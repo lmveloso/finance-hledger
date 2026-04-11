@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.env
+
+# Node
+node_modules/
+dist/
+.vite/
+*.log
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Ledger (NUNCA commitar dados pessoais!)
+*.journal
+*.ledger

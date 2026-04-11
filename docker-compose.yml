@@ -1,0 +1,17 @@
+# Opcional — rodar tudo num container no homelab.
+# Requer que o .journal esteja acessível ao container.
+version: '3.8'
+
+services:
+  finance-hledger:
+    build: .
+    container_name: finance-hledger
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      LEDGER_FILE: /data/finances.journal
+      CORS_ORIGINS: "*"
+    volumes:
+      # Monte seu journal (read-only é suficiente)
+      - ${LEDGER_PATH:-~/finances}:/data:ro
