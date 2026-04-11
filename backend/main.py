@@ -78,10 +78,19 @@ def months_back_bounds(n: int) -> tuple[str, str]:
     return begin, end.isoformat()
 
 
-# ── Helpers pra extrair números do JSON do hledger ────────────────────────
+# ── Helpers pra extrair números do JSON do hledger (1.52) ────────────────
 def _amount(row) -> float:
     """Extrai valor numérico de uma row/account do hledger JSON."""
     try:
+        # Formato hledger 1.52: prTotals/prrTotal são dicts com prrAmounts
+        if isinstance(row, dict) and "prrAmounts" in row:
+            amounts = row.get("prrAmounts") or row.get("prrTotal") or []
+            if isinstance(amounts, list) and amounts:
+                first = amounts[0]
+                if isinstance(first, list) and first:
+                    return float(first[0].get("aquantity", {}).get("floatingPoint", 0))
+            return 0.0
+        # Formato antigo / register / balance: amount é lista de account amounts
         amounts = row.get("amount") or row.get("tamount") or row.get("ebalance") or []
         if isinstance(amounts, list) and amounts:
             return float(amounts[0].get("aquantity", {}).get("floatingPoint", 0))
@@ -114,7 +123,7 @@ def summary(month: Optional[str] = None):
         for sub in data.get("cbrSubreports", []):
             title = (sub[0] if isinstance(sub, list) else sub.get("prrName", "")).lower()
             report = sub[1] if isinstance(sub, list) else sub
-            total = abs(_amount({"amount": report.get("prrTotals", [])}))
+            total = abs(_amount(report.get("prTotals", {})))
             if "revenue" in title or "income" in title or "receita" in title:
                 receitas = total
             elif "expense" in title or "despesa" in title:
@@ -203,13 +212,23 @@ def top_expenses(month: Optional[str] = None, limit: int = 10):
     txs = []
     if isinstance(data, list):
         for t in data:
-            if isinstance(t, list) and len(t) >= 5:
-                tx_data = t[4] if isinstance(t[4], dict) else {}
-                amount = abs(_amount({"amount": t[3]}))
+            if isinstance(t, list) and len(t) >= 4:
+                # hledger 1.52 register: [date, None, desc, posting_dict, balance_list]
+                tx_date = t[0] if isinstance(t[0], str) else ""
+                tx_desc = t[2] if isinstance(t[2], str) else ""
+                posting = t[3] if isinstance(t[3], dict) else {}
+                account = posting.get("paccount", "")
+                pamount = posting.get("pamount", [])
+                # Extrair valor do pamount
+                amount = 0.0
+                if isinstance(pamount, list) and pamount:
+                    a = pamount[0]
+                    if isinstance(a, dict):
+                        amount = abs(float(a.get("aquantity", {}).get("floatingPoint", 0)))
                 txs.append({
-                    "data": tx_data.get("tdate", ""),
-                    "descricao": tx_data.get("tdescription", ""),
-                    "categoria": t[2].split(":")[-1] if isinstance(t[2], str) else "",
+                    "data": tx_date,
+                    "descricao": tx_desc,
+                    "categoria": account.split(":")[-1] if account else "",
                     "valor": round(amount, 2),
                 })
 
@@ -230,7 +249,7 @@ def savings_goal(monthly_target: float = 5000, annual_target: float = 60000):
         for sub in mes_data.get("cbrSubreports", []):
             title = (sub[0] if isinstance(sub, list) else "").lower()
             report = sub[1] if isinstance(sub, list) else {}
-            total = abs(_amount({"amount": report.get("prrTotals", [])}))
+            total = abs(_amount(report.get("prTotals", {})))
             if "revenue" in title or "income" in title:
                 mes_receitas = total
             elif "expense" in title:
@@ -243,7 +262,7 @@ def savings_goal(monthly_target: float = 5000, annual_target: float = 60000):
         for sub in ano_data.get("cbrSubreports", []):
             title = (sub[0] if isinstance(sub, list) else "").lower()
             report = sub[1] if isinstance(sub, list) else {}
-            total = abs(_amount({"amount": report.get("prrTotals", [])}))
+            total = abs(_amount(report.get("prTotals", {})))
             if "revenue" in title or "income" in title:
                 ano_receitas = total
             elif "expense" in title:
