@@ -188,30 +188,51 @@ function Fluxo() {
   if (loading) return <Spinner />;
   if (error) return <ErrorBox msg={error} />;
 
+  const metaMensal = CONFIG.savingsGoal.monthly;
+
   const meses = (data?.months || []).map(m => ({
     ...m,
+    economia: (m.receitas ?? 0) - (m.despesas ?? 0),
     label: m.mes.slice(2), // "26-01"
+    meta: metaMensal,
   }));
 
   return (
     <div className="card">
-      <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 20 }}>Fluxo 12 meses</div>
-      <div style={{ display: 'flex', gap: 20, marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase' }}>Fluxo 12 meses</div>
+        <span className="sans" style={{ fontSize: 11, color: '#d4a574', background: '#2a2724', border: '1px solid #3a3632', borderRadius: 3, padding: '3px 8px', letterSpacing: '0.05em' }}>
+          meta: {BRL(metaMensal)}
+        </span>
+      </div>
+      <div style={{ display: 'flex', gap: 20, marginBottom: 16, flexWrap: 'wrap' }}>
         <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ width: 10, height: 10, background: '#8b9d7a', display: 'inline-block' }} /> Receitas
         </span>
         <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ width: 10, height: 10, background: '#c97b5c', display: 'inline-block' }} /> Despesas
         </span>
+        <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 18, height: 2, background: '#d4a574', display: 'inline-block' }} /> Economia
+        </span>
+        <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 18, height: 0, borderTop: '2px dashed #6b8ca3', display: 'inline-block' }} /> Meta
+        </span>
       </div>
-      <ResponsiveContainer width="100%" height={280}>
+      <ResponsiveContainer width="100%" height={300}>
         <BarChart data={meses} barGap={2}>
           <CartesianGrid strokeDasharray="3 3" stroke="#3a3632" />
           <XAxis dataKey="label" tick={{ fill: '#8a8275', fontSize: 12, fontFamily: 'Inter, sans-serif' }} axisLine={{ stroke: '#3a3632' }} tickLine={false} />
           <YAxis tick={{ fill: '#8a8275', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => BRL(v)} width={72} />
-          <Tooltip contentStyle={{ background: '#1a1815', border: '1px solid #3a3632', borderRadius: 2, fontFamily: 'Inter', fontSize: 12 }} formatter={(v) => BRL(v)} />
+          <Tooltip
+            contentStyle={{ background: '#1a1815', border: '1px solid #3a3632', borderRadius: 2, fontFamily: 'Inter', fontSize: 12 }}
+            formatter={(value, name) => [BRL(value), name]}
+          />
+          <ReferenceLine y={metaMensal} stroke="#6b8ca3" strokeDasharray="6 4" strokeWidth={1.5} label={{ value: `Meta ${BRL(metaMensal)}`, position: 'insideTopRight', fill: '#6b8ca3', fontSize: 11, fontFamily: 'Inter' }} />
           <Bar dataKey="receitas" fill="#8b9d7a" radius={[2, 2, 0, 0]} name="Receitas" />
           <Bar dataKey="despesas" fill="#c97b5c" radius={[2, 2, 0, 0]} name="Despesas" />
+          <Line type="monotone" dataKey="economia" stroke="#d4a574" strokeWidth={2} dot={{ r: 3, fill: '#d4a574', stroke: '#d4a574' }} activeDot={{ r: 5 }} name="Economia" />
+          <Legend content={() => null} />
         </BarChart>
       </ResponsiveContainer>
     </div>
