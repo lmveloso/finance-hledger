@@ -1,0 +1,14 @@
+[Unit]
+Description=Finance Hledger Dashboard
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/lmveloso/dev/finance-hledger/backend
+Environment=LEDGER_FILE=/home/lmveloso/kbm/personal/finance/main.journal
+ExecStart=/home/lmveloso/dev/finance-hledger/backend/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 5199
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
