@@ -183,7 +183,51 @@ def cashflow(months: int = 12):
     """Fluxo mensal (receitas/despesas) dos últimos N meses."""
     begin, end = months_back_bounds(months - 1)
     data = hledger("incomestatement", "-M", "-b", begin, "-e", end)
-    return {"months": months, "raw": data}
+
+    result = []
+    if isinstance(data, dict):
+        cbr_dates = data.get("cbrDates", [])
+        subreports = data.get("cbrSubreports", [])
+
+        # Find Revenues and Expenses subreports
+        revenues_report = None
+        expenses_report = None
+        for sub in subreports:
+            title = (sub[0] if isinstance(sub, list) else "").lower()
+            report = sub[1] if isinstance(sub, list) else {}
+            if "revenue" in title or "income" in title:
+                revenues_report = report
+            elif "expense" in title:
+                expenses_report = report
+
+        # Iterate each period index
+        for period_idx, date_range in enumerate(cbr_dates):
+            # Extract YYYY-MM from first date in the range
+            first_date = date_range[0] if isinstance(date_range, list) else date_range
+            date_str = first_date.get("contents", "") if isinstance(first_date, dict) else str(first_date)
+            mes = date_str[:7]  # "2026-01"
+
+            receitas = 0.0
+            if revenues_report and "prRows" in revenues_report:
+                for row in revenues_report["prRows"]:
+                    amounts = row.get("prrAmounts", [])
+                    if period_idx < len(amounts) and amounts[period_idx]:
+                        receitas += abs(float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0)))
+
+            despesas = 0.0
+            if expenses_report and "prRows" in expenses_report:
+                for row in expenses_report["prRows"]:
+                    amounts = row.get("prrAmounts", [])
+                    if period_idx < len(amounts) and amounts[period_idx]:
+                        despesas += abs(float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0)))
+
+            result.append({
+                "mes": mes,
+                "receitas": round(receitas, 2),
+                "despesas": round(despesas, 2),
+            })
+
+    return {"months": result}
 
 
 @app.get("/api/networth")
@@ -191,7 +235,51 @@ def networth(months: int = 12):
     """Patrimônio líquido ao longo do tempo."""
     begin, end = months_back_bounds(months - 1)
     data = hledger("balancesheet", "-M", "-b", begin, "-e", end, "--historical")
-    return {"months": months, "raw": data}
+
+    result = []
+    if isinstance(data, dict):
+        cbr_dates = data.get("cbrDates", [])
+        subreports = data.get("cbrSubreports", [])
+
+        # Find Assets and Liabilities subreports
+        assets_report = None
+        liabilities_report = None
+        for sub in subreports:
+            title = (sub[0] if isinstance(sub, list) else "").lower()
+            report = sub[1] if isinstance(sub, list) else {}
+            if "asset" in title:
+                assets_report = report
+            elif "liabilit" in title:
+                liabilities_report = report
+
+        # Iterate each period index
+        for period_idx, date_range in enumerate(cbr_dates):
+            first_date = date_range[0] if isinstance(date_range, list) else date_range
+            date_str = first_date.get("contents", "") if isinstance(first_date, dict) else str(first_date)
+            mes = date_str[:7]
+
+            assets = 0.0
+            if assets_report and "prRows" in assets_report:
+                for row in assets_report["prRows"]:
+                    amounts = row.get("prrAmounts", [])
+                    if period_idx < len(amounts) and amounts[period_idx]:
+                        assets += abs(float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0)))
+
+            liabilities = 0.0
+            if liabilities_report and "prRows" in liabilities_report:
+                for row in liabilities_report["prRows"]:
+                    amounts = row.get("prrAmounts", [])
+                    if period_idx < len(amounts) and amounts[period_idx]:
+                        liabilities += abs(float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0)))
+
+            result.append({
+                "mes": mes,
+                "assets": round(assets, 2),
+                "liabilities": round(liabilities, 2),
+                "net": round(assets - liabilities, 2),
+            })
+
+    return {"months": result}
 
 
 @app.get("/api/budget")
