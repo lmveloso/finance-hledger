@@ -64,3 +64,14 @@ Flat layout — four files only: `main.jsx` (entry), `Dashboard.jsx` (the whole 
 
 ### Budget configuration
 Budgets live in the `.journal` file as hledger `~ monthly` periodic transactions (see README for example). The `/api/budget` endpoint surfaces these. `frontend/src/config.js` has a `fallbackBudget` array used only if the journal has no periodic transactions configured yet. Savings targets are frontend-side in `config.js` by default but can also be passed as query params to `/api/savings-goal`.
+
+## AI Agent Skills
+
+This repo includes skills for AI agents to manage hledger journals in `skills/`:
+- `hledger-base` — MCP tools, journal structure, validation protocol, pitfalls
+- `hledger-extrato` — Import bank statements (extrato de conta corrente/poupanca)
+- `hledger-fatura` — Import credit card invoices (fatura de cartao)
+
+Payee-to-account categorization data: `skills/data/payee-categories.json`
+
+Full setup guide: `docs/onboarding.md`

@@ -83,6 +83,13 @@ No seu `.journal` do hledger:
 
 Metas de economia são configuradas no frontend via `frontend/src/config.js`.
 
+## Integração com Agente de IA
+
+O projeto inclui skills para agentes de IA (Claude Code, etc.) que auxiliam na
+gestão dos journals hledger — importação de extratos bancários, classificação
+de despesas e validação de saldos. Veja [docs/onboarding.md](docs/onboarding.md)
+para instruções de configuração.
+
 ## Estrutura
 
 ```
@@ -95,6 +102,13 @@ finance-hledger/
 │   ├── src/
 │   ├── package.json
 │   └── vite.config.js
+├── skills/           # Skills para agentes de IA
+│   ├── hledger-base/
+│   ├── hledger-extrato/
+│   ├── hledger-fatura/
+│   └── data/payee-categories.json
+├── docs/
+│   └── onboarding.md
 ├── docker-compose.yml (opcional)
 └── README.md
 ```
