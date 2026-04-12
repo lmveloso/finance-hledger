@@ -226,13 +226,14 @@ def summary(month: Optional[str] = None):
 
 
 @app.get("/api/categories")
-def categories(month: Optional[str] = None, depth: int = 2, tag: Optional[str] = None):
+def categories(month: Optional[str] = None, depth: int = 2, tag: Optional[list[str]] = Query(None)):
     """Despesas agregadas por categoria (para o gráfico de pizza)."""
     begin, end = month_bounds(month)
     cmd_args = ["balance", "expenses", f"--depth={depth}",
                 "-b", begin, "-e", end, "--layout=bare"]
     if tag:
-        cmd_args.append(f"tag:{tag}")
+        for t in tag:
+            cmd_args.append(f"tag:{t}")
     data = hledger(*cmd_args)
 
     cats = []
@@ -552,7 +553,7 @@ def transactions(
     end: Optional[str] = None,
     category: Optional[str] = None,
     search: Optional[str] = None,
-    tag: Optional[str] = None,
+    tag: Optional[list[str]] = Query(None),
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
     sort: str = "date",
@@ -578,9 +579,10 @@ def transactions(
 
     cmd_args.extend(["-b", begin, "-e", period_end])
 
-    # Filtro por tag
+    # Filtro por tag(s) — AND lógico
     if tag:
-        cmd_args.append(f"tag:{tag}")
+        for t in tag:
+            cmd_args.append(f"tag:{t}")
 
     # Usar output JSON
     data = hledger(*cmd_args)

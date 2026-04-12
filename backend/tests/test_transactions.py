@@ -152,3 +152,43 @@ def test_transactions_empty_month(client):
     data = r.json()
     assert data["total"] == 0
     assert data["transactions"] == []
+
+
+def test_transactions_filter_by_tag(client):
+    r = client.get("/api/transactions?month=2026-03&tag=viagem-floripa")
+    data = r.json()
+    assert r.status_code == 200
+    assert data["total"] == 2
+    descriptions = [tx["descricao"].lower() for tx in data["transactions"]]
+    assert any("passagem" in d for d in descriptions)
+    assert any("hotel" in d for d in descriptions)
+
+
+def test_transactions_filter_by_tag_no_results(client):
+    r = client.get("/api/transactions?month=2026-03&tag=nonexistent-tag")
+    data = r.json()
+    assert data["total"] == 0
+    assert data["transactions"] == []
+
+
+def test_transactions_filter_by_multiple_tags(client):
+    r = client.get("/api/transactions?month=2026-03&tag=viagem-floripa&tag=pet-luna")
+    data = r.json()
+    assert r.status_code == 200
+    # AND logic: no transaction has both tags
+    assert data["total"] == 0
+
+
+def test_transactions_filter_by_tag_with_category(client):
+    r = client.get("/api/transactions?month=2026-03&tag=viagem-floripa&category=Lazer")
+    data = r.json()
+    assert r.status_code == 200
+    assert data["total"] == 1
+    assert "passagem" in data["transactions"][0]["descricao"].lower()
+
+
+def test_transactions_tag_and_search_combined(client):
+    r = client.get("/api/transactions?month=2026-03&tag=viagem-floripa&search=hotel")
+    data = r.json()
+    assert data["total"] == 1
+    assert "hotel" in data["transactions"][0]["descricao"].lower()
