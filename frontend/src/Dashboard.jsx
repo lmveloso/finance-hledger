@@ -1,8 +1,9 @@
 import React, { useState, useCallback, createContext, useContext } from 'react';
-import { ArrowUpRight, ArrowDownRight, Wallet, AlertCircle, ChevronRight, ArrowLeft, PiggyBank, Loader2, ChevronLeft, CalendarDays } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Wallet, AlertCircle, ChevronRight, ArrowLeft, PiggyBank, Loader2, ChevronLeft, CalendarDays, RefreshCw } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend } from 'recharts';
 import { useApi, fetchCategoryDetail } from './api.js';
 import { CONFIG } from './config.js';
+import { usePullToRefresh } from './hooks/usePullToRefresh.js';
 
 const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -38,7 +39,7 @@ function lastYearMonth(ym) {
 
 const MonthContext = createContext();
 
-function MonthProvider({ children }) {
+function MonthProvider({ children, refreshKey }) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [compareMode, setCompareMode] = useState(false);
 
@@ -53,6 +54,7 @@ function MonthProvider({ children }) {
       selectedMonth, setSelectedMonth,
       compareMode, setCompareMode,
       goPrev, goNext, goToday, isCurrentMonth,
+      refreshKey,
     }}>
       {children}
     </MonthContext.Provider>
@@ -183,19 +185,19 @@ function KPI({ label, valor, icon, cor, destaque, loading, delta }) {
 
 // ── Resumo ──────────────────────────────────────────────────────────────
 function Resumo() {
-  const { selectedMonth, compareMode } = useMonth();
+  const { selectedMonth, compareMode, refreshKey } = useMonth();
 
-  const { data: summary, error: e1, loading: l1 } = useApi(`/api/summary?month=${selectedMonth}`, [selectedMonth]);
-  const { data: cats, error: e2, loading: l2 } = useApi(`/api/categories?month=${selectedMonth}&depth=2`, [selectedMonth]);
-  const { data: top, error: e3, loading: l3 } = useApi(`/api/top-expenses?month=${selectedMonth}&limit=5`, [selectedMonth]);
+  const { data: summary, error: e1, loading: l1 } = useApi(`/api/summary?month=${selectedMonth}`, [selectedMonth, refreshKey]);
+  const { data: cats, error: e2, loading: l2 } = useApi(`/api/categories?month=${selectedMonth}&depth=2`, [selectedMonth, refreshKey]);
+  const { data: top, error: e3, loading: l3 } = useApi(`/api/top-expenses?month=${selectedMonth}&limit=5`, [selectedMonth, refreshKey]);
   const { data: goal, loading: l4 } = useApi(
-    `/api/savings-goal?monthly_target=${CONFIG.savingsGoal.monthly}&annual_target=${CONFIG.savingsGoal.annual}`, []
+    `/api/savings-goal?monthly_target=${CONFIG.savingsGoal.monthly}&annual_target=${CONFIG.savingsGoal.annual}`, [refreshKey]
   );
 
   // Comparison data (same month last year)
   const compMonth = lastYearMonth(selectedMonth);
   const { data: compSummary } = useApi(
-    `/api/summary?month=${compMonth}`, [compMonth]
+    `/api/summary?month=${compMonth}`, [compMonth, refreshKey]
   );
 
   const [detalhe, setDetalhe] = useState(null);
@@ -355,7 +357,8 @@ function Resumo() {
 
 // ── Fluxo ───────────────────────────────────────────────────────────────
 function Fluxo() {
-  const { data, error, loading } = useApi('/api/cashflow?months=12', []);
+  const { refreshKey } = useMonth();
+  const { data, error, loading } = useApi('/api/cashflow?months=12', [refreshKey]);
   if (loading) return <Spinner />;
   if (error) return <ErrorBox msg={error} />;
 
@@ -451,8 +454,8 @@ function BudgetBar({ nome, orcado, realizado, percentual, isTotal }) {
 }
 
 function Orcamento() {
-  const { selectedMonth } = useMonth();
-  const { data, error, loading } = useApi(`/api/budget?month=${selectedMonth}`, [selectedMonth]);
+  const { selectedMonth, refreshKey } = useMonth();
+  const { data, error, loading } = useApi(`/api/budget?month=${selectedMonth}`, [selectedMonth, refreshKey]);
   if (loading) return <Spinner />;
   if (error) return <ErrorBox msg={error} />;
 
@@ -494,11 +497,68 @@ function Orcamento() {
   );
 }
 
+// ── Pull-to-refresh indicator ──────────────────────────────────────────
+function PullIndicator({ pullState, pullDistance }) {
+  if (pullState === 'idle') return null;
+
+  const labels = {
+    pulling: 'Puxe para atualizar...',
+    ready: 'Solte para atualizar...',
+    refreshing: 'Atualizando...',
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      padding: '10px 0',
+      background: 'linear-gradient(to bottom, #252220 0%, transparent 100%)',
+      color: pullState === 'ready' ? '#d4a574' : '#8a8275',
+      fontSize: 13,
+      fontFamily: 'Inter, system-ui, sans-serif',
+      transform: `translateY(${pullState === 'refreshing' ? 0 : pullDistance - 40}px)`,
+      opacity: pullState === 'refreshing' ? 1 : Math.min(pullDistance / 60, 1),
+      transition: pullState === 'refreshing' ? 'transform 0.2s ease' : 'none',
+      pointerEvents: 'none',
+    }}>
+      <RefreshCw
+        size={16}
+        style={{
+          animation: pullState === 'refreshing' ? 'spin 1s linear infinite' : 'none',
+          transform: pullState === 'ready' ? 'rotate(180deg)' : `rotate(${pullDistance * 2}deg)`,
+          transition: pullState === 'ready' ? 'transform 0.15s ease' : 'none',
+        }}
+      />
+      {labels[pullState]}
+    </div>
+  );
+}
+
 // ── Main ────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const [aba, setAba] = useState('resumo');
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const doRefresh = useCallback(() => {
+    return new Promise(resolve => {
+      // Small delay so the API has time to re-fetch and the indicator is visible
+      setRefreshKey(k => k + 1);
+      setTimeout(resolve, 600);
+    });
+  }, []);
+
+  const { pullDistance, pullState } = usePullToRefresh(doRefresh, 80);
+
   return (
-    <MonthProvider>
+    <MonthProvider refreshKey={refreshKey}>
+      <PullIndicator pullState={pullState} pullDistance={pullDistance} />
       <DashboardInner aba={aba} setAba={setAba} />
     </MonthProvider>
   );
