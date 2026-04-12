@@ -4,16 +4,19 @@ Serve /api/* (JSON do hledger) e / (SPA React buildada).
 """
 
 import json
+import logging
 import subprocess
 import os
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+
+logger = logging.getLogger("finance-hledger")
 
 # ── Config ──────────────────────────────────────────────────────────────────
 LEDGER_FILE = os.environ.get("LEDGER_FILE", os.path.expanduser("~/finances/2026.journal"))
@@ -32,7 +35,16 @@ app.add_middleware(
 )
 
 
-def hledger(*args: str, output_format: str = "json"):
+def hledger(*args: str, output_format: str = "json",
+            expected_type: Optional[type] = None):
+    """Executa hledger CLI e retorna resultado parseado.
+
+    Args:
+        *args: Argumentos do hledger.
+        output_format: "json" ou "text".
+        expected_type: Se fornecido (dict ou list), emite warning se o
+                       JSON retornado não for desse tipo.
+    """
     cmd = [HLEDGER, "-f", LEDGER_FILE]
     if output_format == "json":
         cmd.extend(["-O", "json"])
@@ -50,9 +62,17 @@ def hledger(*args: str, output_format: str = "json"):
 
     if output_format == "json":
         try:
-            return json.loads(result.stdout)
+            parsed = json.loads(result.stdout)
         except json.JSONDecodeError:
+            logger.warning("hledger retornou não-JSON para args=%s", args)
             return result.stdout.strip()
+
+        if expected_type is not None and not isinstance(parsed, expected_type):
+            logger.warning(
+                "hledger schema: esperado %s, recebido %s para args=%s",
+                expected_type.__name__, type(parsed).__name__, args,
+            )
+        return parsed
     return result.stdout.strip()
 
 
@@ -78,24 +98,92 @@ def months_back_bounds(n: int) -> tuple[str, str]:
     return begin, end.isoformat()
 
 
-# ── Helpers pra extrair números do JSON do hledger (1.52) ────────────────
+# ── Helpers pra extrair números do JSON do hledger (1.52+) ───────────────
+def _extract_one_amount(amount_obj) -> float:
+    """Extrai um único float de um objeto de amount do hledger.
+
+    Formatos suportados:
+      - {"acommodity": "R$", "aquantity": {"floatingPoint": 123.45}}
+      - {"acommodity": "R$", "aquantity": {"floatingPoint": 123.45, "display": ...}}
+      - 123.45  (numérico puro, versões antigas)
+    """
+    if isinstance(amount_obj, (int, float)):
+        return float(amount_obj)
+    if not isinstance(amount_obj, dict):
+        return 0.0
+    aq = amount_obj.get("aquantity", {})
+    if isinstance(aq, dict):
+        val = aq.get("floatingPoint")
+        if val is not None:
+            return float(val)
+    # Formatos ainda mais antigos: "aquantity" pode ser direto um número
+    if isinstance(aq, (int, float)):
+        return float(aq)
+    return 0.0
+
+
+def _parse_amount_list(raw) -> list[float]:
+    """Normaliza qualquer formato de lista de amount para [float].
+
+    Lida com:
+      - lista de dicts: [{"acommodity", "aquantity": {floatingPoint}}]
+      - lista de listas de dicts: [[{"acommodity", ...}]]
+      - lista de números: [123.45]
+      - valor único dict ou number
+      - None / vazio
+    """
+    if raw is None:
+        return []
+    # Valor único (dict ou number) — embrulhar em lista
+    if isinstance(raw, (dict, int, float)):
+        return [_extract_one_amount(raw)]
+    if not isinstance(raw, list):
+        return []
+    if not raw:
+        return []
+    # Lista de listas (formato prrAmounts com períodos): [[{...}, ...], ...]
+    if isinstance(raw[0], list):
+        flat = []
+        for sub in raw:
+            if isinstance(sub, list):
+                for item in sub:
+                    flat.append(_extract_one_amount(item))
+        return flat
+    # Lista de dicts ou números: [{...}, ...] ou [1.0, 2.0]
+    return [_extract_one_amount(item) for item in raw]
+
+
 def _amount(row) -> float:
-    """Extrai valor numérico de uma row/account do hledger JSON."""
-    try:
-        # Formato hledger 1.52: prTotals/prrTotal são dicts com prrAmounts
-        if isinstance(row, dict) and "prrAmounts" in row:
-            amounts = row.get("prrAmounts") or row.get("prrTotal") or []
-            if isinstance(amounts, list) and amounts:
-                first = amounts[0]
-                if isinstance(first, list) and first:
-                    return float(first[0].get("aquantity", {}).get("floatingPoint", 0))
+    """Extrai valor numérico (soma absoluta) de uma row/account do hledger JSON.
+
+    Suporta todos os formatos conhecidos do hledger (1.40+ até 1.52+):
+      - prrAmounts / prrTotal (balancesheet/incomestatement prTotals)
+      - amount / tamount / ebalance (balance/register)
+      - Listas planas ou aninhadas
+      - Valores numéricos puros (int/float)
+    Retorna 0.0 com warning logado se o formato não for reconhecido.
+    """
+    if not isinstance(row, dict):
+        logger.warning("_amount: recebido %s em vez de dict", type(row).__name__)
+        return 0.0
+
+    # Chaves conhecidas em ordem de prioridade
+    candidate_keys = ("prrAmounts", "prrTotal", "amount", "tamount", "ebalance")
+
+    for key in candidate_keys:
+        raw = row.get(key)
+        if raw is not None:
+            values = _parse_amount_list(raw)
+            if values:
+                return sum(values)
+            # Se a chave existe mas resultou em lista vazia, logar debug
+            logger.debug("_amount: chave '%s' presente mas resultou em lista vazia (row keys=%s)",
+                         key, list(row.keys()))
             return 0.0
-        # Formato antigo / register / balance: amount é lista de account amounts
-        amounts = row.get("amount") or row.get("tamount") or row.get("ebalance") or []
-        if isinstance(amounts, list) and amounts:
-            return float(amounts[0].get("aquantity", {}).get("floatingPoint", 0))
-    except (AttributeError, TypeError, IndexError):
-        pass
+
+    # Nenhuma chave reconhecida
+    logger.warning("_amount: nenhuma chave de amount encontrada em row com keys=%s",
+                    list(row.keys()))
     return 0.0
 
 
@@ -287,8 +375,120 @@ def budget(month: Optional[str] = None):
     """Orçamento vs realizado (requer ~ periodic transactions no journal)."""
     begin, end = month_bounds(month)
     data = hledger("balance", "expenses", "--budget",
-                   "-b", begin, "-e", end, output_format="text")
-    return {"month": month or date.today().strftime("%Y-%m"), "raw": data}
+                   "-b", begin, "-e", end)
+
+    mes_label = month or date.today().strftime("%Y-%m")
+    cats = []
+    total_orcado = 0.0
+    total_realizado = 0.0
+
+    if isinstance(data, dict):
+        rows = data.get("prRows", [])
+        for row in rows:
+            name = row.get("prrName", "")
+            amounts = row.get("prrAmounts", [])
+
+            # No budget JSON, prrAmounts[0] = realized, prrAmounts[1] = budgeted
+            realizado = 0.0
+            orcado = 0.0
+            if isinstance(amounts, list) and len(amounts) >= 2:
+                # amounts[0] = realized amounts (can be [] if nothing spent)
+                realized_list = amounts[0]
+                if isinstance(realized_list, list) and realized_list:
+                    for a in realized_list:
+                        if isinstance(a, dict):
+                            realizado += abs(float(a.get("aquantity", {}).get("floatingPoint", 0)))
+                # amounts[1] = budgeted amounts
+                budgeted_list = amounts[1]
+                if isinstance(budgeted_list, list) and budgeted_list:
+                    for a in budgeted_list:
+                        if isinstance(a, dict):
+                            orcado += abs(float(a.get("aquantity", {}).get("floatingPoint", 0)))
+
+            if orcado <= 0:
+                continue
+
+            pct = round((realizado / orcado) * 100) if orcado > 0 else 0
+            # Extract display name: last part of "expenses:category:subcategory"
+            parts = name.split(":")
+            display = parts[-1].capitalize() if len(parts) > 1 else name.capitalize()
+
+            cats.append({
+                "nome": display,
+                "conta": name,
+                "orcado": round(orcado, 2),
+                "realizado": round(realizado, 2),
+                "percentual": pct,
+            })
+            total_orcado += orcado
+            total_realizado += realizado
+
+        # Fallback: if JSON parsing yielded no rows, try text parsing
+        if not rows:
+            cats, total_orcado, total_realizado = _parse_budget_text(begin, end, mes_label)
+    else:
+        # data is string (non-JSON), parse text
+        cats, total_orcado, total_realizado = _parse_budget_text(begin, end, mes_label)
+
+    total_pct = round((total_realizado / total_orcado) * 100) if total_orcado > 0 else 0
+    cats.sort(key=lambda c: c["percentual"], reverse=True)
+
+    return {
+        "month": mes_label,
+        "categorias": cats,
+        "total": {
+            "orcado": round(total_orcado, 2),
+            "realizado": round(total_realizado, 2),
+            "percentual": total_pct,
+        },
+    }
+
+
+def _parse_budget_text(begin: str, end: str, month_label: str):
+    """Fallback: parse hledger --budget -O text output with regex."""
+    import re
+    raw = hledger("balance", "expenses", "--budget",
+                  "-b", begin, "-e", end, output_format="text")
+    cats = []
+    total_orcado = 0.0
+    total_realizado = 0.0
+
+    # Pattern: "expenses:category  ||  BRL 123.45 [ 85% of  BRL 200.00]"
+    pat = re.compile(
+        r'(expenses:\S+)\s*\|\|\s*(?:(?:BRL\s*([\d.,]+))|(?:\d+\s*\[))\s*\[\s*(\d+)%\s+of\s+BRL\s*([\d.,]+)\]'
+    )
+    # Simpler: capture account, realized, %, budgeted
+    pat2 = re.compile(
+        r'^(expenses:\S+)\s+\|\|\s+(?:(BRL\s*[\d.,]+)|\s*\d+\s+)\s+\[\s*(\d+)%\s+of\s+(BRL\s*[\d.,]+)\]'
+    )
+    for line in raw.split('\n'):
+        m = pat2.match(line.strip())
+        if m:
+            name = m.group(1)
+            realized_str = m.group(2) or "0"
+            pct_val = int(m.group(3))
+            budgeted_str = m.group(4)
+
+            def parse_brl(s):
+                s = s.replace("BRL", "").strip()
+                return float(s.replace(".", "").replace(",", ".")) if s else 0.0
+
+            realizado = parse_brl(realized_str)
+            orcado = parse_brl(budgeted_str)
+            parts = name.split(":")
+            display = parts[-1].capitalize() if len(parts) > 1 else name.capitalize()
+
+            cats.append({
+                "nome": display,
+                "conta": name,
+                "orcado": round(orcado, 2),
+                "realizado": round(realizado, 2),
+                "percentual": pct_val,
+            })
+            total_orcado += orcado
+            total_realizado += realizado
+
+    return cats, total_orcado, total_realizado
 
 
 @app.get("/api/top-expenses")
