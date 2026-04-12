@@ -1,264 +1,103 @@
 """
-Fixtures de teste para finance-hledger.
+Fixtures para testes do finance-hledger.
+Cria um journal mínimo temporário e configura o TestClient do FastAPI.
+"""
+import os
+import tempfile
+import pytest
+from fastapi.testclient import TestClient
 
-JSON mockados representando cada formato conhecido de saída do hledger.
-Reutilizáveis em test_parsers.py e nos testes de endpoint (T4).
+# Minimal journal com ~5 transações, 1 periodic budget, 1 asset, 1 liability
+MINIMAL_JOURNAL = """\
+~ monthly
+    expenses:Alimentacao       2200.00
+    expenses:Transporte         800.00
+    expenses:Saude             1500.00
+    expenses:Lazer              600.00
+    expenses:Moradia          3500.00
+    expenses:Vestuario          400.00
+    expenses:Educacao          1200.00
+    expenses:Servicos           800.00
+    expenses:Outros             500.00
+    equity:Opening
+
+2026-01-05 * Supermercado
+    expenses:Alimentacao:Supermercado  185.50
+    assets:Banco:Nubank
+
+2026-01-10 * Aluguel
+    expenses:Moradia:Aluguel  3500.00
+    assets:Banco:Nubank
+
+2026-01-15 * Uber
+    expenses:Transporte:Uber  45.00
+    liabilities:Cartao:Visa
+
+2026-02-03 * Supermercado
+    expenses:Alimentacao:Supermercado  210.00
+    assets:Banco:Nubank
+
+2026-02-08 * Farmacia
+    expenses:Saude:Farmacia  120.00
+    liabilities:Cartao:Visa
+
+2026-02-12 * Netflix
+    expenses:Lazer:Streaming  55.90
+    liabilities:Cartao:Visa
+
+2026-03-01 * Salario
+    assets:Banco:Nubank  12000.00
+    income:Salario
+
+2026-03-05 * Supermercado
+    expenses:Alimentacao:Supermercado  195.00
+    assets:Banco:Nubank
+
+2026-03-10 * Curso online
+    expenses:Educacao:Cursos  250.00
+    liabilities:Cartao:Visa
+
+2026-03-15 * Internet
+    expenses:Servicos:Internet  99.90
+    assets:Banco:Nubank
 """
 
-import pytest
+
+@pytest.fixture(scope="session")
+def journal_file():
+    """Cria um journal temporário e configura LEDGER_FILE."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".journal", delete=False) as f:
+        f.write(MINIMAL_JOURNAL)
+        f.flush()
+        path = f.name
+
+    # Set LEDGER_FILE para o journal de teste
+    old_ledger = os.environ.get("LEDGER_FILE")
+    os.environ["LEDGER_FILE"] = path
+
+    yield path
+
+    # Restaurar e limpar
+    if old_ledger is not None:
+        os.environ["LEDGER_FILE"] = old_ledger
+    else:
+        os.environ.pop("LEDGER_FILE", None)
+    os.unlink(path)
 
 
-# ──────────────────────────────────────────────────────────────────────────
-# Fixtures: objetos de amount em formatos variados
-# ──────────────────────────────────────────────────────────────────────────
+@pytest.fixture(scope="session")
+def client(journal_file):
+    """TestClient do FastAPI com LEDGER_FILE apontando pro fixture."""
+    # Precisa reimportar o módulo para capturar o LEDGER_FILE atualizado
+    # O main.py lê LEDGER_FILE no nível do módulo, então precisamos
+    # recarregar o módulo para que ele pegue o valor do fixture.
+    import importlib
+    import main as main_mod
+    importlib.reload(main_mod)
 
-@pytest.fixture
-def amount_standard():
-    """Formato hledger 1.52 padrão: aquantity.floatingPoint."""
-    return {"acommodity": "R$", "aquantity": {"floatingPoint": 1500.75, "display": "R$1500.75"}}
+    # Reconfigurar LEDGER_FILE no módulo
+    main_mod.LEDGER_FILE = journal_file
 
-
-@pytest.fixture
-def amount_negative():
-    """Amount negativo (despesa)."""
-    return {"acommodity": "R$", "aquantity": {"floatingPoint": -350.00}}
-
-
-@pytest.fixture
-def amount_pure_float():
-    """Formato antigo: valor numérico puro (float)."""
-    return 42.50
-
-
-@pytest.fixture
-def amount_pure_int():
-    """Formato antigo: valor numérico puro (int)."""
-    return 100
-
-
-@pytest.fixture
-def amount_aquantity_number():
-    """Formato raro: aquantity é número direto (sem floatingPoint)."""
-    return {"acommodity": "$", "aquantity": 99.99}
-
-
-@pytest.fixture
-def amount_list_flat():
-    """Lista plana de amounts (balance/register format)."""
-    return [
-        {"acommodity": "R$", "aquantity": {"floatingPoint": 200.00}},
-        {"acommodity": "R$", "aquantity": {"floatingPoint": 50.50}},
-    ]
-
-
-@pytest.fixture
-def amount_list_nested():
-    """Lista aninhada de amounts (prrAmounts multi-período)."""
-    return [
-        [{"acommodity": "R$", "aquantity": {"floatingPoint": 1000.00}}],
-        [{"acommodity": "R$", "aquantity": {"floatingPoint": 2000.00}}],
-    ]
-
-
-@pytest.fixture
-def amount_list_numbers():
-    """Lista de números puros (formato antigo)."""
-    return [10.0, 20.0, 30.0]
-
-
-# ──────────────────────────────────────────────────────────────────────────
-# Fixtures: rows completas como retornadas pelo hledger
-# ──────────────────────────────────────────────────────────────────────────
-
-@pytest.fixture
-def row_prramounts():
-    """Row de prTotals com prrAmounts (incomestatement/balancesheet)."""
-    return {
-        "prrAmounts": [
-            [{"acommodity": "R$", "aquantity": {"floatingPoint": 5000.00}}],
-        ],
-        "prrTotal": [
-            [{"acommodity": "R$", "aquantity": {"floatingPoint": 5000.00}}],
-        ],
-    }
-
-
-@pytest.fixture
-def row_amount():
-    """Row com chave 'amount' (balance format)."""
-    return {
-        "amount": [{"acommodity": "R$", "aquantity": {"floatingPoint": 750.25}}],
-    }
-
-
-@pytest.fixture
-def row_tamount():
-    """Row com chave 'tamount' (register format)."""
-    return {
-        "tamount": [{"acommodity": "R$", "aquantity": {"floatingPoint": 1200.00}}],
-    }
-
-
-@pytest.fixture
-def row_ebalance():
-    """Row com chave 'ebalance' (budget/effective balance)."""
-    return {
-        "ebalance": [{"acommodity": "R$", "aquantity": {"floatingPoint": 300.00}}],
-    }
-
-
-@pytest.fixture
-def row_numeric_amount():
-    """Row com amount numérico puro (versão antiga do hledger)."""
-    return {
-        "amount": [42.50],
-    }
-
-
-@pytest.fixture
-def row_empty():
-    """Row com chaves mas listas vazias (journal vazio)."""
-    return {
-        "prrAmounts": [],
-        "prrTotal": [],
-    }
-
-
-@pytest.fixture
-def row_unknown_keys():
-    """Row com chaves desconhecidas (formato futuro/não mapeado)."""
-    return {
-        "someNewField": "value",
-        "anotherField": 123,
-    }
-
-
-@pytest.fixture
-def row_zero_amount():
-    """Row com amount zerado."""
-    return {
-        "amount": [{"acommodity": "R$", "aquantity": {"floatingPoint": 0.0}}],
-    }
-
-
-# ──────────────────────────────────────────────────────────────────────────
-# Fixtures: respostas completas do hledger por comando
-# ──────────────────────────────────────────────────────────────────────────
-
-@pytest.fixture
-def incomestatement_response():
-    """Resposta simulada de hledger incomestatement -O json."""
-    return {
-        "cbrSubreports": [
-            ["Revenues", {
-                "prRows": [
-                    {
-                        "prrAmounts": [
-                            [{"acommodity": "R$", "aquantity": {"floatingPoint": 8500.00}}]
-                        ],
-                    }
-                ],
-                "prTotals": {
-                    "prrAmounts": [
-                        [{"acommodity": "R$", "aquantity": {"floatingPoint": 8500.00}}]
-                    ],
-                },
-            }],
-            ["Expenses", {
-                "prRows": [
-                    {
-                        "prrAmounts": [
-                            [{"acommodity": "R$", "aquantity": {"floatingPoint": 6200.00}}]
-                        ],
-                    }
-                ],
-                "prTotals": {
-                    "prrAmounts": [
-                        [{"acommodity": "R$", "aquantity": {"floatingPoint": 6200.00}}]
-                    ],
-                },
-            }],
-        ],
-        "cbrDates": [],
-    }
-
-
-@pytest.fixture
-def cashflow_response():
-    """Resposta simulada de hledger incomestatement -M -O json."""
-    return {
-        "cbrDates": [
-            [{"contents": "2026-01-01"}, {"contents": "2026-02-01"}],
-            [{"contents": "2026-02-01"}, {"contents": "2026-03-01"}],
-        ],
-        "cbrSubreports": [
-            ["Revenues", {
-                "prRows": [
-                    {
-                        "prrAmounts": [
-                            [{"acommodity": "R$", "aquantity": {"floatingPoint": 8000.00}}],
-                            [{"acommodity": "R$", "aquantity": {"floatingPoint": 9000.00}}],
-                        ],
-                    }
-                ],
-            }],
-            ["Expenses", {
-                "prRows": [
-                    {
-                        "prrAmounts": [
-                            [{"acommodity": "R$", "aquantity": {"floatingPoint": 5000.00}}],
-                            [{"acommodity": "R$", "aquantity": {"floatingPoint": 6500.00}}],
-                        ],
-                    }
-                ],
-            }],
-        ],
-    }
-
-
-@pytest.fixture
-def balance_response():
-    """Resposta simulada de hledger balance expenses -O json --layout=bare."""
-    return [
-        [
-            ["expenses:Alimentação", "Alimentação",
-             [{"acommodity": "R$", "aquantity": {"floatingPoint": 2200.00}}],
-             [{"acommodity": "R$", "aquantity": {"floatingPoint": 2200.00}}]],
-            ["expenses:Transporte", "Transporte",
-             [{"acommodity": "R$", "aquantity": {"floatingPoint": 800.00}}],
-             [{"acommodity": "R$", "aquantity": {"floatingPoint": 800.00}}]],
-        ]
-    ]
-
-
-@pytest.fixture
-def register_response():
-    """Resposta simulada de hledger register expenses -O json."""
-    return [
-        ["2026-04-01", None, "Supermercado",
-         {"paccount": "expenses:Alimentação",
-          "pamount": [{"acommodity": "R$", "aquantity": {"floatingPoint": 185.50}}]},
-         [{"acommodity": "R$", "aquantity": {"floatingPoint": 185.50}}]],
-        ["2026-04-03", None, "Uber",
-         {"paccount": "expenses:Transporte",
-          "pamount": [{"acommodity": "R$", "aquantity": {"floatingPoint": 32.00}}]},
-         [{"acommodity": "R$", "aquantity": {"floatingPoint": 217.50}}]],
-    ]
-
-
-@pytest.fixture
-def empty_list_response():
-    """Resposta de journal vazio: lista vazia."""
-    return []
-
-
-@pytest.fixture
-def empty_dict_response():
-    """Resposta de journal vazio: dict vazio ou sem subreports."""
-    return {"cbrSubreports": [], "cbrDates": []}
-
-
-@pytest.fixture
-def text_response():
-    """Resposta de hledger quando output_format=text (não-JSON)."""
-    return "            R$ 5000.00  expenses\n            R$ 5000.00\n"
+    # Verificar se frontend/dist existe — se não, não montar SPA
+    # (o TestClient funciona sem isso)
+    return TestClient(main_mod.app)
