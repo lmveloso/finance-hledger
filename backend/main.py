@@ -392,22 +392,23 @@ def budget(month: Optional[str] = None):
             name = row.get("prrName", "")
             amounts = row.get("prrAmounts", [])
 
-            # No budget JSON, prrAmounts[0] = realized, prrAmounts[1] = budgeted
+            # prrAmounts is a list of periods: [ [realized[], budgeted[]], ... ]
+            # Each period has two lists: realized amounts and budgeted amounts.
             realizado = 0.0
             orcado = 0.0
-            if isinstance(amounts, list) and len(amounts) >= 2:
-                # amounts[0] = realized amounts (can be [] if nothing spent)
-                realized_list = amounts[0]
-                if isinstance(realized_list, list) and realized_list:
-                    for a in realized_list:
-                        if isinstance(a, dict):
-                            realizado += abs(float(a.get("aquantity", {}).get("floatingPoint", 0)))
-                # amounts[1] = budgeted amounts
-                budgeted_list = amounts[1]
-                if isinstance(budgeted_list, list) and budgeted_list:
-                    for a in budgeted_list:
-                        if isinstance(a, dict):
-                            orcado += abs(float(a.get("aquantity", {}).get("floatingPoint", 0)))
+            if isinstance(amounts, list) and amounts:
+                period = amounts[0]  # first (and usually only) period
+                if isinstance(period, list) and len(period) >= 2:
+                    realized_list = period[0]
+                    if isinstance(realized_list, list) and realized_list:
+                        for a in realized_list:
+                            if isinstance(a, dict):
+                                realizado += abs(float(a.get("aquantity", {}).get("floatingPoint", 0)))
+                    budgeted_list = period[1]
+                    if isinstance(budgeted_list, list) and budgeted_list:
+                        for a in budgeted_list:
+                            if isinstance(a, dict):
+                                orcado += abs(float(a.get("aquantity", {}).get("floatingPoint", 0)))
 
             if orcado <= 0:
                 continue
@@ -496,10 +497,12 @@ def _parse_budget_text(begin: str, end: str, month_label: str):
 
 
 @app.get("/api/top-expenses")
-def top_expenses(month: Optional[str] = None, limit: int = 10):
+def top_expenses(month: Optional[str] = None, limit: int = 10,
+                 category: Optional[str] = None):
     """Maiores gastos individuais do mês."""
     begin, end = month_bounds(month)
-    data = hledger("register", "expenses", "-b", begin, "-e", end)
+    query = f"expenses:{category}" if category else "expenses"
+    data = hledger("register", query, "-b", begin, "-e", end)
 
     txs = []
     if isinstance(data, list):
