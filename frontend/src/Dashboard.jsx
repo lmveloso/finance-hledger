@@ -1,4 +1,4 @@
-import React, { useState, useCallback, createContext, useContext } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { ArrowUpRight, ArrowDownRight, Wallet, AlertCircle, ChevronRight, ArrowLeft, PiggyBank, Loader2, ChevronLeft, CalendarDays, RefreshCw } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend } from 'recharts';
 import { useApi, fetchCategoryDetail } from './api.js';
@@ -497,6 +497,205 @@ function Orcamento() {
   );
 }
 
+// ── Transações ──────────────────────────────────────────────────────────
+function Transacoes() {
+  const { selectedMonth, refreshKey } = useMonth();
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [category, setCategory] = useState('');
+  const [page, setPage] = useState(0);
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  // Date range mode
+  const [rangeMode, setRangeMode] = useState('month'); // 'month' | 'range'
+  const [rangeStart, setRangeStart] = useState('');
+  const [rangeEnd, setRangeEnd] = useState('');
+
+  const limit = 50;
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(0);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(0); }, [selectedMonth, category, sortBy, sortOrder, rangeMode]);
+
+  // Build API URL
+  let path;
+  if (rangeMode === 'range' && rangeStart && rangeEnd) {
+    path = `/api/transactions?start=${rangeStart}&end=${rangeEnd}&limit=${limit}&offset=${page * limit}&sort=${sortBy}&order=${sortOrder}`;
+  } else {
+    path = `/api/transactions?month=${selectedMonth}&limit=${limit}&offset=${page * limit}&sort=${sortBy}&order=${sortOrder}`;
+  }
+  if (category) path += `&category=${encodeURIComponent(category)}`;
+  if (debouncedSearch) path += `&search=${encodeURIComponent(debouncedSearch)}`;
+
+  const { data, error, loading } = useApi(path, [path, refreshKey]);
+
+  // Fetch categories for the filter dropdown
+  const { data: catsData } = useApi(`/api/categories?month=${selectedMonth}&depth=2`, [selectedMonth, refreshKey]);
+  const categories = (catsData?.categorias || []).map(c => c.nome);
+
+  const txs = data?.transactions || [];
+  const total = data?.total || 0;
+  const totalPages = Math.ceil(total / limit);
+  const startIdx = page * limit + 1;
+  const endIdx = Math.min((page + 1) * limit, total);
+
+  const toggleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(o => o === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('desc');
+    }
+  };
+
+  const thStyle = {
+    textAlign: 'left', padding: '10px 8px', fontSize: 11, letterSpacing: '0.08em',
+    textTransform: 'uppercase', color: '#8a8275', borderBottom: '1px solid #3a3632',
+    cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
+  };
+  const tdStyle = {
+    padding: '12px 8px', fontSize: 13, borderBottom: '1px solid #3a3632', color: '#c4bcab',
+  };
+  const inputStyle = {
+    background: '#1a1815', border: '1px solid #3a3632', borderRadius: 3, color: '#e8e2d5',
+    padding: '8px 12px', fontSize: 13, fontFamily: 'Inter, sans-serif', outline: 'none',
+    width: '100%',
+  };
+  const selectStyle = { ...inputStyle, cursor: 'pointer' };
+
+  const SortIcon = ({ field }) => {
+    if (sortBy !== field) return <span style={{ color: '#4a4642', marginLeft: 4 }}>&#8693;</span>;
+    return <span style={{ color: '#d4a574', marginLeft: 4 }}>{sortOrder === 'asc' ? '↑' : '↓'}</span>;
+  };
+
+  return (
+    <div className="card">
+      <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 20 }}>
+        Transações
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div style={{ flex: '1 1 220px' }}>
+          <input
+            type="text"
+            placeholder="Buscar por descrição..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={inputStyle}
+          />
+        </div>
+        <div style={{ flex: '0 1 180px' }}>
+          <select value={category} onChange={e => { setCategory(e.target.value); setPage(0); }} style={selectStyle}>
+            <option value="">Todas categorias</option>
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button
+            className="sans"
+            onClick={() => setRangeMode(rangeMode === 'month' ? 'range' : 'month')}
+            style={{
+              ...navBtnStyle, fontSize: 11, padding: '6px 10px',
+              background: rangeMode === 'range' ? '#2a2724' : '#252220',
+            }}
+            title={rangeMode === 'month' ? 'Alternar para range de datas' : 'Voltar para mês único'}
+          >
+            {rangeMode === 'month' ? 'Mês' : 'Range'}
+          </button>
+        </div>
+      </div>
+
+      {/* Date range inputs */}
+      {rangeMode === 'range' && (
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+          <div style={{ flex: '0 1 150px' }}>
+            <input type="date" value={rangeStart} onChange={e => { setRangeStart(e.target.value); setPage(0); }} style={inputStyle} />
+          </div>
+          <div className="sans" style={{ color: '#8a8275', fontSize: 13, display: 'flex', alignItems: 'center' }}>até</div>
+          <div style={{ flex: '0 1 150px' }}>
+            <input type="date" value={rangeEnd} onChange={e => { setRangeEnd(e.target.value); setPage(0); }} style={inputStyle} />
+          </div>
+        </div>
+      )}
+
+      {error && <ErrorBox msg={error} />}
+
+      {loading ? <Spinner /> : txs.length === 0 ? (
+        <div className="sans" style={{ color: '#8a8275', fontSize: 13, padding: '20px 0' }}>
+          Nenhuma transação encontrada para os filtros selecionados.
+        </div>
+      ) : (
+        <>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={thStyle} onClick={() => toggleSort('date')}>
+                    Data <SortIcon field="date" />
+                  </th>
+                  <th style={thStyle}>Descrição</th>
+                  <th style={thStyle}>Categoria</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }} onClick={() => toggleSort('amount')}>
+                    <SortIcon field="amount" /> Valor
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {txs.map((tx, i) => (
+                  <tr key={i} style={{ transition: 'background 0.12s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#2a2724'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#8a8275', fontSize: 12 }}>{tx.data}</td>
+                    <td style={tdStyle}>{tx.descricao}</td>
+                    <td style={{ ...tdStyle, color: '#8a8275', fontSize: 12 }}>{tx.categoria}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600 }}>
+                      {BRLc(tx.valor)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: '1px solid #3a3632' }}>
+            <span className="sans" style={{ fontSize: 12, color: '#8a8275' }}>
+              {total > 0 ? `${startIdx}–${endIdx} de ${total}` : '0 resultados'}
+            </span>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button
+                className="sans"
+                onClick={() => setPage(p => Math.max(0, p - 1))}
+                disabled={page === 0}
+                style={{ ...navBtnStyle, opacity: page === 0 ? 0.3 : 1 }}
+              >
+                <ChevronLeft size={14} /> Anterior
+              </button>
+              <button
+                className="sans"
+                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                disabled={page >= totalPages - 1}
+                style={{ ...navBtnStyle, opacity: page >= totalPages - 1 ? 0.3 : 1 }}
+              >
+                Próxima <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Pull-to-refresh indicator ──────────────────────────────────────────
 function PullIndicator({ pullState, pullDistance }) {
   if (pullState === 'idle') return null;
@@ -601,7 +800,7 @@ function DashboardInner({ aba, setAba }) {
         </header>
 
         <nav style={{ display: 'flex', gap: 2, marginBottom: 24, borderBottom: '1px solid #3a3632', overflowX: 'auto' }}>
-          {['resumo', 'fluxo', 'orçamento'].map(t => (
+          {['resumo', 'fluxo', 'orçamento', 'transações'].map(t => (
             <button key={t} className={`tab ${aba === t ? 'active' : ''}`} onClick={() => setAba(t)}>{t}</button>
           ))}
         </nav>
@@ -609,6 +808,7 @@ function DashboardInner({ aba, setAba }) {
         {aba === 'resumo' && <Resumo />}
         {aba === 'fluxo' && <Fluxo />}
         {aba === 'orçamento' && <Orcamento />}
+        {aba === 'transações' && <Transacoes />}
 
         <footer className="sans" style={{ marginTop: 48, paddingTop: 20, borderTop: '1px solid #3a3632', fontSize: 11, color: '#6a6258', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
           hledger · via Tailscale

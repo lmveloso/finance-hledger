@@ -525,6 +525,88 @@ def top_expenses(month: Optional[str] = None, limit: int = 10):
             "transacoes": txs[:limit]}
 
 
+@app.get("/api/transactions")
+def transactions(
+    month: Optional[str] = None,
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    sort: str = "date",
+    order: str = "desc",
+):
+    """Lista paginada de transações com filtros por categoria, busca e range."""
+    # Determinar período
+    if start and end:
+        begin, period_end = start, end
+    elif month:
+        begin, period_end = month_bounds(month)
+    else:
+        begin, period_end = month_bounds()
+
+    # Construir args do hledger register
+    cmd_args = ["register"]
+
+    # Filtro por categoria
+    if category:
+        cmd_args.append(f"expenses:{category}")
+    else:
+        cmd_args.append("expenses")
+
+    cmd_args.extend(["-b", begin, "-e", period_end])
+
+    # Usar output JSON
+    data = hledger(*cmd_args)
+
+    txs = []
+    if isinstance(data, list):
+        for t in data:
+            if not (isinstance(t, list) and len(t) >= 4):
+                continue
+            tx_date = t[0] if isinstance(t[0], str) else ""
+            tx_desc = t[2] if isinstance(t[2], str) else ""
+
+            # Filtro de busca (case-insensitive na descrição)
+            if search and search.lower() not in tx_desc.lower():
+                continue
+
+            posting = t[3] if isinstance(t[3], dict) else {}
+            account = posting.get("paccount", "")
+            pamount = posting.get("pamount", [])
+            amount = 0.0
+            if isinstance(pamount, list) and pamount:
+                a = pamount[0]
+                if isinstance(a, dict):
+                    amount = abs(float(a.get("aquantity", {}).get("floatingPoint", 0)))
+
+            txs.append({
+                "data": tx_date,
+                "descricao": tx_desc,
+                "conta": account,
+                "categoria": account.split(":")[-1] if account else "",
+                "valor": round(amount, 2),
+            })
+
+    # Ordenação
+    reverse = order.lower() == "desc"
+    if sort == "amount":
+        txs.sort(key=lambda x: x["valor"], reverse=reverse)
+    else:  # default: date
+        txs.sort(key=lambda x: x["data"], reverse=reverse)
+
+    total = len(txs)
+    paginated = txs[offset:offset + limit]
+
+    return {
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "transactions": paginated,
+    }
+
+
 @app.get("/api/savings-goal")
 def savings_goal(monthly_target: float = 5000, annual_target: float = 60000):
     """Progresso de meta de economia (mensal + anual)."""
