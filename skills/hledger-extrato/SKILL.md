@@ -14,6 +14,16 @@ triggers:
 
 Depende do skill **hledger-base** para padroes de transacao, validacao e pitfalls.
 
+## Inicializacao (OBRIGATORIO — primeira acao)
+
+Antes de QUALQUER chamada MCP ou escrita de arquivo:
+
+1. Executar no terminal: `echo $LEDGER_FILE`
+2. Se vazio, **PERGUNTAR ao usuario** o path do main.journal
+3. Usar o path absoluto resultante em todas as chamadas MCP
+
+MCP tools NAO expandem `~` nem variaveis — passar sempre o path literal.
+
 ## Workflow
 
 1. **Ler** o extrato (JSON, PDF, CSV, imagem)

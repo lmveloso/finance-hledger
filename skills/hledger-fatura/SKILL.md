@@ -14,6 +14,16 @@ triggers:
 
 Depende do skill **hledger-base** para padroes de transacao, validacao e pitfalls.
 
+## Inicializacao (OBRIGATORIO — primeira acao)
+
+Antes de QUALQUER chamada MCP ou escrita de arquivo:
+
+1. Executar no terminal: `echo $LEDGER_FILE`
+2. Se vazio, **PERGUNTAR ao usuario** o path do main.journal
+3. Usar o path absoluto resultante em todas as chamadas MCP
+
+MCP tools NAO expandem `~` nem variaveis — passar sempre o path literal.
+
 ## Padrao "Fatura Anterior" (CRITICO)
 
 Toda fatura tem **tres entradas de abertura** para bootstrap correto do saldo:

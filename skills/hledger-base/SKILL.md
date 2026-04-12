@@ -11,14 +11,22 @@ triggers:
 
 # hledger — Referencia Base
 
+## Inicializacao (OBRIGATORIO — primeira acao)
+
+Antes de QUALQUER chamada MCP ou escrita de arquivo, resolver o path do journal:
+
+1. Executar no terminal: `echo $LEDGER_FILE`
+2. Se o resultado for vazio ou inexistente, **PERGUNTAR ao usuario**
+3. Usar o path resultante como `file` em **TODAS** as chamadas MCP
+
+**NUNCA** assumir, adivinhar ou usar paths relativos.
+MCP tools NAO expandem `~` nem variaveis de ambiente — passar sempre o path absoluto literal.
+
 ## Visao geral
 
 - **hledger 1.52** — plain-text double-entry accounting CLI
 - **hledger-mcp** — MCP server que expoe comandos hledger como tools
 - **Moeda**: BRL (Brazilian Real)
-- **Journal**: caminho definido pela variavel de ambiente `$LEDGER_FILE` (ex: `/home/user/finances/main.journal`)
-
-> O agente deduz o path do journal a partir de `$LEDGER_FILE`. Se nao estiver definido, perguntar ao usuario.
 
 ## MCP Tools — usar SEMPRE
 
@@ -227,3 +235,7 @@ O mapeamento payee→conta vive em `payee-categories.json` junto a este skill (`
 ### Escrita de arquivos
 - Usar path absoluto para MCP (`/home/...`, nunca `~/...`)
 - NAO usar heredoc (`cat << EOF`) no terminal — pode poluir arquivo
+
+### Path hardcoded
+NUNCA copiar o path do journal de memoria de sessao anterior. Sempre resolver
+`$LEDGER_FILE` no inicio de cada sessao. O path pode mudar entre maquinas/usuarios.
