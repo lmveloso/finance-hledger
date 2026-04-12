@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 const API = import.meta.env.VITE_API_URL || '';  // same-origin em prod
 
-/** Hook simples pra fetch com loading/error. */
+/** Hook simples pra fetch com loading/error. Suporta params dinâmicos. */
 export function useApi(path, deps = []) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);

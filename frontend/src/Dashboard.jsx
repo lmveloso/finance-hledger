@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ArrowUpRight, ArrowDownRight, Wallet, AlertCircle, ChevronRight, ArrowLeft, PiggyBank, Loader2 } from 'lucide-react';
+import React, { useState, useCallback, createContext, useContext } from 'react';
+import { ArrowUpRight, ArrowDownRight, Wallet, AlertCircle, ChevronRight, ArrowLeft, PiggyBank, Loader2, ChevronLeft, CalendarDays } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend } from 'recharts';
 import { useApi, fetchCategoryDetail } from './api.js';
 import { CONFIG } from './config.js';
@@ -8,6 +8,146 @@ const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currenc
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const pct = (n) => `${Math.round(n)}%`;
 const color = (i) => CONFIG.categoryColors[i % CONFIG.categoryColors.length];
+
+// ── Month context ──────────────────────────────────────────────────────
+function getCurrentMonth() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function formatMonthBR(ym) {
+  const [y, m] = ym.split('-');
+  const d = new Date(parseInt(y), parseInt(m) - 1, 1);
+  // Capitalize first letter
+  const str = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function addMonth(ym, delta) {
+  let [y, m] = ym.split('-').map(Number);
+  m += delta;
+  if (m > 12) { m = 1; y++; }
+  if (m < 1) { m = 12; y--; }
+  return `${y}-${String(m).padStart(2, '0')}`;
+}
+
+function lastYearMonth(ym) {
+  const [y, m] = ym.split('-');
+  return `${parseInt(y) - 1}-${m}`;
+}
+
+const MonthContext = createContext();
+
+function MonthProvider({ children }) {
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+  const [compareMode, setCompareMode] = useState(false);
+
+  const goPrev = useCallback(() => setSelectedMonth(m => addMonth(m, -1)), []);
+  const goNext = useCallback(() => setSelectedMonth(m => addMonth(m, 1)), []);
+  const goToday = useCallback(() => setSelectedMonth(getCurrentMonth()), []);
+
+  const isCurrentMonth = selectedMonth === getCurrentMonth();
+
+  return (
+    <MonthContext.Provider value={{
+      selectedMonth, setSelectedMonth,
+      compareMode, setCompareMode,
+      goPrev, goNext, goToday, isCurrentMonth,
+    }}>
+      {children}
+    </MonthContext.Provider>
+  );
+}
+
+function useMonth() {
+  return useContext(MonthContext);
+}
+
+// ── MonthPicker ────────────────────────────────────────────────────────
+function MonthPicker() {
+  const { selectedMonth, compareMode, setCompareMode, goPrev, goNext, goToday, isCurrentMonth } = useMonth();
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <button
+          onClick={goPrev}
+          className="sans"
+          style={navBtnStyle}
+          title="Mês anterior"
+        >
+          <ChevronLeft size={16} />
+        </button>
+        <span className="serif" style={{ fontSize: 18, fontWeight: 600, minWidth: 160, textAlign: 'center', color: '#e8e2d5' }}>
+          {formatMonthBR(selectedMonth)}
+        </span>
+        <button
+          onClick={goNext}
+          className="sans"
+          style={navBtnStyle}
+          title="Próximo mês"
+        >
+          <ChevronRight size={16} />
+        </button>
+      </div>
+      {!isCurrentMonth && (
+        <button
+          onClick={goToday}
+          className="sans"
+          style={{
+            ...navBtnStyle,
+            fontSize: 11,
+            padding: '4px 10px',
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+          }}
+          title="Voltar ao mês atual"
+        >
+          <CalendarDays size={12} style={{ marginRight: 4 }} /> Hoje
+        </button>
+      )}
+      <label className="sans" style={{
+        display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+        fontSize: 12, color: '#8a8275', marginLeft: 8,
+      }}>
+        <input
+          type="checkbox"
+          checked={compareMode}
+          onChange={(e) => setCompareMode(e.target.checked)}
+          style={{ accentColor: '#d4a574' }}
+        />
+        vs ano anterior
+      </label>
+    </div>
+  );
+}
+
+const navBtnStyle = {
+  background: '#252220',
+  border: '1px solid #3a3632',
+  borderRadius: 3,
+  color: '#d4a574',
+  cursor: 'pointer',
+  padding: '4px 6px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'background 0.12s',
+};
+
+// ── Delta badge ────────────────────────────────────────────────────────
+function DeltaBadge({ current, previous }) {
+  if (previous == null || previous === 0) return null;
+  const delta = ((current - previous) / Math.abs(previous)) * 100;
+  const isUp = delta >= 0;
+  const color = isUp ? '#8b9d7a' : '#c97b5c';
+  return (
+    <span className="sans" style={{
+      fontSize: 11, color, marginLeft: 6, whiteSpace: 'nowrap',
+    }}>
+      {isUp ? '+' : ''}{Math.round(delta)}%
+    </span>
+  );
+}
 
 // ── UI atoms ────────────────────────────────────────────────────────────
 const Spinner = () => (
@@ -27,14 +167,15 @@ const ErrorBox = ({ msg }) => (
   </div>
 );
 
-function KPI({ label, valor, icon, cor, destaque, loading }) {
+function KPI({ label, valor, icon, cor, destaque, loading, delta }) {
   return (
     <div className="card" style={{ borderLeft: destaque ? `3px solid ${cor}` : '1px solid #3a3632' }}>
       <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ color: cor }}>{icon}</span> {label}
       </div>
-      <div className="serif" style={{ fontSize: destaque ? 38 : 30, fontWeight: 600, color: destaque ? cor : '#e8e2d5', letterSpacing: '-0.02em', lineHeight: 1 }}>
+      <div className="serif" style={{ fontSize: destaque ? 38 : 30, fontWeight: 600, color: destaque ? cor : '#e8e2d5', letterSpacing: '-0.02em', lineHeight: 1, display: 'flex', alignItems: 'baseline', flexWrap: 'wrap' }}>
         {loading ? '···' : BRL(valor)}
+        {delta}
       </div>
     </div>
   );
@@ -42,11 +183,19 @@ function KPI({ label, valor, icon, cor, destaque, loading }) {
 
 // ── Resumo ──────────────────────────────────────────────────────────────
 function Resumo() {
-  const { data: summary, error: e1, loading: l1 } = useApi('/api/summary', []);
-  const { data: cats, error: e2, loading: l2 } = useApi('/api/categories?depth=2', []);
-  const { data: top, error: e3, loading: l3 } = useApi('/api/top-expenses?limit=5', []);
+  const { selectedMonth, compareMode } = useMonth();
+
+  const { data: summary, error: e1, loading: l1 } = useApi(`/api/summary?month=${selectedMonth}`, [selectedMonth]);
+  const { data: cats, error: e2, loading: l2 } = useApi(`/api/categories?month=${selectedMonth}&depth=2`, [selectedMonth]);
+  const { data: top, error: e3, loading: l3 } = useApi(`/api/top-expenses?month=${selectedMonth}&limit=5`, [selectedMonth]);
   const { data: goal, loading: l4 } = useApi(
     `/api/savings-goal?monthly_target=${CONFIG.savingsGoal.monthly}&annual_target=${CONFIG.savingsGoal.annual}`, []
+  );
+
+  // Comparison data (same month last year)
+  const compMonth = lastYearMonth(selectedMonth);
+  const { data: compSummary } = useApi(
+    `/api/summary?month=${compMonth}`, [compMonth]
   );
 
   const [detalhe, setDetalhe] = useState(null);
@@ -60,7 +209,7 @@ function Resumo() {
   const openCat = async (cat) => {
     setLoadingDet(true);
     try {
-      const r = await fetchCategoryDetail(cat.nome);
+      const r = await fetchCategoryDetail(cat.nome, selectedMonth);
       setDetalhe({ ...cat, subcats: r.subcategorias || [] });
     } catch (e) {
       setDetalhe({ ...cat, subcats: [], error: e.message });
@@ -70,9 +219,31 @@ function Resumo() {
   return (
     <div className="grid">
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-        <KPI label="Receitas" valor={summary?.receitas} icon={<ArrowUpRight size={15} />} cor="#8b9d7a" loading={l1} />
-        <KPI label="Despesas" valor={summary?.despesas} icon={<ArrowDownRight size={15} />} cor="#c97b5c" loading={l1} />
-        <KPI label="Saldo do mês" valor={summary?.saldo} icon={<Wallet size={15} />} cor="#d4a574" destaque loading={l1} />
+        <KPI
+          label="Receitas"
+          valor={summary?.receitas}
+          icon={<ArrowUpRight size={15} />}
+          cor="#8b9d7a"
+          loading={l1}
+          delta={compareMode && compSummary ? <DeltaBadge current={summary?.receitas} previous={compSummary?.receitas} /> : null}
+        />
+        <KPI
+          label="Despesas"
+          valor={summary?.despesas}
+          icon={<ArrowDownRight size={15} />}
+          cor="#c97b5c"
+          loading={l1}
+          delta={compareMode && compSummary ? <DeltaBadge current={summary?.despesas} previous={compSummary?.despesas} /> : null}
+        />
+        <KPI
+          label="Saldo do mês"
+          valor={summary?.saldo}
+          icon={<Wallet size={15} />}
+          cor="#d4a574"
+          destaque
+          loading={l1}
+          delta={compareMode && compSummary ? <DeltaBadge current={summary?.saldo} previous={compSummary?.saldo} /> : null}
+        />
       </div>
 
       {/* Meta de economia */}
@@ -280,7 +451,8 @@ function BudgetBar({ nome, orcado, realizado, percentual, isTotal }) {
 }
 
 function Orcamento() {
-  const { data, error, loading } = useApi('/api/budget', []);
+  const { selectedMonth } = useMonth();
+  const { data, error, loading } = useApi(`/api/budget?month=${selectedMonth}`, [selectedMonth]);
   if (loading) return <Spinner />;
   if (error) return <ErrorBox msg={error} />;
 
@@ -326,6 +498,15 @@ function Orcamento() {
 export default function Dashboard() {
   const [aba, setAba] = useState('resumo');
   return (
+    <MonthProvider>
+      <DashboardInner aba={aba} setAba={setAba} />
+    </MonthProvider>
+  );
+}
+
+function DashboardInner({ aba, setAba }) {
+  const { selectedMonth } = useMonth();
+  return (
     <div style={{ minHeight: '100vh', background: '#1a1815', color: '#e8e2d5', fontFamily: 'Georgia, serif' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap');
@@ -346,12 +527,17 @@ export default function Dashboard() {
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 20px' }}>
         <header style={{ marginBottom: 36, borderBottom: '1px solid #3a3632', paddingBottom: 20 }}>
-          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.2em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 8 }}>
-            {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })} · Visão familiar
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+            <div>
+              <div className="sans" style={{ fontSize: 11, letterSpacing: '0.2em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 8 }}>
+                {formatMonthBR(selectedMonth)} · Visão familiar
+              </div>
+              <h1 className="serif" style={{ fontSize: 'clamp(34px, 6vw, 58px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1 }}>
+                Finanças <em style={{ fontWeight: 400, color: '#d4a574' }}>Pessoais</em>
+              </h1>
+            </div>
+            <MonthPicker />
           </div>
-          <h1 className="serif" style={{ fontSize: 'clamp(34px, 6vw, 58px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1 }}>
-            Finanças <em style={{ fontWeight: 400, color: '#d4a574' }}>Pessoais</em>
-          </h1>
         </header>
 
         <nav style={{ display: 'flex', gap: 2, marginBottom: 24, borderBottom: '1px solid #3a3632', overflowX: 'auto' }}>
