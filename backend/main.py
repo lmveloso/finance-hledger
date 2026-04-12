@@ -685,6 +685,23 @@ def savings_goal(monthly_target: float = 5000, annual_target: float = 60000):
 if FRONTEND_DIST.exists():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
 
+    # PWA files served explicitly before the catch-all so they don't return index.html
+    @app.get("/manifest.json")
+    def manifest():
+        return FileResponse(FRONTEND_DIST / "manifest.json", media_type="application/json")
+
+    @app.get("/sw.js")
+    def service_worker():
+        return FileResponse(FRONTEND_DIST / "sw.js", media_type="application/javascript")
+
+    @app.get("/icon-192.png")
+    def icon_192():
+        return FileResponse(FRONTEND_DIST / "icon-192.png", media_type="image/png")
+
+    @app.get("/icon-512.png")
+    def icon_512():
+        return FileResponse(FRONTEND_DIST / "icon-512.png", media_type="image/png")
+
     @app.get("/{full_path:path}")
     def spa(full_path: str):
         # API routes are handled above; qualquer outro path cai aqui.
