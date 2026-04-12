@@ -219,18 +219,84 @@ function Fluxo() {
 }
 
 // ── Orçamento ───────────────────────────────────────────────────────────
+function BudgetBar({ nome, orcado, realizado, percentual, isTotal }) {
+  const fillPct = orcado > 0 ? Math.min((realizado / orcado) * 100, 100) : 0;
+  const overBudget = percentual > 100;
+  const barColor = overBudget ? '#c97b5c' : '#8b9d7a';
+  const barBg = '#3a3632';
+
+  return (
+    <div style={{ marginBottom: isTotal ? 0 : 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+        <span className="sans" style={{
+          fontSize: isTotal ? 14 : 13,
+          color: isTotal ? '#e8e2d5' : '#c4bcab',
+          fontWeight: isTotal ? 600 : 400,
+        }}>
+          {nome}
+        </span>
+        <span className="sans" style={{ fontSize: 13, color: '#8a8275', whiteSpace: 'nowrap', marginLeft: 12 }}>
+          {BRLc(realizado)} / {BRLc(orcado)}{' '}
+          <span style={{ color: barColor, fontWeight: 600 }}>({pct(percentual)})</span>
+        </span>
+      </div>
+      <div style={{
+        height: isTotal ? 10 : 6,
+        background: barBg,
+        borderRadius: 3,
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${fillPct}%`,
+          background: barColor,
+          borderRadius: 3,
+          transition: 'width 0.3s ease',
+        }} />
+      </div>
+    </div>
+  );
+}
+
 function Orcamento() {
   const { data, error, loading } = useApi('/api/budget', []);
   if (loading) return <Spinner />;
   if (error) return <ErrorBox msg={error} />;
+
+  const categorias = (data?.categorias || [])
+    .filter(c => c.orcado > 0)
+    .sort((a, b) => b.percentual - a.percentual);
+  const total = data?.total;
+
   return (
     <div className="card">
       <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 20 }}>Orçamento vs realizado</div>
-      <div className="sans" style={{ color: '#8a8275', fontSize: 13, marginBottom: 16 }}>
-        Saída bruta do <code style={{ color: '#d4a574' }}>hledger --budget</code>.
-        Defina transações periódicas (<code>~ monthly</code>) no seu .journal.
-      </div>
-      <pre style={{ color: '#c4bcab', fontFamily: 'ui-monospace, monospace', fontSize: 12, overflowX: 'auto', whiteSpace: 'pre', margin: 0 }}>{data?.raw || '(sem dados)'}</pre>
+
+      {total && (
+        <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid #3a3632' }}>
+          <BudgetBar
+            nome="Total"
+            orcado={total.orcado}
+            realizado={total.realizado}
+            percentual={total.percentual}
+            isTotal
+          />
+        </div>
+      )}
+
+      {categorias.length === 0 ? (
+        <div className="sans" style={{ color: '#8a8275', fontSize: 13 }}>
+          Nenhuma categoria com orçamento definido. Adicione transações periódicas (~ monthly) no seu .journal.
+        </div>
+      ) : categorias.map((c, i) => (
+        <BudgetBar
+          key={c.conta || i}
+          nome={c.nome}
+          orcado={c.orcado}
+          realizado={c.realizado}
+          percentual={c.percentual}
+        />
+      ))}
     </div>
   );
 }
