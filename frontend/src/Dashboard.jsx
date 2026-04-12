@@ -184,16 +184,36 @@ function Resumo() {
 
 // ── Fluxo ───────────────────────────────────────────────────────────────
 function Fluxo() {
-  // TODO: parsear /api/cashflow quando o shape estiver estável.
-  // Por ora, mostra um placeholder funcional.
+  const { data, error, loading } = useApi('/api/cashflow?months=12', []);
+  if (loading) return <Spinner />;
+  if (error) return <ErrorBox msg={error} />;
+
+  const meses = (data?.months || []).map(m => ({
+    ...m,
+    label: m.mes.slice(2), // "26-01"
+  }));
+
   return (
     <div className="card">
       <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 20 }}>Fluxo 12 meses</div>
-      <div className="sans" style={{ color: '#8a8275', fontSize: 13 }}>
-        Esta view consome <code style={{ color: '#d4a574' }}>/api/cashflow</code>.
-        Estruture assim no parser assim que tiver alguns meses de dados:
-        cada mês vira <code>{'{ mes, receitas, despesas }'}</code>.
+      <div style={{ display: 'flex', gap: 20, marginBottom: 16 }}>
+        <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 10, height: 10, background: '#8b9d7a', display: 'inline-block' }} /> Receitas
+        </span>
+        <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 10, height: 10, background: '#c97b5c', display: 'inline-block' }} /> Despesas
+        </span>
       </div>
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart data={meses} barGap={2}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#3a3632" />
+          <XAxis dataKey="label" tick={{ fill: '#8a8275', fontSize: 12, fontFamily: 'Inter, sans-serif' }} axisLine={{ stroke: '#3a3632' }} tickLine={false} />
+          <YAxis tick={{ fill: '#8a8275', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => BRL(v)} width={72} />
+          <Tooltip contentStyle={{ background: '#1a1815', border: '1px solid #3a3632', borderRadius: 2, fontFamily: 'Inter', fontSize: 12 }} formatter={(v) => BRL(v)} />
+          <Bar dataKey="receitas" fill="#8b9d7a" radius={[2, 2, 0, 0]} name="Receitas" />
+          <Bar dataKey="despesas" fill="#c97b5c" radius={[2, 2, 0, 0]} name="Despesas" />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }
