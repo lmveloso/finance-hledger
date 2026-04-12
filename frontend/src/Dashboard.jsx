@@ -503,6 +503,7 @@ function Transacoes() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [category, setCategory] = useState('');
+  const [selectedTags, setSelectedTags] = useState([]);
   const [page, setPage] = useState(0);
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -523,7 +524,7 @@ function Transacoes() {
   }, [search]);
 
   // Reset page when filters change
-  useEffect(() => { setPage(0); }, [selectedMonth, category, sortBy, sortOrder, rangeMode]);
+  useEffect(() => { setPage(0); }, [selectedMonth, category, sortBy, sortOrder, rangeMode, selectedTags]);
 
   // Build API URL
   let path;
@@ -534,12 +535,17 @@ function Transacoes() {
   }
   if (category) path += `&category=${encodeURIComponent(category)}`;
   if (debouncedSearch) path += `&search=${encodeURIComponent(debouncedSearch)}`;
+  selectedTags.forEach(t => { path += `&tag=${encodeURIComponent(t)}`; });
 
   const { data, error, loading } = useApi(path, [path, refreshKey]);
 
   // Fetch categories for the filter dropdown
   const { data: catsData } = useApi(`/api/categories?month=${selectedMonth}&depth=2`, [selectedMonth, refreshKey]);
   const categories = (catsData?.categorias || []).map(c => c.nome);
+
+  // Fetch tags
+  const { data: tagsData } = useApi('/api/tags', [refreshKey]);
+  const allTags = tagsData?.tags || [];
 
   const txs = data?.transactions || [];
   const total = data?.total || 0;
@@ -554,6 +560,14 @@ function Transacoes() {
       setSortBy(field);
       setSortOrder('desc');
     }
+  };
+
+  const toggleTag = (tagName) => {
+    setSelectedTags(prev =>
+      prev.includes(tagName)
+        ? prev.filter(t => t !== tagName)
+        : [...prev, tagName]
+    );
   };
 
   const thStyle = {
@@ -623,6 +637,68 @@ function Transacoes() {
           <div className="sans" style={{ color: '#8a8275', fontSize: 13, display: 'flex', alignItems: 'center' }}>até</div>
           <div style={{ flex: '0 1 150px' }}>
             <input type="date" value={rangeEnd} onChange={e => { setRangeEnd(e.target.value); setPage(0); }} style={inputStyle} />
+          </div>
+        </div>
+      )}
+
+      {/* Tags filter */}
+      {allTags.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div className="sans" style={{ fontSize: 11, color: '#8a8275', marginBottom: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+            Tags
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {allTags.map(t => {
+              const isActive = selectedTags.includes(t.tag);
+              return (
+                <button
+                  key={t.tag}
+                  onClick={() => toggleTag(t.tag)}
+                  className="sans"
+                  style={{
+                    background: isActive ? '#3a3632' : '#252220',
+                    border: `1px solid ${isActive ? '#d4a574' : '#3a3632'}`,
+                    borderRadius: 12,
+                    color: isActive ? '#d4a574' : '#c4bcab',
+                    padding: '4px 12px',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    transition: 'all 0.12s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  {t.tag}
+                  <span style={{
+                    background: isActive ? '#d4a574' : '#3a3632',
+                    color: isActive ? '#1a1815' : '#8a8275',
+                    borderRadius: 8,
+                    padding: '0 6px',
+                    fontSize: 10,
+                    fontWeight: 600,
+                  }}>
+                    {t.count}
+                  </span>
+                </button>
+              );
+            })}
+            {selectedTags.length > 0 && (
+              <button
+                onClick={() => setSelectedTags([])}
+                className="sans"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#c97b5c',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                }}
+              >
+                Limpar filtros
+              </button>
+            )}
           </div>
         </div>
       )}
