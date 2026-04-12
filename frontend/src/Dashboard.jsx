@@ -186,6 +186,7 @@ function KPI({ label, valor, icon, cor, destaque, loading, delta }) {
 // ── Resumo ──────────────────────────────────────────────────────────────
 function Resumo() {
   const { selectedMonth, compareMode, refreshKey } = useMonth();
+  const { goToTransactions } = useNav();
 
   const { data: summary, error: e1, loading: l1 } = useApi(`/api/summary?month=${selectedMonth}`, [selectedMonth, refreshKey]);
   const { data: cats, error: e2, loading: l2 } = useApi(`/api/categories?month=${selectedMonth}&depth=2`, [selectedMonth, refreshKey]);
@@ -202,6 +203,22 @@ function Resumo() {
 
   const [detalhe, setDetalhe] = useState(null);
   const [loadingDet, setLoadingDet] = useState(false);
+  const [catTopExpenses, setCatTopExpenses] = useState(null);
+  const [loadingCatTop, setLoadingCatTop] = useState(false);
+
+  // Fetch top expenses filtered by drilled-down category
+  useEffect(() => {
+    if (!detalhe) { setCatTopExpenses(null); return; }
+    let cancelled = false;
+    setLoadingCatTop(true);
+    const API = import.meta.env.VITE_API_URL || '';
+    fetch(`${API}/api/top-expenses?month=${selectedMonth}&limit=20&category=${encodeURIComponent(detalhe.nome)}`)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(d => { if (!cancelled) setCatTopExpenses(d); })
+      .catch(() => { if (!cancelled) setCatTopExpenses(null); })
+      .finally(() => { if (!cancelled) setLoadingCatTop(false); });
+    return () => { cancelled = true; };
+  }, [detalhe, selectedMonth, refreshKey]);
 
   const err = e1 || e2 || e3;
   if (err) return <ErrorBox msg={err} />;
@@ -339,16 +356,57 @@ function Resumo() {
         </div>
 
         <div className="card">
-          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>Maiores gastos</div>
-          {l3 ? <Spinner /> : (top?.transacoes || []).map((g, i, arr) => (
-            <div key={i} style={{ padding: '14px 0', borderBottom: i < arr.length - 1 ? '1px solid #3a3632' : 'none' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-                <span className="serif" style={{ fontSize: 15 }}>{g.descricao}</span>
-                <span className="serif" style={{ fontSize: 16, color: '#d4a574', whiteSpace: 'nowrap' }}>{BRL(g.valor)}</span>
-              </div>
-              <div className="sans" style={{ fontSize: 11, color: '#8a8275', marginTop: 2 }}>{g.categoria} · {g.data}</div>
-            </div>
-          ))}
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>
+            {detalhe ? `Maiores gastos · ${detalhe.nome}` : 'Maiores gastos'}
+          </div>
+          {(() => {
+            const isLoading = detalhe ? loadingCatTop : l3;
+            const transactions = detalhe
+              ? (catTopExpenses?.transacoes || [])
+              : (top?.transacoes || []);
+            const displayed = transactions.slice(0, 5);
+            const hasMore = transactions.length > 5;
+            if (isLoading) return <Spinner />;
+            return (
+              <>
+                {displayed.map((g, i, arr) => (
+                  <div key={i} style={{ padding: '14px 0', borderBottom: i < arr.length - 1 ? '1px solid #3a3632' : 'none' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                      <span className="serif" style={{ fontSize: 15 }}>{g.descricao}</span>
+                      <span className="serif" style={{ fontSize: 16, color: '#d4a574', whiteSpace: 'nowrap' }}>{BRL(g.valor)}</span>
+                    </div>
+                    <div className="sans" style={{ fontSize: 11, color: '#8a8275', marginTop: 2 }}>{g.categoria} · {g.data}</div>
+                  </div>
+                ))}
+                {hasMore && (
+                  <button
+                    onClick={() => goToTransactions(detalhe ? detalhe.nome : null)}
+                    className="sans"
+                    style={{
+                      background: 'none',
+                      border: '1px solid #3a3632',
+                      borderRadius: 3,
+                      color: '#d4a574',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      padding: '8px 12px',
+                      width: '100%',
+                      marginTop: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      transition: 'background 0.12s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#2a2724'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    Ver todas ({transactions.length}) <ChevronRight size={14} />
+                  </button>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
     </div>
@@ -500,6 +558,7 @@ function Orcamento() {
 // ── Transações ──────────────────────────────────────────────────────────
 function Transacoes() {
   const { selectedMonth, refreshKey } = useMonth();
+  const { navCategory, setNavCategory } = useNav();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [category, setCategory] = useState('');
@@ -513,6 +572,14 @@ function Transacoes() {
   const [rangeEnd, setRangeEnd] = useState('');
 
   const limit = 50;
+
+  // Apply navCategory from context when navigating from Resumo
+  useEffect(() => {
+    if (navCategory) {
+      setCategory(navCategory);
+      setNavCategory(null); // consume it
+    }
+  }, [navCategory, setNavCategory]);
 
   // Debounce search
   useEffect(() => {
@@ -816,10 +883,18 @@ function PullIndicator({ pullState, pullDistance }) {
   );
 }
 
+// ── Navigation context (for cross-tab navigation) ───────────────────────
+const NavContext = createContext();
+
+function useNav() {
+  return useContext(NavContext);
+}
+
 // ── Main ────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const [aba, setAba] = useState('resumo');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [navCategory, setNavCategory] = useState(null);
 
   const doRefresh = useCallback(() => {
     return new Promise(resolve => {
@@ -829,12 +904,19 @@ export default function Dashboard() {
     });
   }, []);
 
+  const goToTransactions = useCallback((category) => {
+    setNavCategory(category || null);
+    setAba('transações');
+  }, []);
+
   const { pullDistance, pullState } = usePullToRefresh(doRefresh, 80);
 
   return (
     <MonthProvider refreshKey={refreshKey}>
-      <PullIndicator pullState={pullState} pullDistance={pullDistance} />
-      <DashboardInner aba={aba} setAba={setAba} />
+      <NavContext.Provider value={{ goToTransactions, navCategory, setNavCategory }}>
+        <PullIndicator pullState={pullState} pullDistance={pullDistance} />
+        <DashboardInner aba={aba} setAba={setAba} />
+      </NavContext.Provider>
     </MonthProvider>
   );
 }
