@@ -2,8 +2,8 @@
 export const CONFIG = {
   // Metas de economia (em BRL)
   savingsGoal: {
-    monthly: 5000,
-    annual: 60000,
+    monthly: 11000,
+    annual: 120000,
   },
   // Orçamentos por categoria (só usado se você NÃO tiver budget no .journal ainda)
   // Quando ~periodic estiver configurado, o hledger retorna isso pelo endpoint /api/budget
