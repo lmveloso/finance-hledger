@@ -537,9 +537,9 @@ def tags():
 
     result = []
     for tag_name in tag_names:
-        # Contar transações com essa tag
-        count_raw = hledger("register", f"tag:{tag_name}", output_format="text")
-        count = len([l for l in count_raw.split("\n") if l.strip()])
+        # Contar transações com essa tag usando 'print' (1 bloco por transação)
+        count_raw = hledger("print", f"tag:{tag_name}", output_format="text")
+        count = len([l for l in count_raw.split("\n") if l.strip() and l[0:1].isdigit()])
         result.append({"tag": tag_name, "count": count})
 
     result.sort(key=lambda t: t["count"], reverse=True)
