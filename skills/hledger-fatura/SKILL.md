@@ -47,7 +47,7 @@ Toda fatura tem **tres entradas de abertura** para bootstrap correto do saldo:
 
 1. **Extrair** dados da fatura (PDF, CSV, imagem)
 2. **Verificar total**: somar todas as compras e confirmar com total declarado da fatura
-3. **Classificar** compras usando `skills/data/payee-categories.json`
+3. **Classificar** compras usando `skills/hledger-base/payee-categories.json`
 4. **Perguntar ao usuario** (em batch, antes de escrever):
    - Comercios desconhecidos / ambiguos
    - Qual conta bancaria pagou a fatura?
@@ -59,7 +59,7 @@ Toda fatura tem **tres entradas de abertura** para bootstrap correto do saldo:
 
 ## Classificacao
 
-1. Carregar `skills/data/payee-categories.json` do repositorio finance-hledger
+1. Carregar `skills/hledger-base/payee-categories.json`
 2. Match case-insensitive do nome do comercio nos `patterns`
 3. Se match e nao `ambiguous` → usar `account` e `tag`
 4. Se `ambiguous: true` ou sem match → adicionar a lista de perguntas
@@ -142,8 +142,8 @@ Se o pagamento da fatura anterior ocorreu ANTES da data de corte dos saldos inic
 ## Validacao
 
 ```
-hledger_check(file="<JOURNAL_DIR>/main.journal")
-hledger_balance(file="<JOURNAL_DIR>/main.journal", query="liabilities:cartao:xp-visa")
+hledger_check(file="$LEDGER_FILE")
+hledger_balance(file="$LEDGER_FILE", query="liabilities:cartao:xp-visa")
 ```
 
 O saldo deve ser **negativo** e igual ao total da fatura atual. Exemplo: fatura de R$ 8.500 → saldo `BRL -8500.00`.

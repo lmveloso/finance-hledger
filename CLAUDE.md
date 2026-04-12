@@ -72,6 +72,6 @@ This repo includes skills for AI agents to manage hledger journals in `skills/`:
 - `hledger-extrato` — Import bank statements (extrato de conta corrente/poupanca)
 - `hledger-fatura` — Import credit card invoices (fatura de cartao)
 
-Payee-to-account categorization data: `skills/data/payee-categories.json`
+Payee-to-account categorization data: `skills/hledger-base/payee-categories.json`
 
 Full setup guide: `docs/onboarding.md`

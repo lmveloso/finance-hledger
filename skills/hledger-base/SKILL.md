@@ -16,9 +16,9 @@ triggers:
 - **hledger 1.52** — plain-text double-entry accounting CLI
 - **hledger-mcp** — MCP server que expoe comandos hledger como tools
 - **Moeda**: BRL (Brazilian Real)
-- **Journal**: caminho definido pela variavel de ambiente `$LEDGER_FILE` ou configuracao MCP
+- **Journal**: caminho definido pela variavel de ambiente `$LEDGER_FILE` (ex: `/home/user/finances/main.journal`)
 
-> Antes do primeiro uso, confirme o caminho do journal com o usuario ou verifique a configuracao MCP.
+> O agente deduz o path do journal a partir de `$LEDGER_FILE`. Se nao estiver definido, perguntar ao usuario.
 
 ## MCP Tools — usar SEMPRE
 
@@ -149,15 +149,15 @@ Apos **qualquer** escrita no journal, executar na ordem:
 3. **Comparar** o saldo com o valor real do banco/extrato
 
 ```
-hledger_check(file="<JOURNAL_DIR>/main.journal")
-hledger_balance(file="<JOURNAL_DIR>/main.journal", query="<conta-afetada>")
+hledger_check(file="$LEDGER_FILE")
+hledger_balance(file="$LEDGER_FILE", query="<conta-afetada>")
 ```
 
 Se o saldo nao bater, investigar antes de adicionar ajuste.
 
 ## Categorizacao
 
-O mapeamento payee→conta vive em `skills/data/payee-categories.json` no repositorio finance-hledger. Ver skills hledger-extrato e hledger-fatura para instrucoes de uso.
+O mapeamento payee→conta vive em `payee-categories.json` junto a este skill (`skills/hledger-base/payee-categories.json`). Ver skills hledger-extrato e hledger-fatura para instrucoes de uso.
 
 ## hledger 1.52 — JSON Format
 

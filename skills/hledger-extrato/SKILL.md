@@ -19,7 +19,7 @@ Depende do skill **hledger-base** para padroes de transacao, validacao e pitfall
 1. **Ler** o extrato (JSON, PDF, CSV, imagem)
 2. **Parsear** transacoes (data, descricao, valor, sinal C/D)
 3. **Verificar** soma: saldo anterior + creditos - debitos = saldo final do banco
-4. **Classificar** cada transacao usando `skills/data/payee-categories.json`
+4. **Classificar** cada transacao usando `skills/hledger-base/payee-categories.json`
 5. **Perguntar** todos os itens ambiguos ao usuario de uma vez (batch)
 6. **Escrever** arquivo journal
 7. **Incluir** no main.journal (`include YYYY-MM-banco-conta.journal`)
@@ -77,7 +77,7 @@ Ler direto. Colunas tipicas: data, descricao, valor, saldo.
 
 ## Classificacao
 
-1. Carregar `skills/data/payee-categories.json` do repositorio finance-hledger
+1. Carregar `skills/hledger-base/payee-categories.json`
 2. Para cada transacao, buscar match case-insensitive do payee nos `patterns`
 3. Se match encontrado e `ambiguous` nao eh `true` → usar `account` e `tag` do JSON
 4. Se match encontrado e `ambiguous: true` → adicionar a lista de perguntas
@@ -176,8 +176,8 @@ Calcular: `saldo_final_banco - movimentacoes_do_mes`.
 Rodar protocolo de validacao do hledger-base:
 
 ```
-hledger_check(file="<JOURNAL_DIR>/main.journal")
-hledger_balance(file="<JOURNAL_DIR>/main.journal", query="assets:banco:caixa:corrente")
+hledger_check(file="$LEDGER_FILE")
+hledger_balance(file="$LEDGER_FILE", query="assets:banco:caixa:corrente")
 ```
 
 O saldo deve bater com o saldo final do extrato bancario.

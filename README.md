@@ -106,7 +106,7 @@ finance-hledger/
 │   ├── hledger-base/
 │   ├── hledger-extrato/
 │   ├── hledger-fatura/
-│   └── data/payee-categories.json
+│   └── hledger-base/payee-categories.json
 ├── docs/
 │   └── onboarding.md
 ├── docker-compose.yml (opcional)

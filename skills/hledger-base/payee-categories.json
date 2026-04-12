@@ -1,0 +1,1053 @@
+{
+  "version": "2026-04",
+  "description": "Mapeamento de payees para contas hledger e tipo orcamentario. Fonte unica de verdade para classificacao de despesas. Match de patterns eh case-insensitive substring.",
+  "entries": [
+    {
+      "patterns": ["Supermercado Rincao", "Rincao"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Parana Supermercados", "Parana Super"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Supermercado Master", "Master Supermercado"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Supermercado Mast"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Supermercado Mari"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Beal"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Copacol"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Nossa Casa"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Muffato", "Super Muffato"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado (Campo Mourao). Se contexto combustivel -> transporte:combustivel"
+    },
+    {
+      "patterns": ["Santa Cruz"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Festival Santa Felicidade", "Festval"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Mercado do Denis"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Mercado Itamaraty"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Supermercado Marilia"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Supermercado Santa Ma"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["A Laurino Alimentos"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["A Predileta"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Carreira"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "supermercado"
+    },
+    {
+      "patterns": ["Lourdes Lucena Da"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "leite (entrega direta recorrente)"
+    },
+    {
+      "patterns": ["Panificadora Rampazzo", "Rampazzo"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "padaria — classificado como supermercado (compras basicas)"
+    },
+    {
+      "patterns": ["Buiu Panificadora", "Buiu"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "padaria"
+    },
+    {
+      "patterns": ["Panificadora Santos", "Padaria Santos"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "padaria"
+    },
+    {
+      "patterns": ["Padaria e Confeitaria"],
+      "account": "expenses:alimentacao:supermercado",
+      "tag": "CUSTOS FIXOS",
+      "notes": "padaria"
+    },
+    {
+      "patterns": ["Ifood.com Agencia", "Ifood"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "delivery"
+    },
+    {
+      "patterns": ["Boni Sushi"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "restaurante japones"
+    },
+    {
+      "patterns": ["EBI Restaurante", "EBI"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "restaurante"
+    },
+    {
+      "patterns": ["Espetinhos Junior"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "espetinhos"
+    },
+    {
+      "patterns": ["KFC"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "fast food"
+    },
+    {
+      "patterns": ["Taco Bell", "Tacóbell"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "fast food"
+    },
+    {
+      "patterns": ["Gebon"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "sorveteria"
+    },
+    {
+      "patterns": ["D'Vicz Sorvetes", "Dvicz"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "sorvete"
+    },
+    {
+      "patterns": ["Oi Gelatos e Sorvetes", "Oi Gelatos"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "sorvete"
+    },
+    {
+      "patterns": ["Sorveteria D'Pauli", "D'Pauli"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "sorvete"
+    },
+    {
+      "patterns": ["MP*Rochinha Sorvetes"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "sorvete"
+    },
+    {
+      "patterns": ["Emporio do Portuga"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "restaurante"
+    },
+    {
+      "patterns": ["Marcos Churrascaria"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "churrascaria"
+    },
+    {
+      "patterns": ["Restaurante Surubim"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "restaurante"
+    },
+    {
+      "patterns": ["Casa do Camarao"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "restaurante"
+    },
+    {
+      "patterns": ["Anila Restaurante"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "restaurante"
+    },
+    {
+      "patterns": ["Armazem do Coco Caioba"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "restaurante"
+    },
+    {
+      "patterns": ["Carlinhos Lanches"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "lanchonete"
+    },
+    {
+      "patterns": ["Divinechief"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "restaurante"
+    },
+    {
+      "patterns": ["Bar AABB"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "bar do clube AABB — NAO classificar em lazer"
+    },
+    {
+      "patterns": ["Agnaldo Matheus"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "comida"
+    },
+    {
+      "patterns": ["Beatriz de Carvah"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "comida"
+    },
+    {
+      "patterns": ["Ines Barbosa"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "comida"
+    },
+    {
+      "patterns": ["Jeferson Aparecido"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "comida"
+    },
+    {
+      "patterns": ["Joao Guilherme Buc"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "comida de rua"
+    },
+    {
+      "patterns": ["K J Da Silva"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "comida"
+    },
+    {
+      "patterns": ["Lucas Cabral de Al"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "comida"
+    },
+    {
+      "patterns": ["Luciana dos Santos"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "comida"
+    },
+    {
+      "patterns": ["Lucianovazpinto"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "comida"
+    },
+    {
+      "patterns": ["Maria Elizete"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "comida"
+    },
+    {
+      "patterns": ["Rafaeldeassis"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "comida"
+    },
+    {
+      "patterns": ["Walter Fabiano"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "comida"
+    },
+    {
+      "patterns": ["MP*Madruga"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "restaurante/delivery"
+    },
+    {
+      "patterns": ["MP*Maria"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "restaurante/delivery"
+    },
+    {
+      "patterns": ["Joaovitor"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "restaurante"
+    },
+    {
+      "patterns": ["Distribuidora de"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "notes": "alimentacao"
+    },
+    {
+      "patterns": ["AUTO P PRA FRENTE", "POSTO TOMODAT", "Tatu conveniencia"],
+      "account": "expenses:alimentacao:conveniencia",
+      "tag": "PRAZERES",
+      "notes": "loja de conveniencia de auto posto — NAO combustivel"
+    },
+    {
+      "patterns": ["Tuna Pagamentos"],
+      "account": "expenses:alimentacao:restaurante",
+      "tag": "PRAZERES",
+      "ambiguous": true,
+      "notes": "gateway generico — confirmar contexto com usuario"
+    },
+    {
+      "patterns": ["Sanepar"],
+      "account": "expenses:moradia:agua",
+      "tag": "CUSTOS FIXOS",
+      "notes": "agua"
+    },
+    {
+      "patterns": ["Copel"],
+      "account": "expenses:moradia:luz",
+      "tag": "CUSTOS FIXOS",
+      "notes": "energia eletrica"
+    },
+    {
+      "patterns": ["Zaaz", "ZAAZ"],
+      "account": "expenses:moradia:internet",
+      "tag": "CUSTOS FIXOS",
+      "notes": "internet casa"
+    },
+    {
+      "patterns": ["Google Fiber", "Google One internet"],
+      "account": "expenses:moradia:internet",
+      "tag": "CUSTOS FIXOS",
+      "notes": "internet"
+    },
+    {
+      "patterns": ["Vivo", "Vivo Pr"],
+      "account": "expenses:moradia:telefone",
+      "tag": "CUSTOS FIXOS",
+      "notes": "celulares"
+    },
+    {
+      "patterns": ["Havan", "HAVAN"],
+      "account": "expenses:moradia:manutencao",
+      "tag": "CUSTOS FIXOS",
+      "notes": "manutencao casa"
+    },
+    {
+      "patterns": ["JIM.COM", "2 CORACOES"],
+      "account": "expenses:moradia:manutencao",
+      "tag": "CUSTOS FIXOS",
+      "notes": "manutencao (piscina)"
+    },
+    {
+      "patterns": ["PayPal Nabu Casa"],
+      "account": "expenses:moradia:manutencao",
+      "tag": "CUSTOS FIXOS",
+      "notes": "automacao residencial Home Assistant"
+    },
+    {
+      "patterns": ["Quaz Tudo"],
+      "account": "expenses:moradia:manutencao",
+      "tag": "CUSTOS FIXOS",
+      "notes": "manutencao casa"
+    },
+    {
+      "patterns": ["Campoplastic"],
+      "account": "expenses:moradia:manutencao",
+      "tag": "CUSTOS FIXOS",
+      "notes": "manutencao casa"
+    },
+    {
+      "patterns": ["Comercio de Tecidos"],
+      "account": "expenses:moradia:manutencao",
+      "tag": "CUSTOS FIXOS",
+      "notes": "manutencao casa"
+    },
+    {
+      "patterns": ["Pix Marketplace"],
+      "account": "expenses:moradia:manutencao",
+      "tag": "CUSTOS FIXOS",
+      "notes": "compras online para casa (manutencao)"
+    },
+    {
+      "patterns": ["Marcia Aparecida"],
+      "account": "expenses:moradia:manutencao",
+      "tag": "CUSTOS FIXOS",
+      "notes": "jardinagem"
+    },
+    {
+      "patterns": ["Nova Alfa Tecnologia", "NOVA ALFA"],
+      "account": "expenses:moradia:equipamentos",
+      "tag": "CONFORTO",
+      "notes": "equipamento novo"
+    },
+    {
+      "patterns": ["Placas solares"],
+      "account": "expenses:moradia:equipamentos",
+      "tag": "CONFORTO",
+      "notes": "equipamento novo"
+    },
+    {
+      "patterns": ["Bless"],
+      "account": "expenses:moradia:equipamentos",
+      "tag": "CONFORTO",
+      "notes": "equipamento"
+    },
+    {
+      "patterns": ["Shopping China"],
+      "account": "expenses:moradia:equipamentos",
+      "tag": "CONFORTO",
+      "notes": "equipamento"
+    },
+    {
+      "patterns": ["Jandira", "Pagamento Jandira"],
+      "account": "expenses:moradia:empregada",
+      "tag": "CONFORTO",
+      "notes": "empregada domestica"
+    },
+    {
+      "patterns": ["Josieli de Oliveira"],
+      "account": "expenses:moradia:empregada",
+      "tag": "CONFORTO",
+      "notes": "diarista"
+    },
+    {
+      "patterns": ["Mercado Livre"],
+      "account": "expenses:moradia:manutencao",
+      "tag": "CUSTOS FIXOS",
+      "ambiguous": true,
+      "notes": "Se conserto/reposicao -> moradia:manutencao (CUSTOS FIXOS). Se item novo -> moradia:equipamentos (CONFORTO)"
+    },
+    {
+      "patterns": ["Tatu Auto Posto"],
+      "account": "expenses:transporte:combustivel",
+      "tag": "CUSTOS FIXOS",
+      "notes": "combustivel. Se compra em conveniencia -> alimentacao:conveniencia"
+    },
+    {
+      "patterns": ["Autoposto Karina", "Auto Posto Karina"],
+      "account": "expenses:transporte:combustivel",
+      "tag": "CUSTOS FIXOS",
+      "notes": "combustivel"
+    },
+    {
+      "patterns": ["Auto Posto Anila"],
+      "account": "expenses:transporte:combustivel",
+      "tag": "CUSTOS FIXOS",
+      "notes": "combustivel"
+    },
+    {
+      "patterns": ["Auto Posto Fiedoli"],
+      "account": "expenses:transporte:combustivel",
+      "tag": "CUSTOS FIXOS",
+      "notes": "combustivel"
+    },
+    {
+      "patterns": ["Auto Posto Muffato"],
+      "account": "expenses:transporte:combustivel",
+      "tag": "CUSTOS FIXOS",
+      "notes": "combustivel"
+    },
+    {
+      "patterns": ["Edson Lopes"],
+      "account": "expenses:transporte:escolar",
+      "tag": "CUSTOS FIXOS",
+      "notes": "van escolar"
+    },
+    {
+      "patterns": ["Millani Baterias"],
+      "account": "expenses:transporte:manutencao",
+      "tag": "CUSTOS FIXOS",
+      "notes": "manutencao veiculo"
+    },
+    {
+      "patterns": ["Bicicletaria Lider", "Lider Byke"],
+      "account": "expenses:transporte:manutencao",
+      "tag": "CUSTOS FIXOS",
+      "notes": "manutencao bicicleta"
+    },
+    {
+      "patterns": ["IPVA"],
+      "account": "expenses:transporte:impostos",
+      "tag": "CUSTOS FIXOS",
+      "notes": "imposto veiculo"
+    },
+    {
+      "patterns": ["Licenciamento", "Detran", "Departamento de Transito"],
+      "account": "expenses:transporte:impostos",
+      "tag": "CUSTOS FIXOS",
+      "notes": "taxas veiculo"
+    },
+    {
+      "patterns": ["EPR Iguacu", "EPR Litoral Pioneiro", "Via Araucaria"],
+      "account": "expenses:transporte:pedagio",
+      "tag": "CUSTOS FIXOS",
+      "notes": "pedagio"
+    },
+    {
+      "patterns": ["Easyjet Mobilidade"],
+      "account": "expenses:transporte:aplicativo",
+      "tag": "CONFORTO",
+      "notes": "app mobilidade"
+    },
+    {
+      "patterns": ["Pagar Me"],
+      "account": "expenses:transporte:aplicativo",
+      "tag": "CONFORTO",
+      "notes": "app mobilidade (gateway)"
+    },
+    {
+      "patterns": ["Uber", "Uber Brasil"],
+      "account": "expenses:transporte:aplicativo",
+      "tag": "CONFORTO",
+      "notes": "app mobilidade"
+    },
+    {
+      "patterns": ["Estar Campo Mourao"],
+      "account": "expenses:transporte:estacionamento",
+      "tag": "CONFORTO",
+      "notes": "estacionamento rotativo"
+    },
+    {
+      "patterns": ["Unimed"],
+      "account": "expenses:saude:plano",
+      "tag": "CUSTOS FIXOS",
+      "notes": "plano de saude"
+    },
+    {
+      "patterns": ["Drogaria Popular"],
+      "account": "expenses:saude:farmacia",
+      "tag": "CUSTOS FIXOS",
+      "notes": "farmacia"
+    },
+    {
+      "patterns": ["Panvel"],
+      "account": "expenses:saude:farmacia",
+      "tag": "CUSTOS FIXOS",
+      "notes": "farmacia"
+    },
+    {
+      "patterns": ["Raia", "Droga Raia", "Raia141", "Raia1938"],
+      "account": "expenses:saude:farmacia",
+      "tag": "CUSTOS FIXOS",
+      "notes": "farmacia"
+    },
+    {
+      "patterns": ["Nissei", "Drogarias Nissei", "Farmacias Nissei"],
+      "account": "expenses:saude:farmacia",
+      "tag": "CUSTOS FIXOS",
+      "notes": "farmacia"
+    },
+    {
+      "patterns": ["Farmacia Sao Joao"],
+      "account": "expenses:saude:farmacia",
+      "tag": "CUSTOS FIXOS",
+      "notes": "farmacia"
+    },
+    {
+      "patterns": ["Farmacias Preco D", "Preco D"],
+      "account": "expenses:saude:farmacia",
+      "tag": "CUSTOS FIXOS",
+      "notes": "farmacia"
+    },
+    {
+      "patterns": ["Porto Rico"],
+      "account": "expenses:saude:farmacia",
+      "tag": "CUSTOS FIXOS",
+      "notes": "farmacia"
+    },
+    {
+      "patterns": ["Prestarfarma", "Prestar Farma"],
+      "account": "expenses:saude:farmacia",
+      "tag": "CUSTOS FIXOS",
+      "notes": "farmacia"
+    },
+    {
+      "patterns": ["Bioervas"],
+      "account": "expenses:saude:farmacia",
+      "tag": "CUSTOS FIXOS",
+      "notes": "farmacia"
+    },
+    {
+      "patterns": ["Farmarilquima"],
+      "account": "expenses:saude:farmacia",
+      "tag": "CUSTOS FIXOS",
+      "notes": "farmacia"
+    },
+    {
+      "patterns": ["Verde Mais Saude"],
+      "account": "expenses:saude:farmacia",
+      "tag": "CUSTOS FIXOS",
+      "notes": "farmacia"
+    },
+    {
+      "patterns": ["Farmacia Moreira Sales", "Farmacia Moreira Salles"],
+      "account": "expenses:saude:farmacia",
+      "tag": "CUSTOS FIXOS",
+      "notes": "farmacia"
+    },
+    {
+      "patterns": ["Ademar Cesar Ignac"],
+      "account": "expenses:saude:consulta",
+      "tag": "CONFORTO",
+      "notes": "consulta medica"
+    },
+    {
+      "patterns": ["Simone Maraus"],
+      "account": "expenses:saude:consulta",
+      "tag": "CONFORTO",
+      "notes": "consulta medica"
+    },
+    {
+      "patterns": ["TNLOPES", "TNLOPESSEVICOS"],
+      "account": "expenses:saude:consulta",
+      "tag": "CONFORTO",
+      "notes": "consulta medica"
+    },
+    {
+      "patterns": ["Clinica de Ortodontia"],
+      "account": "expenses:saude:consulta",
+      "tag": "CONFORTO",
+      "notes": "ortodontia"
+    },
+    {
+      "patterns": ["Psicóloga Ana Cecília", "Psicologa"],
+      "account": "expenses:saude:consulta",
+      "tag": "CONFORTO",
+      "notes": "psicologia"
+    },
+    {
+      "patterns": ["Academia", "F&R Fit", "F&r Fit Centro"],
+      "account": "expenses:saude:condicionamento",
+      "tag": "CONFORTO",
+      "notes": "academia/condicionamento fisico"
+    },
+    {
+      "patterns": ["Escola UP", "Colegio UP"],
+      "account": "expenses:educacao:mensalidade",
+      "tag": "CUSTOS FIXOS",
+      "notes": "mensalidade escolar"
+    },
+    {
+      "patterns": ["Centro Educacional", "Les Campos"],
+      "account": "expenses:educacao:mensalidade",
+      "tag": "CUSTOS FIXOS",
+      "notes": "mensalidade escolar"
+    },
+    {
+      "patterns": ["Copas Verdes", "COPAS VERDES"],
+      "account": "expenses:educacao:mensalidade",
+      "tag": "CUSTOS FIXOS",
+      "notes": "educacao"
+    },
+    {
+      "patterns": ["Papelaria Aquarela"],
+      "account": "expenses:educacao:material",
+      "tag": "CUSTOS FIXOS",
+      "notes": "material escolar"
+    },
+    {
+      "patterns": ["Claude.ai", "Claude Subscription"],
+      "account": "expenses:educacao:profissional",
+      "tag": "AUMENTAR RENDA",
+      "notes": "ferramenta IA"
+    },
+    {
+      "patterns": ["OpenRouter"],
+      "account": "expenses:educacao:profissional",
+      "tag": "AUMENTAR RENDA",
+      "notes": "ferramenta IA"
+    },
+    {
+      "patterns": ["Google One"],
+      "account": "expenses:educacao:profissional",
+      "tag": "AUMENTAR RENDA",
+      "notes": "armazenamento profissional"
+    },
+    {
+      "patterns": ["UDT Cursos"],
+      "account": "expenses:educacao:profissional",
+      "tag": "AUMENTAR RENDA",
+      "notes": "curso tecnico"
+    },
+    {
+      "patterns": ["Vartuous Language", "Virtuous Language"],
+      "account": "expenses:educacao:profissional",
+      "tag": "AUMENTAR RENDA",
+      "notes": "escola de idiomas"
+    },
+    {
+      "patterns": ["BLACK RIGOR"],
+      "account": "expenses:educacao:profissional",
+      "tag": "AUMENTAR RENDA",
+      "notes": "curso/treinamento"
+    },
+    {
+      "patterns": ["Claudia Ribeiro"],
+      "account": "expenses:educacao:outros",
+      "tag": "CUSTOS FIXOS",
+      "notes": "aula piano Ana Cecilia"
+    },
+    {
+      "patterns": ["Ponto Musical"],
+      "account": "expenses:educacao:outros",
+      "tag": "CUSTOS FIXOS",
+      "notes": "musica"
+    },
+    {
+      "patterns": ["Julimeire Silva"],
+      "account": "expenses:educacao:outros",
+      "tag": "CUSTOS FIXOS",
+      "ambiguous": true,
+      "notes": "desconhecido — professora? baba? Confirmar com usuario"
+    },
+    {
+      "patterns": ["Dizimo"],
+      "account": "expenses:doacao:dizimo",
+      "tag": "CUSTOS FIXOS",
+      "notes": "dizimo"
+    },
+    {
+      "patterns": ["Cancao Nova", "Fundacao Joao Paulo"],
+      "account": "expenses:doacao:comunidades",
+      "tag": "CUSTOS FIXOS",
+      "notes": "doacao comunidade religiosa"
+    },
+    {
+      "patterns": ["Wagner Garcia"],
+      "account": "expenses:doacao:comunidades",
+      "tag": "CUSTOS FIXOS",
+      "notes": "doacao igreja"
+    },
+    {
+      "patterns": ["Unafa", "UNAFA"],
+      "account": "expenses:doacao:encontros",
+      "tag": "CUSTOS FIXOS",
+      "notes": "uniao de familias"
+    },
+    {
+      "patterns": ["Encontrao"],
+      "account": "expenses:doacao:encontros",
+      "tag": "CUSTOS FIXOS",
+      "notes": "inscricao encontrao"
+    },
+    {
+      "patterns": ["Argentino Marcal", "Argentino"],
+      "account": "expenses:doacao:terceiros",
+      "tag": "CUSTOS FIXOS",
+      "notes": "ajuda ao pai (Argentino Marcal)"
+    },
+    {
+      "patterns": ["Alexsandra Bramant", "Alexandra Bramant", "Alexsandra"],
+      "account": "expenses:doacao:terceiros",
+      "tag": "CUSTOS FIXOS",
+      "notes": "cuidadora da mae de Lucas"
+    },
+    {
+      "patterns": ["Pe Euzebio", "Ajuda Pe"],
+      "account": "expenses:doacao:terceiros",
+      "tag": "CUSTOS FIXOS",
+      "notes": "doacao padre"
+    },
+    {
+      "patterns": ["Lar dos Velhinhos", "Lar Dos Velhinhos"],
+      "account": "expenses:doacao:terceiros",
+      "tag": "CUSTOS FIXOS",
+      "notes": "doacao asilo"
+    },
+    {
+      "patterns": ["AABB"],
+      "account": "expenses:lazer:clube",
+      "tag": "PRAZERES",
+      "notes": "clube AABB (mensalidade). Bar AABB -> alimentacao:restaurante"
+    },
+    {
+      "patterns": ["Clube de Campo"],
+      "account": "expenses:lazer:clube",
+      "tag": "PRAZERES",
+      "notes": "clube"
+    },
+    {
+      "patterns": ["Silvia Cristina"],
+      "account": "expenses:lazer:clube",
+      "tag": "PRAZERES",
+      "notes": "bar do clube"
+    },
+    {
+      "patterns": ["Netflix"],
+      "account": "expenses:lazer:streaming",
+      "tag": "CONFORTO",
+      "notes": "streaming"
+    },
+    {
+      "patterns": ["YouTube Premium", "DL*GOOGLE YOUTUB", "Google YouTube"],
+      "account": "expenses:lazer:streaming",
+      "tag": "CONFORTO",
+      "notes": "streaming"
+    },
+    {
+      "patterns": ["Amazon Prime", "Google Amazon Shopping"],
+      "account": "expenses:lazer:streaming",
+      "tag": "CONFORTO",
+      "notes": "streaming"
+    },
+    {
+      "patterns": ["Brasil Paralel"],
+      "account": "expenses:lazer:streaming",
+      "tag": "CONFORTO",
+      "notes": "streaming"
+    },
+    {
+      "patterns": ["Melin"],
+      "account": "expenses:lazer:streaming",
+      "tag": "CONFORTO",
+      "notes": "streaming"
+    },
+    {
+      "patterns": ["Porto Rico Aqua Park"],
+      "account": "expenses:lazer:passeios",
+      "tag": "PRAZERES",
+      "notes": "parque aquatico"
+    },
+    {
+      "patterns": ["Titanic Passeios"],
+      "account": "expenses:lazer:passeios",
+      "tag": "PRAZERES",
+      "notes": "passeio"
+    },
+    {
+      "patterns": ["Pousada Villa Caioba", "Vila Caioba Pousada"],
+      "account": "expenses:lazer:viagens",
+      "tag": "PRAZERES",
+      "notes": "pousada"
+    },
+    {
+      "patterns": ["Clube de tiro"],
+      "account": "expenses:lazer:outros",
+      "tag": "PRAZERES",
+      "notes": "tiro esportivo"
+    },
+    {
+      "patterns": ["Giovanna Batista"],
+      "account": "expenses:familia",
+      "tag": "CUSTOS FIXOS",
+      "notes": "transferencia para esposa"
+    },
+    {
+      "patterns": ["Mateus Leite Mazza"],
+      "account": "expenses:pessoal:mesada",
+      "tag": "CONFORTO",
+      "notes": "mesada filho Mateus"
+    },
+    {
+      "patterns": ["MCCABELEREIRO", "Claudio Enrique", "Studio Claudio Oliveira"],
+      "account": "expenses:pessoal:cuidados",
+      "tag": "CONFORTO",
+      "notes": "cabeleireiro"
+    },
+    {
+      "patterns": ["Joao Leonardo", "54.573.149"],
+      "account": "expenses:pessoal:cuidados",
+      "tag": "CONFORTO",
+      "notes": "cabeleireiro"
+    },
+    {
+      "patterns": ["House Estamparia"],
+      "account": "expenses:pessoal:roupas",
+      "tag": "CONFORTO",
+      "notes": "roupas"
+    },
+    {
+      "patterns": ["Roseli Gloor", "Roseli Canezin"],
+      "account": "expenses:pessoal:roupas",
+      "tag": "CONFORTO",
+      "notes": "costureira"
+    },
+    {
+      "patterns": ["Agrocenter", "Casa do Produtor"],
+      "account": "expenses:pets:alimentacao",
+      "tag": "PRAZERES",
+      "notes": "racao/alimentacao animal"
+    },
+    {
+      "patterns": ["Ednei de Oliveira"],
+      "account": "expenses:pets:alimentacao",
+      "tag": "PRAZERES",
+      "notes": "racao"
+    },
+    {
+      "patterns": ["Provet", "Veterinaria"],
+      "account": "expenses:pets:veterinario",
+      "tag": "PRAZERES",
+      "notes": "veterinario"
+    },
+    {
+      "patterns": ["Caixa Vida e Previdencia", "Caixa Vida E Prev"],
+      "account": "expenses:financeiro:previdencia",
+      "tag": "LIBERDADE FINANCEIRA",
+      "notes": "previdencia privada"
+    },
+    {
+      "patterns": ["Previdencia Giovanna"],
+      "account": "expenses:financeiro:previdencia",
+      "tag": "LIBERDADE FINANCEIRA",
+      "notes": "previdencia esposa"
+    },
+    {
+      "patterns": ["Previdencia Mateus", "Previdencia Ana Cecilia", "Previdencia Miguel"],
+      "account": "expenses:financeiro:previdencia",
+      "tag": "LIBERDADE FINANCEIRA",
+      "notes": "previdencia filhos"
+    },
+    {
+      "patterns": ["Tarifa bancaria", "Tarifa CEF", "Mensalidade Cesta"],
+      "account": "expenses:financeiro:taxas",
+      "tag": "CUSTOS FIXOS",
+      "notes": "tarifa bancaria"
+    },
+    {
+      "patterns": ["IOF", "Debito de IOF", "IOF compra"],
+      "account": "expenses:financeiro:taxas",
+      "tag": "CUSTOS FIXOS",
+      "notes": "IOF"
+    },
+    {
+      "patterns": ["Cobranca de Juros", "Juros"],
+      "account": "expenses:financeiro:taxas",
+      "tag": "CUSTOS FIXOS",
+      "notes": "juros bancarios"
+    },
+    {
+      "patterns": ["Anuidade Caixa", "Anuidade"],
+      "account": "expenses:financeiro:taxas",
+      "tag": "CUSTOS FIXOS",
+      "notes": "anuidade cartao"
+    },
+    {
+      "patterns": ["HDI Seguros"],
+      "account": "expenses:seguro",
+      "tag": "CUSTOS FIXOS",
+      "notes": "seguro carro"
+    },
+    {
+      "patterns": ["Michelle Barbera"],
+      "account": "expenses:financeiro:impostos",
+      "tag": "CUSTOS FIXOS",
+      "notes": "contador/impostos"
+    },
+    {
+      "patterns": ["EBCT", "Correios"],
+      "account": "expenses:financeiro:impostos",
+      "tag": "CUSTOS FIXOS",
+      "notes": "correios/taxas"
+    },
+    {
+      "patterns": ["Concat All Servicos", "Concat All"],
+      "account": "income:salario",
+      "tag": null,
+      "notes": "aporte empresa — credito salario"
+    },
+    {
+      "patterns": ["Cartoes Caixa Mastercard PF"],
+      "account": "liabilities:cartao:caixa-mastercard",
+      "tag": null,
+      "notes": "pagamento fatura Caixa Mastercard"
+    },
+    {
+      "patterns": ["P.S. de Matos"],
+      "account": "expenses:outros",
+      "tag": "CUSTOS FIXOS",
+      "ambiguous": true,
+      "notes": "desconhecido — confirmar com usuario"
+    },
+    {
+      "patterns": ["EC Osasco"],
+      "account": "expenses:outros",
+      "tag": "CUSTOS FIXOS",
+      "ambiguous": true,
+      "notes": "desconhecido — confirmar com usuario"
+    }
+  ],
+  "rules": [
+    "Mercado Livre: se conserto/reposicao -> expenses:moradia:manutencao (CUSTOS FIXOS). Se item novo -> expenses:moradia:equipamentos (CONFORTO)",
+    "Auto postos: se combustivel -> expenses:transporte:combustivel (CUSTOS FIXOS). Se conveniencia -> expenses:alimentacao:conveniencia (PRAZERES)",
+    "Streaming digital (Netflix, YouTube, Amazon, Melin) -> expenses:lazer:streaming (CONFORTO). NAO usar moradia:tv",
+    "Uniformes e material escolar -> expenses:educacao:material (CUSTOS FIXOS). NAO usar pessoal",
+    "Academia -> expenses:saude:condicionamento (CONFORTO). NAO usar pessoal",
+    "Doacoes a familiares dependentes (pai, cuidadora mae) -> expenses:doacao:terceiros (CUSTOS FIXOS)",
+    "Ferramentas IA e assinaturas profissionais -> expenses:educacao:profissional (AUMENTAR RENDA)",
+    "Bar AABB -> expenses:alimentacao:restaurante (PRAZERES). AABB mensalidade -> expenses:lazer:clube (PRAZERES)"
+  ]
+}

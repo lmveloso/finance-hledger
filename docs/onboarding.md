@@ -177,7 +177,7 @@ O projeto inclui skills para agentes de IA no diretorio `skills/`:
 
 Os skills ensinam o agente de IA a:
 - Parsear extratos em multiplos formatos (JSON, PDF, CSV, imagem)
-- Classificar transacoes automaticamente usando `skills/data/payee-categories.json`
+- Classificar transacoes automaticamente usando `skills/hledger-base/payee-categories.json`
 - Perguntar sobre itens ambiguos antes de registrar
 - Escrever transacoes no journal via hledger MCP ou arquivo direto
 - Validar integridade apos cada importacao
@@ -191,11 +191,11 @@ Ao abrir o projeto no Claude Code, os skills sao descobertos automaticamente. Ba
 
 ### Usando com outro agente
 
-Copiar o conteudo dos SKILL.md para a configuracao de skills/prompts do seu agente. O agente precisa ter acesso ao hledger-mcp e ao arquivo `payee-categories.json`.
+Copiar o conteudo dos SKILL.md para a configuracao de skills/prompts do seu agente. O agente precisa ter acesso ao hledger-mcp e ao arquivo `payee-categories.json` (junto ao skill base).
 
 ## 6. Personalizando Categorias
 
-O arquivo `skills/data/payee-categories.json` contem o mapeamento de payees para contas hledger. Para personalizar:
+O arquivo `skills/hledger-base/payee-categories.json` contem o mapeamento de payees para contas hledger. Para personalizar:
 
 1. Editar o JSON adicionando seus payees recorrentes
 2. Cada entrada tem: `patterns` (substrings para match), `account` (conta hledger), `tag` (tipo orcamentario)
