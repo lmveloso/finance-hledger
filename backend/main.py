@@ -226,11 +226,14 @@ def summary(month: Optional[str] = None):
 
 
 @app.get("/api/categories")
-def categories(month: Optional[str] = None, depth: int = 2):
+def categories(month: Optional[str] = None, depth: int = 2, tag: Optional[str] = None):
     """Despesas agregadas por categoria (para o gráfico de pizza)."""
     begin, end = month_bounds(month)
-    data = hledger("balance", "expenses", f"--depth={depth}",
-                   "-b", begin, "-e", end, "--layout=bare")
+    cmd_args = ["balance", "expenses", f"--depth={depth}",
+                "-b", begin, "-e", end, "--layout=bare"]
+    if tag:
+        cmd_args.append(f"tag:{tag}")
+    data = hledger(*cmd_args)
 
     cats = []
     if isinstance(data, list) and len(data) >= 1:
@@ -525,6 +528,23 @@ def top_expenses(month: Optional[str] = None, limit: int = 10):
             "transacoes": txs[:limit]}
 
 
+@app.get("/api/tags")
+def tags():
+    """Lista todas as tags únicas do journal com contagem de transações."""
+    raw = hledger("tags", output_format="text")
+    tag_names = [line.strip() for line in raw.split("\n") if line.strip()]
+
+    result = []
+    for tag_name in tag_names:
+        # Contar transações com essa tag
+        count_raw = hledger("register", f"tag:{tag_name}", output_format="text")
+        count = len([l for l in count_raw.split("\n") if l.strip()])
+        result.append({"tag": tag_name, "count": count})
+
+    result.sort(key=lambda t: t["count"], reverse=True)
+    return {"tags": result}
+
+
 @app.get("/api/transactions")
 def transactions(
     month: Optional[str] = None,
@@ -532,12 +552,13 @@ def transactions(
     end: Optional[str] = None,
     category: Optional[str] = None,
     search: Optional[str] = None,
+    tag: Optional[str] = None,
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
     sort: str = "date",
     order: str = "desc",
 ):
-    """Lista paginada de transações com filtros por categoria, busca e range."""
+    """Lista paginada de transações com filtros por categoria, busca, tag e range."""
     # Determinar período
     if start and end:
         begin, period_end = start, end
@@ -556,6 +577,10 @@ def transactions(
         cmd_args.append("expenses")
 
     cmd_args.extend(["-b", begin, "-e", period_end])
+
+    # Filtro por tag
+    if tag:
+        cmd_args.append(f"tag:{tag}")
 
     # Usar output JSON
     data = hledger(*cmd_args)

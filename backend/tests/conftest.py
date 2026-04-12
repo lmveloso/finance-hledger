@@ -60,6 +60,18 @@ MINIMAL_JOURNAL = """\
 2026-03-15 * Internet
     expenses:Servicos:Internet  99.90
     assets:Banco:Nubank
+
+2026-03-20 * Passagem aerea ; viagem-floripa:
+    expenses:Lazer:Viagens  850.00
+    assets:Banco:Nubank
+
+2026-03-25 * Hotel Floripa ; viagem-floripa:
+    expenses:Moradia:Hotel  1200.00
+    liabilities:Cartao:Visa
+
+2026-03-28 * Racao pet ; pet-luna:
+    expenses:Outros:Pet  120.00
+    assets:Banco:Nubank
 """
 
 
