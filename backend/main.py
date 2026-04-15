@@ -859,9 +859,12 @@ def accounts(user: Optional[str] = Depends(get_current_user)):
         amount = _amount({"amount": row[3]}) if isinstance(row[3], list) else 0.0
         # Determine type from account path
         tipo = "ativo" if name.startswith("assets") else "passivo"
-        # Display name: last meaningful part
+        # Display name: last two parts capitalized
         parts = name.split(":")
-        display = parts[-1] if len(parts) > 1 else name
+        if len(parts) >= 2:
+            display = parts[-2].capitalize() + " " + parts[-1].capitalize()
+        else:
+            display = parts[0].capitalize()
         result.append({
             "nome": display,
             "caminho": name,

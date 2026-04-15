@@ -815,7 +815,7 @@ function Transacoes() {
                     <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#8a8275', fontSize: 12 }}>{tx.data}</td>
                     <td style={tdStyle}>{tx.descricao}</td>
                     <td style={{ ...tdStyle, color: '#8a8275', fontSize: 12 }}>{tx.categoria}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600 }}>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? '#8b9d7a' : tx.valor < 0 ? '#c97b5c' : 'inherit' }}>
                       {BRLc(tx.valor)}
                     </td>
                   </tr>
@@ -1243,7 +1243,7 @@ function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, s
                     >
                       <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#8a8275', fontSize: 12 }}>{tx.data}</td>
                       <td style={tdStyle}>{tx.descricao}</td>
-                      <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600 }}>
+                      <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? '#8b9d7a' : tx.valor < 0 ? '#c97b5c' : 'inherit' }}>
                         {BRLc(tx.valor)}
                       </td>
                       <td style={{
@@ -1290,7 +1290,7 @@ function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, s
                     >
                       <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#8a8275', fontSize: 12 }}>{tx.data}</td>
                       <td style={tdStyle}>{tx.descricao}</td>
-                      <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600 }}>
+                      <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? '#8b9d7a' : tx.valor < 0 ? '#c97b5c' : 'inherit' }}>
                         {BRLc(tx.valor)}
                       </td>
                     </tr>
