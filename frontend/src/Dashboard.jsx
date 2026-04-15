@@ -1000,6 +1000,311 @@ function Previsao() {
   );
 }
 
+// ── Contas (Individual Account View) ──────────────────────────────────
+function Contas() {
+  const { refreshKey } = useMonth();
+  const { data, error, loading } = useApi('/api/accounts', [refreshKey]);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [rangeStart, setRangeStart] = useState('');
+  const [rangeEnd, setRangeEnd] = useState('');
+  const [showStatement, setShowStatement] = useState(false);
+
+  if (loading) return <Spinner />;
+  if (error) return <ErrorBox msg={error} />;
+
+  const contas = data?.contas || [];
+  const ativos = contas.filter(c => c.tipo === 'ativo');
+  const passivos = contas.filter(c => c.tipo === 'passivo');
+
+  // If an account is selected, show detail view
+  if (selectedAccount) {
+    return (
+      <AccountDetail
+        account={selectedAccount}
+        onBack={() => { setSelectedAccount(null); setShowStatement(false); setRangeStart(''); setRangeEnd(''); }}
+        rangeStart={rangeStart}
+        setRangeStart={setRangeStart}
+        rangeEnd={rangeEnd}
+        setRangeEnd={setRangeEnd}
+        showStatement={showStatement}
+        setShowStatement={setShowStatement}
+        refreshKey={refreshKey}
+      />
+    );
+  }
+
+  const AccountCard = ({ conta }) => {
+    const isNeg = conta.saldo < 0;
+    const saldoColor = conta.tipo === 'passivo' ? (isNeg ? '#c97b5c' : '#8b9d7a') : (isNeg ? '#c97b5c' : '#8b9d7a');
+    return (
+      <div
+        className="crow"
+        onClick={() => setSelectedAccount(conta)}
+        style={{ cursor: 'pointer' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{
+            width: 8, height: 8, borderRadius: '50%',
+            background: conta.tipo === 'ativo' ? '#8b9d7a' : '#c97b5c',
+            flexShrink: 0,
+          }} />
+          <div>
+            <div className="sans" style={{ fontSize: 14, color: '#c4bcab' }}>{conta.nome}</div>
+            <div className="sans" style={{ fontSize: 11, color: '#6a6258', marginTop: 2 }}>{conta.caminho}</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span className="serif" style={{ fontSize: 16, fontWeight: 600, color: saldoColor }}>
+            {BRLc(conta.saldo)}
+          </span>
+          <ChevronRight size={14} style={{ color: '#6a6258' }} />
+        </div>
+      </div>
+    );
+  };
+
+  const totalAtivos = ativos.reduce((s, c) => s + c.saldo, 0);
+  const totalPassivos = passivos.reduce((s, c) => s + c.saldo, 0);
+
+  return (
+    <div className="grid">
+      {/* Summary cards */}
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+        <KPI
+          label="Total Ativos"
+          valor={totalAtivos}
+          icon={<ArrowUpRight size={15} />}
+          cor="#8b9d7a"
+          destaque
+        />
+        <KPI
+          label="Total Passivos"
+          valor={Math.abs(totalPassivos)}
+          icon={<ArrowDownRight size={15} />}
+          cor="#c97b5c"
+        />
+        <KPI
+          label="Patrimônio Líquido"
+          valor={totalAtivos + totalPassivos}
+          icon={<Wallet size={15} />}
+          cor="#d4a574"
+          destaque
+        />
+      </div>
+
+      <div className="grid g3">
+        {/* Assets */}
+        <div className="card">
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>
+            Ativos
+          </div>
+          {ativos.length === 0 ? (
+            <div className="sans" style={{ fontSize: 13, color: '#8a8275' }}>Nenhuma conta de ativo encontrada.</div>
+          ) : ativos.map(c => <AccountCard key={c.caminho} conta={c} />)}
+        </div>
+
+        {/* Liabilities */}
+        <div className="card">
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>
+            Passivos
+          </div>
+          {passivos.length === 0 ? (
+            <div className="sans" style={{ fontSize: 13, color: '#8a8275' }}>Nenhuma conta de passivo encontrada.</div>
+          ) : passivos.map(c => <AccountCard key={c.caminho} conta={c} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, setRangeEnd, showStatement, setShowStatement, refreshKey }) {
+  // Recent transactions (last 20)
+  const { data: txData, loading: txLoading, error: txError } = useApi(
+    `/api/transactions?account=${encodeURIComponent(account.caminho)}&limit=20&order=desc`,
+    [account.caminho, refreshKey]
+  );
+
+  // Statement transactions (date range)
+  const statementPath = showStatement && rangeStart && rangeEnd
+    ? `/api/transactions?account=${encodeURIComponent(account.caminho)}&start=${rangeStart}&end=${rangeEnd}&limit=500&order=asc`
+    : null;
+  const { data: stmtData, loading: stmtLoading, error: stmtError } = useApi(
+    statementPath || '_skip',
+    [statementPath, refreshKey]
+  );
+
+  const saldoColor = account.saldo < 0 ? '#c97b5c' : '#8b9d7a';
+
+  const thStyle = {
+    textAlign: 'left', padding: '10px 8px', fontSize: 11, letterSpacing: '0.08em',
+    textTransform: 'uppercase', color: '#8a8275', borderBottom: '1px solid #3a3632',
+  };
+  const tdStyle = {
+    padding: '12px 8px', fontSize: 13, borderBottom: '1px solid #3a3632', color: '#c4bcab',
+  };
+  const inputStyle = {
+    background: '#1a1815', border: '1px solid #3a3632', borderRadius: 3, color: '#e8e2d5',
+    padding: '8px 12px', fontSize: 13, fontFamily: 'Inter, sans-serif', outline: 'none',
+  };
+
+  // Compute running balance for statement
+  const stmtTxs = stmtData?.transactions || [];
+  let runningBalance = 0;
+  // For liabilities, amounts in register are usually positive for charges
+  // We compute running balance from 0 based on the amounts shown
+  const stmtWithBalance = stmtTxs.map(tx => {
+    // Determine if this is a debit or credit based on the account type
+    // For assets: positive amount = money in, negative = money out
+    // For liabilities: it's inverted
+    runningBalance += tx.valor;
+    return { ...tx, runningBalance: round2(runningBalance) };
+  });
+  function round2(n) { return Math.round(n * 100) / 100; }
+
+  return (
+    <div className="card">
+      {/* Header */}
+      <button onClick={onBack} className="sans" style={{
+        background: 'none', border: 'none', color: '#d4a574', cursor: 'pointer',
+        fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, padding: 0, marginBottom: 20,
+      }}>
+        <ArrowLeft size={14} /> Voltar para contas
+      </button>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+        <span style={{
+          width: 10, height: 10, borderRadius: '50%',
+          background: account.tipo === 'ativo' ? '#8b9d7a' : '#c97b5c',
+        }} />
+        <span className="serif" style={{ fontSize: 26, fontWeight: 600 }}>{account.nome}</span>
+        <span className="serif" style={{ fontSize: 26, color: saldoColor, fontWeight: 600 }}>{BRLc(account.saldo)}</span>
+        <span className="sans" style={{ fontSize: 11, color: '#6a6258', marginLeft: 8 }}>{account.caminho}</span>
+      </div>
+
+      {/* Date range picker for statement */}
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
+        <div className="sans" style={{ fontSize: 11, color: '#8a8275', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          Extrato:
+        </div>
+        <input type="date" value={rangeStart} onChange={e => setRangeStart(e.target.value)} style={inputStyle} />
+        <span className="sans" style={{ color: '#8a8275', fontSize: 13 }}>até</span>
+        <input type="date" value={rangeEnd} onChange={e => setRangeEnd(e.target.value)} style={inputStyle} />
+        <button
+          className="sans"
+          onClick={() => setShowStatement(true)}
+          disabled={!rangeStart || !rangeEnd}
+          style={{
+            ...navBtnStyle,
+            fontSize: 12,
+            padding: '8px 14px',
+            opacity: (!rangeStart || !rangeEnd) ? 0.4 : 1,
+          }}
+        >
+          Buscar
+        </button>
+        {showStatement && (
+          <button
+            className="sans"
+            onClick={() => { setShowStatement(false); setRangeStart(''); setRangeEnd(''); }}
+            style={{
+              background: 'none', border: 'none', color: '#c97b5c', cursor: 'pointer',
+              fontSize: 12, padding: '8px 8px',
+            }}
+          >
+            Limpar
+          </button>
+        )}
+      </div>
+
+      {/* Statement view */}
+      {showStatement ? (
+        <>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>
+            Extrato · {rangeStart} a {rangeEnd}
+          </div>
+          {stmtLoading ? <Spinner /> : stmtError ? <ErrorBox msg={stmtError} /> : stmtTxs.length === 0 ? (
+            <div className="sans" style={{ fontSize: 13, color: '#8a8275' }}>Nenhuma transação no período selecionado.</div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Data</th>
+                    <th style={thStyle}>Descrição</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>Valor</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>Saldo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stmtWithBalance.map((tx, i) => (
+                    <tr key={i}
+                      onMouseEnter={e => e.currentTarget.style.background = '#2a2724'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#8a8275', fontSize: 12 }}>{tx.data}</td>
+                      <td style={tdStyle}>{tx.descricao}</td>
+                      <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600 }}>
+                        {BRLc(tx.valor)}
+                      </td>
+                      <td style={{
+                        ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600,
+                        color: tx.runningBalance < 0 ? '#c97b5c' : '#8b9d7a',
+                      }}>
+                        {BRLc(tx.runningBalance)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="sans" style={{ fontSize: 12, color: '#8a8275', marginTop: 12, paddingTop: 12, borderTop: '1px solid #3a3632' }}>
+                {stmtTxs.length} transações · Saldo final: <span className="serif" style={{ fontWeight: 600, color: stmtWithBalance[stmtWithBalance.length - 1]?.runningBalance < 0 ? '#c97b5c' : '#8b9d7a' }}>
+                  {BRLc(stmtWithBalance[stmtWithBalance.length - 1]?.runningBalance || 0)}
+                </span>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        /* Recent transactions */
+        <>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>
+            Últimas transações
+          </div>
+          {txLoading ? <Spinner /> : txError ? <ErrorBox msg={txError} /> : (txData?.transactions || []).length === 0 ? (
+            <div className="sans" style={{ fontSize: 13, color: '#8a8275' }}>Nenhuma transação encontrada para esta conta.</div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Data</th>
+                    <th style={thStyle}>Descrição</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(txData?.transactions || []).map((tx, i) => (
+                    <tr key={i}
+                      onMouseEnter={e => e.currentTarget.style.background = '#2a2724'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#8a8275', fontSize: 12 }}>{tx.data}</td>
+                      <td style={tdStyle}>{tx.descricao}</td>
+                      <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600 }}>
+                        {BRLc(tx.valor)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Pull-to-refresh indicator ──────────────────────────────────────────
 function PullIndicator({ pullState, pullDistance }) {
   if (pullState === 'idle') return null;
@@ -1119,7 +1424,7 @@ function DashboardInner({ aba, setAba }) {
         </header>
 
         <nav style={{ display: 'flex', gap: 2, marginBottom: 24, borderBottom: '1px solid #3a3632', overflowX: 'auto' }}>
-          {['resumo', 'fluxo', 'orçamento', 'previsão', 'transações'].map(t => (
+          {['resumo', 'fluxo', 'orçamento', 'previsão', 'contas', 'transações'].map(t => (
             <button key={t} className={`tab ${aba === t ? 'active' : ''}`} onClick={() => setAba(t)}>{t}</button>
           ))}
         </nav>
@@ -1128,6 +1433,7 @@ function DashboardInner({ aba, setAba }) {
         {aba === 'fluxo' && <Fluxo />}
         {aba === 'orçamento' && <Orcamento />}
         {aba === 'previsão' && <Previsao />}
+        {aba === 'contas' && <Contas />}
         {aba === 'transações' && <Transacoes />}
 
         <footer className="sans" style={{ marginTop: 48, paddingTop: 20, borderTop: '1px solid #3a3632', fontSize: 11, color: '#6a6258', letterSpacing: '0.1em', textTransform: 'uppercase' }}>

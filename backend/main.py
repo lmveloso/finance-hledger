@@ -632,6 +632,7 @@ def transactions(
     start: Optional[str] = None,
     end: Optional[str] = None,
     category: Optional[str] = None,
+    account: Optional[str] = None,
     search: Optional[str] = None,
     tag: Optional[list[str]] = Query(None),
     limit: int = Query(50, ge=1, le=500),
@@ -640,7 +641,7 @@ def transactions(
     order: str = "desc",
     user: Optional[str] = Depends(get_current_user),
 ):
-    """Lista paginada de transações com filtros por categoria, busca, tag e range."""
+    """Lista paginada de transações com filtros por categoria, conta, busca, tag e range."""
     # Determinar período
     if start and end:
         begin, period_end = start, end
@@ -652,8 +653,11 @@ def transactions(
     # Construir args do hledger register
     cmd_args = ["register"]
 
+    # Filtro por conta específica (usado na aba Contas)
+    if account:
+        cmd_args.append(account)
     # Filtro por categoria
-    if category:
+    elif category:
         cmd_args.append(f"expenses:{category}")
     else:
         cmd_args.append("expenses")
@@ -836,6 +840,76 @@ def alerts(month: Optional[str] = None, user: Optional[str] = Depends(get_curren
 
     alertas.sort(key=lambda a: a["percentual_acima"], reverse=True)
     return {"month": target_month, "alertas": alertas}
+
+
+@app.get("/api/accounts")
+def accounts(user: Optional[str] = Depends(get_current_user)):
+    """Lista todas as contas (ativos + passivos) com saldo atual."""
+    data = hledger("balance", "assets", "liabilities", "--flat")
+
+    result = []
+    # hledger balance returns [[row, row, ...]] — nested list
+    rows = data[0] if isinstance(data, list) and data and isinstance(data[0], list) else []
+    for row in rows:
+        if not isinstance(row, list) or len(row) < 4:
+            continue
+        name = row[0] if isinstance(row[0], str) else ""
+        if not name:
+            continue
+        amount = _amount({"amount": row[3]}) if isinstance(row[3], list) else 0.0
+        # Determine type from account path
+        tipo = "ativo" if name.startswith("assets") else "passivo"
+        # Display name: last meaningful part
+        parts = name.split(":")
+        display = parts[-1] if len(parts) > 1 else name
+        result.append({
+            "nome": display,
+            "caminho": name,
+            "tipo": tipo,
+            "saldo": round(amount, 2),
+        })
+
+    result.sort(key=lambda a: (0 if a["tipo"] == "ativo" else 1, a["caminho"]))
+    return {"contas": result}
+
+
+@app.get("/api/accounts/{account_path:path}/balance-history")
+def account_balance_history(
+    account_path: str,
+    months: int = 12,
+    user: Optional[str] = Depends(get_current_user),
+):
+    """Saldo mensal de uma conta ao longo do tempo."""
+    begin, end = months_back_bounds(months - 1)
+    data = hledger("balance", account_path, "-M", "-b", begin, "-e", end, "--historical")
+
+    result = []
+    if isinstance(data, dict):
+        cbr_dates = data.get("cbrDates", [])
+        subreports = data.get("cbrSubreports", [])
+        # Find the account row
+        account_row = None
+        for sub in subreports:
+            report = sub[1] if isinstance(sub, list) else sub
+            for row in report.get("prRows", []):
+                if account_path in row.get("prrName", ""):
+                    account_row = row
+                    break
+            if account_row:
+                break
+
+        if account_row:
+            amounts = account_row.get("prrAmounts", [])
+            for period_idx, date_range in enumerate(cbr_dates):
+                first_date = date_range[0] if isinstance(date_range, list) else date_range
+                date_str = first_date.get("contents", "") if isinstance(first_date, dict) else str(first_date)
+                mes = date_str[:7]
+                val = 0.0
+                if period_idx < len(amounts) and amounts[period_idx]:
+                    val = float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0))
+                result.append({"mes": mes, "saldo": round(val, 2)})
+
+    return {"account": account_path, "history": result}
 
 
 @app.get("/api/seasonality")

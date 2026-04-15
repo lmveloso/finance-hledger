@@ -34,30 +34,30 @@ Generate a deterministic token: `HMAC-SHA256(secret_key, username)` encoded as h
        USERS["lucas"] = _lucas_pw
    if _gio_pw:
        USERS["gio"] = _gio_pw
-   AUTH_ENABLED = bool(USERS)
+   AUTH_ENABLED=***
    ```
 3. Create in-memory token store:
    ```python
    _tokens: dict[str, str] = {}  # token -> username
    ```
 4. Add `POST /api/login` endpoint:
-   - Accepts JSON body `{"password": "..."}`
+   - Accepts JSON body `{"password": "***"}`
    - Iterates `USERS` dict, uses `hmac.compare_digest` to check password
-   - On match: generates `secrets.token_hex(32)`, stores in `_tokens`, returns `{"token": "...", "user": "lucas"}`
+   - On match: generates `secrets.token_hex(32)`, stores in `_tokens`, returns `{"token": "***", "user": "lucas"}`
    - On no match: returns 401 `{"detail": "Senha incorreta"}`
    - Add `POST` to CORS `allow_methods`
 
 **Test plan:**
 ```bash
-# Without env vars → AUTH_ENABLED=False, all routes open (backwards compatible)
-export PASSWORD_LUCAS=abc123 PASSWORD_GIO=xyz789
+# Without env vars → AUTH_ENABLED=*** all routes open (backwards compatible)
+export PASSWORD_LUCAS=*** PASSWORD_GIO=***
 uvicorn main:app --port 8080
 # Login with wrong password → 401
-curl -X POST localhost:8080/api/login -H 'Content-Type: application/json' -d '{"password":"wrong"}'
+curl -X POST localhost:8080/api/login -H 'Content-Type: application/json' -d '{"password": "***"}'
 # Login with correct password → 200 + token
-curl -X POST localhost:8080/api/login -H 'Content-Type: application/json' -d '{"password":"abc123"}'
+curl -X POST localhost:8080/api/login -H 'Content-Type: application/json' -d '{"password": "***"}'
 # Use token on protected route
-curl localhost:8080/api/summary -H 'Authorization: Bearer <token>'
+curl localhost:8080/api/summary -H 'Authorization: Bearer ***
 ```
 
 ---
@@ -155,8 +155,8 @@ npm run dev
 **Changes:**
 Add to the `[Service]` section:
 ```
-Environment=PASSWORD_LUCAS=<actual_password>
-Environment=PASSWORD_GIO=<actual_password>
+Environment=PASSWORD_LUCAS=***
+Environment=PASSWORD_GIO=***
 ```
 Then `systemctl --user daemon-reload && systemctl --user restart finance-hledger`.
 
@@ -179,7 +179,7 @@ ssh 10.0.0.110 "systemctl --user status finance-hledger"
 | 1.4 Systemd env vars | 5 min | 1.1 |
 | **Total** | **~2 h** | |
 
-**Backwards compatibility:** When `PASSWORD_LUCAS` and `PASSWORD_GIO` are not set, `AUTH_ENABLED=False` and all endpoints work exactly as before. Zero breakage.
+**Backwards compatibility:** When `PASSWORD_LUCAS` and `PASSWORD_GIO` are not set, `AUTH_ENABLED=*** and all endpoints work exactly as before. Zero breakage.
 
 ---
 
@@ -217,7 +217,7 @@ All new endpoints follow the existing pattern: shell out to hledger CLI, parse J
        begin, end = months_forward_bounds(months)
        data = hledger("incomestatement", "-M", "--forecast",
                       "-b", begin, "-e", end)
-       # Parse identically ao /api/cashflow — mesma estrutura cbrSubreports
+       # Parse identicamente ao /api/cashflow — mesma estrutura cbrSubreports
        result = []
        if isinstance(data, dict):
            cbr_dates = data.get("cbrDates", [])
@@ -499,43 +499,87 @@ npm run dev
    - Add a `progress` field comparing current month vs target
    - Add historical trend: last 6 months of realized vs budgeted per category
 
-2. **Frontend:** In the budget tab, add a small sparkline or trend arrow per category showing whether spending is trending up/down vs target.
-
-**This is stretch scope — defer if Feature 2 core (Steps 2.1–2.5) is sufficient.**
-
-**Test plan:** Same as budget endpoint but with added trend data.
-
 ---
 
-### Feature 2 summary
+## Feature 3: Individual Account View (Contas)
+
+A new "Contas" tab where the user can browse all accounts (bank accounts, credit cards) and see their balance + transactions.
+
+### Step 3.1: Backend — `/api/accounts` endpoint
+**Files:** `backend/main.py`
+**Effort:** ~30 min
+**Dependencies:** None
+
+**Changes:**
+1. Add `/api/accounts` endpoint that calls `hledger balance assets liabilities --flat -O json` to get all leaf accounts with their current balances.
+2. Parse the JSON response, extracting account name and balance.
+3. Categorize each account as "ativo" (asset) or "passivo" (liability) based on the account path.
+4. Return a list like:
+   ```json
+   {
+     "accounts": [
+       {"nome": "bb:corrente", "caminho": "assets:banco:bb:corrente", "tipo": "ativo", "saldo": 1234.56},
+       {"nome": "xp-visa", "caminho": "liabilities:cartao:xp-visa", "tipo": "passivo", "saldo": -567.89}
+     ]
+   }
+   ```
+
+**Test plan:**
+```bash
+curl localhost:8080/api/accounts
+# Verify: list of all accounts with balances
+# Verify: assets have positive or zero balances, liabilities have negative or zero
+```
+
+### Step 3.2: Backend — Add `account` filter to `/api/transactions`
+**Files:** `backend/main.py`
+**Effort:** ~15 min
+**Dependencies:** None
+
+**Changes:**
+1. Add `account` query parameter to the `/api/transactions` endpoint.
+2. When `account` is provided, use it as the hledger query instead of `expenses{...}`. Pass it directly as the positional query arg to `hledger register`.
+3. This lets the frontend pull transactions for any account, not just expense categories.
+
+**Test plan:**
+```bash
+curl 'localhost:8080/api/transactions?account=assets:banco:caixa:corrente&limit=10'
+# Verify: returns transactions specific to that account
+```
+
+### Step 3.3: Frontend — Contas tab with account list
+**Files:** `frontend/src/Dashboard.jsx`
+**Effort:** ~45 min
+**Dependencies:** Step 3.1
+
+**Changes:**
+1. Add `'contas'` to the tab list.
+2. Create `<Contas />` component:
+   - Uses `useApi('/api/accounts')` to get the list of accounts.
+   - Groups accounts by type (ativo / passivo).
+   - Renders account cards showing name + formatted balance.
+   - Click on an account card to view its detail (transactions + statement).
+   - Uses existing styling patterns (card, sans/serif classes, accent colors).
+
+### Step 3.4: Frontend — Account detail + statement view
+**Files:** `frontend/src/Dashboard.jsx`
+**Effort:** ~60 min
+**Dependencies:** Step 3.2, Step 3.3
+
+**Changes:**
+1. When an account is selected in `<Contas />`, show:
+   - Account name and current balance at the top.
+   - Last 20 transactions (reuses `/api/transactions?account=...&limit=20`).
+   - A date range picker (two `<input type="date">` fields) for pulling a statement.
+2. When the user picks a date range and clicks "Buscar", fetch `/api/transactions?account=...&start=...&end=...&limit=500` and display all transactions with a running balance column.
+3. A "Voltar" button to go back to the account list.
+
+### Feature 3 summary
 
 | Step | Effort | Deps |
 |------|--------|------|
-| 2.1 Forecast endpoint | 45 min | — |
-| 2.2 Alerts endpoint | 50 min | — |
-| 2.3 Seasonality endpoint | 45 min | — |
-| 2.4 Frontend forecast + alerts | 60 min | 2.1, 2.2 |
-| 2.5 Frontend heatmap | 50 min | 2.3 |
-| 2.6 Category goals (stretch) | 40 min | 2.2 |
-| **Total** | **~4.5 h** | |
-
----
-
-## Deployment sequence
-
-1. Feature 1 first (auth) — it protects all existing endpoints too
-2. Feature 2 endpoints can be developed in parallel (no auth dependency for backend logic)
-3. Deploy order:
-   - Merge Feature 1 backend → test with curl
-   - Merge Feature 1 frontend → build, test in browser
-   - Merge Feature 2 backend endpoints → test with curl
-   - Merge Feature 2 frontend → build, test in browser
-   - Update systemd env vars on 10.0.0.110
-
-## Notes
-
-- Code comments in Portuguese to match existing codebase
-- All endpoints add `user: Optional[str] = Depends(get_current_user)` for future per-user filtering
-- No new Python dependencies — everything uses stdlib (`secrets`, `hmac`, `hashlib`)
-- No new npm dependencies — Recharts already has everything needed for charts
-- The `_category_spending` helper from Step 2.2 is reused by both Alerts (2.2) and Seasonality (2.3)
+| 3.1 Backend accounts | 30 min | — |
+| 3.2 Backend tx filter | 15 min | — |
+| 3.3 Frontend account list | 45 min | 3.1 |
+| 3.4 Frontend detail/statement | 60 min | 3.2, 3.3 |
+| **Total** | **~2.5 h** | |
