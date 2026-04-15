@@ -7,11 +7,13 @@ import json
 import logging
 import subprocess
 import os
+import secrets
+import hmac
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Optional, Union
 
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Request, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -23,6 +25,31 @@ LEDGER_FILE = os.environ.get("LEDGER_FILE", os.path.expanduser("~/finances/2026.
 HLEDGER = os.environ.get("HLEDGER_PATH", "hledger")
 FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
 
+# ── Auth ─────────────────────────────────────────────────────────────────────
+USERS = {}
+_lucas_pw = os.environ.get("PASSWORD_LUCAS")
+_gio_pw = os.environ.get("PASSWORD_GIO")
+if _lucas_pw:
+    USERS["lucas"] = _lucas_pw
+if _gio_pw:
+    USERS["gio"] = _gio_pw
+AUTH_ENABLED = bool(USERS)
+_tokens: dict[str, str] = {}  # token -> username
+
+
+def get_current_user(authorization: Optional[str] = Header(None)) -> Optional[str]:
+    """Valida token do header Authorization. Retorna username ou None."""
+    if not AUTH_ENABLED:
+        return None
+    if not authorization:
+        raise HTTPException(401, "Token necessário")
+    token = authorization.removeprefix("Bearer ").strip()
+    user = _tokens.get(token)
+    if not user:
+        raise HTTPException(401, "Token inválido")
+    return user
+
+
 app = FastAPI(title="finance-hledger", version="1.0.0")
 
 # CORS — permissivo por padrão (acesso via Tailscale).
@@ -30,7 +57,7 @@ app = FastAPI(title="finance-hledger", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -96,6 +123,27 @@ def months_back_bounds(n: int) -> tuple[str, str]:
     end = date.today().replace(day=1)
     end = end.replace(year=end.year + 1, month=1) if end.month == 12 else end.replace(month=end.month + 1)
     return begin, end.isoformat()
+
+
+def months_forward_bounds(n: int) -> tuple[str, str]:
+    """Retorna (hoje, hoje + n meses) em ISO."""
+    begin = date.today().replace(day=1).isoformat()
+    end = date.today()
+    for _ in range(n):
+        if end.month == 12:
+            end = end.replace(year=end.year + 1, month=1)
+        else:
+            end = end.replace(month=end.month + 1)
+    return begin, end.isoformat()
+
+
+def add_month_str(ym: str, delta: int) -> str:
+    """Adiciona/subtrai meses de uma string YYYY-MM."""
+    y, m = map(int, ym.split("-"))
+    m += delta
+    while m > 12: m -= 12; y += 1
+    while m < 1: m += 12; y -= 1
+    return f"{y:04d}-{m:02d}"
 
 
 # ── Helpers pra extrair números do JSON do hledger (1.52+) ───────────────
@@ -187,7 +235,36 @@ def _amount(row) -> float:
     return 0.0
 
 
+def _category_spending(month: str) -> dict[str, float]:
+    """Retorna {categoria: valor} de despesas do mês."""
+    begin, end = month_bounds(month)
+    data = hledger("balance", "expenses", "--depth=2",
+                   "-b", begin, "-e", end, "--layout=bare")
+    cats = {}
+    if isinstance(data, list) and len(data) >= 1:
+        for row in data[0]:
+            if isinstance(row, list) and len(row) >= 4:
+                name = row[0].split(":")[-1] if isinstance(row[0], str) else str(row[0])
+                amount = abs(_amount({"amount": row[3]})) if isinstance(row[3], list) else 0
+                if amount > 0:
+                    cats[name.lower()] = amount
+    return cats
+
+
 # ── Endpoints ─────────────────────────────────────────────────────────────
+@app.post("/api/login")
+async def login(request: Request):
+    """Autentica por senha e retorna token."""
+    body = await request.json()
+    password = body.get("password", "")
+    for username, pw in USERS.items():
+        if hmac.compare_digest(password, pw):
+            token = secrets.token_hex(32)
+            _tokens[token] = username
+            return {"token": token, "user": username}
+    raise HTTPException(401, "Senha incorreta")
+
+
 @app.get("/api/health")
 def health():
     version = hledger("--version", output_format="text")
@@ -200,7 +277,7 @@ def health():
 
 
 @app.get("/api/summary")
-def summary(month: Optional[str] = None):
+def summary(month: Optional[str] = None, user: Optional[str] = Depends(get_current_user)):
     """Receitas, despesas e saldo do mês."""
     begin, end = month_bounds(month)
     data = hledger("incomestatement", "-b", begin, "-e", end)
@@ -226,7 +303,7 @@ def summary(month: Optional[str] = None):
 
 
 @app.get("/api/categories")
-def categories(month: Optional[str] = None, depth: int = 2, tag: Optional[list[str]] = Query(None)):
+def categories(month: Optional[str] = None, depth: int = 2, tag: Optional[list[str]] = Query(None), user: Optional[str] = Depends(get_current_user)):
     """Despesas agregadas por categoria (para o gráfico de pizza)."""
     begin, end = month_bounds(month)
     cmd_args = ["balance", "expenses", f"--depth={depth}",
@@ -250,7 +327,7 @@ def categories(month: Optional[str] = None, depth: int = 2, tag: Optional[list[s
 
 
 @app.get("/api/categories/{category}")
-def category_detail(category: str, month: Optional[str] = None):
+def category_detail(category: str, month: Optional[str] = None, user: Optional[str] = Depends(get_current_user)):
     """Drill-down: subcategorias de uma categoria."""
     begin, end = month_bounds(month)
     data = hledger("balance", f"expenses:{category}", "--depth=3",
@@ -271,7 +348,7 @@ def category_detail(category: str, month: Optional[str] = None):
 
 
 @app.get("/api/cashflow")
-def cashflow(months: int = 12):
+def cashflow(months: int = 12, user: Optional[str] = Depends(get_current_user)):
     """Fluxo mensal (receitas/despesas) dos últimos N meses."""
     begin, end = months_back_bounds(months - 1)
     data = hledger("incomestatement", "-M", "-b", begin, "-e", end)
@@ -323,7 +400,7 @@ def cashflow(months: int = 12):
 
 
 @app.get("/api/networth")
-def networth(months: int = 12):
+def networth(months: int = 12, user: Optional[str] = Depends(get_current_user)):
     """Patrimônio líquido ao longo do tempo."""
     begin, end = months_back_bounds(months - 1)
     data = hledger("balancesheet", "-M", "-b", begin, "-e", end, "--historical")
@@ -375,7 +452,7 @@ def networth(months: int = 12):
 
 
 @app.get("/api/budget")
-def budget(month: Optional[str] = None):
+def budget(month: Optional[str] = None, user: Optional[str] = Depends(get_current_user)):
     """Orçamento vs realizado (requer ~ periodic transactions no journal)."""
     begin, end = month_bounds(month)
     data = hledger("balance", "expenses", "--budget",
@@ -498,7 +575,7 @@ def _parse_budget_text(begin: str, end: str, month_label: str):
 
 @app.get("/api/top-expenses")
 def top_expenses(month: Optional[str] = None, limit: int = 10,
-                 category: Optional[str] = None):
+                 category: Optional[str] = None, user: Optional[str] = Depends(get_current_user)):
     """Maiores gastos individuais do mês."""
     begin, end = month_bounds(month)
     query = f"expenses:{category}" if category else "expenses"
@@ -533,7 +610,7 @@ def top_expenses(month: Optional[str] = None, limit: int = 10,
 
 
 @app.get("/api/tags")
-def tags():
+def tags(user: Optional[str] = Depends(get_current_user)):
     """Lista todas as tags únicas do journal com contagem de transações."""
     raw = hledger("tags", output_format="text")
     tag_names = [line.strip() for line in raw.split("\n") if line.strip()]
@@ -561,6 +638,7 @@ def transactions(
     offset: int = Query(0, ge=0),
     sort: str = "date",
     order: str = "desc",
+    user: Optional[str] = Depends(get_current_user),
 ):
     """Lista paginada de transações com filtros por categoria, busca, tag e range."""
     # Determinar período
@@ -638,7 +716,7 @@ def transactions(
 
 
 @app.get("/api/savings-goal")
-def savings_goal(monthly_target: float = 5000, annual_target: float = 60000):
+def savings_goal(monthly_target: float = 5000, annual_target: float = 60000, user: Optional[str] = Depends(get_current_user)):
     """Progresso de meta de economia (mensal + anual)."""
     year = date.today().year
     # Mês atual
@@ -677,6 +755,110 @@ def savings_goal(monthly_target: float = 5000, annual_target: float = 60000):
             "target": annual_target,
             "actual": round(ano_receitas - ano_despesas, 2),
         },
+    }
+
+
+@app.get("/api/forecast")
+def forecast(months: int = 6, user: Optional[str] = Depends(get_current_user)):
+    """Projeção de saldo N meses à frente baseada em transações periódicas."""
+    begin, end = months_forward_bounds(months)
+    data = hledger("incomestatement", "-M", "--forecast",
+                   "-b", begin, "-e", end)
+
+    result = []
+    if isinstance(data, dict):
+        cbr_dates = data.get("cbrDates", [])
+        subreports = data.get("cbrSubreports", [])
+        revenues_report = expenses_report = None
+        for sub in subreports:
+            title = (sub[0] if isinstance(sub, list) else "").lower()
+            report = sub[1] if isinstance(sub, list) else {}
+            if "revenue" in title or "income" in title:
+                revenues_report = report
+            elif "expense" in title:
+                expenses_report = report
+
+        for period_idx, date_range in enumerate(cbr_dates):
+            first_date = date_range[0] if isinstance(date_range, list) else date_range
+            date_str = first_date.get("contents", "") if isinstance(first_date, dict) else str(first_date)
+            mes = date_str[:7]
+            receitas = despesas = 0.0
+            if revenues_report and "prRows" in revenues_report:
+                for row in revenues_report["prRows"]:
+                    amounts = row.get("prrAmounts", [])
+                    if period_idx < len(amounts) and amounts[period_idx]:
+                        receitas += abs(float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0)))
+            if expenses_report and "prRows" in expenses_report:
+                for row in expenses_report["prRows"]:
+                    amounts = row.get("prrAmounts", [])
+                    if period_idx < len(amounts) and amounts[period_idx]:
+                        despesas += abs(float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0)))
+            result.append({
+                "mes": mes,
+                "receitas": round(receitas, 2),
+                "despesas": round(despesas, 2),
+                "saldo": round(receitas - despesas, 2),
+            })
+    return {"months": result, "forecast": True}
+
+
+@app.get("/api/alerts")
+def alerts(month: Optional[str] = None, user: Optional[str] = Depends(get_current_user)):
+    """Alertas: categorias com gasto >25% acima da média dos últimos 3 meses."""
+    target_month = month or date.today().strftime("%Y-%m")
+    target_spending = _category_spending(target_month)
+
+    # Média dos 3 meses anteriores
+    historical: dict[str, list[float]] = {}
+    for i in range(1, 4):
+        hist_month = add_month_str(target_month, -i)
+        hist_spending = _category_spending(hist_month)
+        for cat, val in hist_spending.items():
+            historical.setdefault(cat, []).append(val)
+
+    alertas = []
+    for cat, current in target_spending.items():
+        hist_vals = historical.get(cat, [])
+        if len(hist_vals) < 2:
+            continue
+        avg = sum(hist_vals) / len(hist_vals)
+        if avg <= 0:
+            continue
+        pct_above = ((current - avg) / avg) * 100
+        if pct_above > 25:
+            alertas.append({
+                "categoria": cat.capitalize(),
+                "atual": round(current, 2),
+                "media": round(avg, 2),
+                "percentual_acima": round(pct_above, 1),
+                "mensagem": f"{cat.capitalize()} está {round(pct_above)}% acima da média (R$ {current:.2f} vs R$ {avg:.2f}/mês)",
+            })
+
+    alertas.sort(key=lambda a: a["percentual_acima"], reverse=True)
+    return {"month": target_month, "alertas": alertas}
+
+
+@app.get("/api/seasonality")
+def seasonality(months: int = 12, user: Optional[str] = Depends(get_current_user)):
+    """Matriz mês × categoria para heatmap de sazonalidade."""
+    matrix = []
+    start = date.today().replace(day=1)
+    for i in range(months - 1, -1, -1):
+        m_date = start
+        for _ in range(i):
+            m_date = (m_date - timedelta(days=1)).replace(day=1)
+        ym = m_date.strftime("%Y-%m")
+        spending = _category_spending(ym)  # reutiliza helper
+        matrix.append({"mes": ym, "categorias": spending})
+
+    # Coleta todas as categorias únicas
+    all_cats = set()
+    for row in matrix:
+        all_cats.update(row["categorias"].keys())
+
+    return {
+        "categorias": sorted(all_cats),
+        "meses": matrix,
     }
 
 

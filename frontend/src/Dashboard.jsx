@@ -195,6 +195,9 @@ function Resumo() {
     `/api/savings-goal?monthly_target=${CONFIG.savingsGoal.monthly}&annual_target=${CONFIG.savingsGoal.annual}`, [refreshKey]
   );
 
+  const { data: alertasData } = useApi(`/api/alerts?month=${selectedMonth}`, [selectedMonth, refreshKey]);
+  const alertas = alertasData?.alertas || [];
+
   // Comparison data (same month last year)
   const compMonth = lastYearMonth(selectedMonth);
   const { data: compSummary } = useApi(
@@ -237,6 +240,18 @@ function Resumo() {
 
   return (
     <div className="grid">
+      {alertas.length > 0 && (
+        <div style={{ background: '#3a2020', border: '1px solid #5a3030', borderRadius: 4, padding: '16px 20px' }}>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.1em', color: '#c97b5c', textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <AlertCircle size={14} /> Alertas de gastos
+          </div>
+          {alertas.map((a, i) => (
+            <div key={i} className="sans" style={{ fontSize: 13, color: '#e8e2d5', padding: '6px 0', borderTop: i > 0 ? '1px solid #4a2a2a' : 'none' }}>
+              <strong>{a.categoria}</strong> está {Math.round(a.percentual_acima)}% acima da média (atual: {BRLc(a.atual)} vs média: {BRLc(a.media)})
+            </div>
+          ))}
+        </div>
+      )}
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
         <KPI
           label="Receitas"
@@ -839,6 +854,152 @@ function Transacoes() {
   );
 }
 
+// ── Previsão ───────────────────────────────────────────────────────────
+const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+function monthLabel(ym) {
+  const m = parseInt(ym.split('-')[1], 10);
+  return MONTH_LABELS[m - 1] || ym;
+}
+
+function Previsao() {
+  const { refreshKey } = useMonth();
+  const { data: forecastData, error: e1, loading: l1 } = useApi('/api/forecast?months=12', [refreshKey]);
+  const { data: seasonData, error: e2, loading: l2 } = useApi('/api/seasonality?months=12', [refreshKey]);
+
+  if (l1 || l2) return <Spinner />;
+  if (e1) return <ErrorBox msg={e1} />;
+  if (e2) return <ErrorBox msg={e2} />;
+
+  const months = forecastData?.months || [];
+
+  // Compute projected balance for next 6 months
+  const projectedMonths = months.filter(m => m.forecast).slice(0, 6);
+  const projectedSaldo = projectedMonths.reduce((sum, m) => sum + (m.saldo ?? 0), 0);
+
+  const chartData = months.map(m => ({
+    ...m,
+    label: monthLabel(m.mes),
+  }));
+
+  // Seasonality heatmap data
+  const categorias = seasonData?.categorias || [];
+  const seasonMeses = seasonData?.meses || [];
+
+  // Compute max per row for opacity
+  const rowMax = {};
+  categorias.forEach(cat => {
+    rowMax[cat] = 0;
+    seasonMeses.forEach(m => {
+      const v = m.categorias?.[cat] ?? 0;
+      if (v > rowMax[cat]) rowMax[cat] = v;
+    });
+  });
+
+  return (
+    <div className="grid">
+      {/* Forecast chart */}
+      <div className="card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase' }}>
+            Previsão de fluxo · 12 meses
+          </div>
+          <span className="sans" style={{ fontSize: 12, color: '#d4a574', background: '#2a2724', border: '1px solid #3a3632', borderRadius: 3, padding: '3px 8px' }}>
+            Saldo projetado 6 meses: {BRL(projectedSaldo)}
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: 20, marginBottom: 16, flexWrap: 'wrap' }}>
+          <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 10, height: 10, background: '#8b9d7a', display: 'inline-block' }} /> Receitas
+          </span>
+          <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 10, height: 10, background: '#c97b5c', display: 'inline-block' }} /> Despesas
+          </span>
+          <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 18, height: 2, background: '#6b8ca3', display: 'inline-block' }} /> Saldo
+          </span>
+          <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 18, height: 0, borderTop: '2px dashed #3a3632', display: 'inline-block', opacity: 0.5 }} /> Previsão
+          </span>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#3a3632" />
+            <XAxis dataKey="label" tick={{ fill: '#8a8275', fontSize: 12, fontFamily: 'Inter, sans-serif' }} axisLine={{ stroke: '#3a3632' }} tickLine={false} />
+            <YAxis tick={{ fill: '#8a8275', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => BRL(v)} width={72} />
+            <Tooltip
+              contentStyle={{ background: '#1a1815', border: '1px solid #3a3632', borderRadius: 2, fontFamily: 'Inter', fontSize: 12 }}
+              formatter={(value, name) => [BRL(value), name]}
+              labelFormatter={(label, payload) => {
+                const item = payload?.[0]?.payload;
+                return item?.mes || label;
+              }}
+            />
+            <Line type="monotone" dataKey="receitas" stroke="#8b9d7a" strokeWidth={2} dot={{ r: 3, fill: '#8b9d7a' }} activeDot={{ r: 5 }} name="Receitas" strokeDasharray="" />
+            <Line type="monotone" dataKey="despesas" stroke="#c97b5c" strokeWidth={2} dot={{ r: 3, fill: '#c97b5c' }} activeDot={{ r: 5 }} name="Despesas" />
+            <Line type="monotone" dataKey="saldo" stroke="#6b8ca3" strokeWidth={2} dot={{ r: 3, fill: '#6b8ca3' }} activeDot={{ r: 5 }} name="Saldo" />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Seasonality heatmap */}
+      {categorias.length > 0 && seasonMeses.length > 0 && (
+        <div className="card">
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>
+            Sazonalidade · Despesas por categoria
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', padding: '8px 10px', color: '#8a8275', borderBottom: '1px solid #3a3632', fontWeight: 500, whiteSpace: 'nowrap' }}>Categoria</th>
+                  {seasonMeses.map(m => (
+                    <th key={m.mes} style={{ textAlign: 'right', padding: '8px 8px', color: '#8a8275', borderBottom: '1px solid #3a3632', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                      {monthLabel(m.mes)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {categorias.map(cat => (
+                  <tr key={cat}>
+                    <td style={{ padding: '6px 10px', borderBottom: '1px solid #2a2724', color: '#c4bcab', whiteSpace: 'nowrap' }} className="sans">
+                      {cat}
+                    </td>
+                    {seasonMeses.map(m => {
+                      const val = m.categorias?.[cat] ?? 0;
+                      const max = rowMax[cat] || 1;
+                      const opacity = Math.min(val / max, 1);
+                      return (
+                        <td
+                          key={m.mes}
+                          title={`${cat} · ${monthLabel(m.mes)}: ${BRLc(val)}`}
+                          style={{
+                            textAlign: 'right',
+                            padding: '6px 8px',
+                            borderBottom: '1px solid #2a2724',
+                            fontFamily: "'Fraunces', Georgia, serif",
+                            fontSize: 12,
+                            color: '#e8e2d5',
+                            background: val > 0 ? `rgba(212, 165, 116, ${opacity * 0.4})` : 'transparent',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {val > 0 ? BRL(val) : '—'}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Pull-to-refresh indicator ──────────────────────────────────────────
 function PullIndicator({ pullState, pullDistance }) {
   if (pullState === 'idle') return null;
@@ -958,7 +1119,7 @@ function DashboardInner({ aba, setAba }) {
         </header>
 
         <nav style={{ display: 'flex', gap: 2, marginBottom: 24, borderBottom: '1px solid #3a3632', overflowX: 'auto' }}>
-          {['resumo', 'fluxo', 'orçamento', 'transações'].map(t => (
+          {['resumo', 'fluxo', 'orçamento', 'previsão', 'transações'].map(t => (
             <button key={t} className={`tab ${aba === t ? 'active' : ''}`} onClick={() => setAba(t)}>{t}</button>
           ))}
         </nav>
@@ -966,6 +1127,7 @@ function DashboardInner({ aba, setAba }) {
         {aba === 'resumo' && <Resumo />}
         {aba === 'fluxo' && <Fluxo />}
         {aba === 'orçamento' && <Orcamento />}
+        {aba === 'previsão' && <Previsao />}
         {aba === 'transações' && <Transacoes />}
 
         <footer className="sans" style={{ marginTop: 48, paddingTop: 20, borderTop: '1px solid #3a3632', fontSize: 11, color: '#6a6258', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
