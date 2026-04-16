@@ -432,6 +432,7 @@ function Resumo() {
 function Fluxo() {
   const { refreshKey } = useMonth();
   const { data, error, loading } = useApi('/api/cashflow?months=12', [refreshKey]);
+  const [detailMonth, setDetailMonth] = useState(null);
   if (loading) return <Spinner />;
   if (error) return <ErrorBox msg={error} />;
 
@@ -476,12 +477,37 @@ function Fluxo() {
             formatter={(value, name) => [BRL(value), name]}
           />
           <ReferenceLine y={metaMensal} stroke="#6b8ca3" strokeDasharray="6 4" strokeWidth={1.5} label={{ value: `Meta ${BRL(metaMensal)}`, position: 'insideTopRight', fill: '#6b8ca3', fontSize: 11, fontFamily: 'Inter' }} />
-          <Bar dataKey="receitas" fill="#8b9d7a" radius={[2, 2, 0, 0]} name="Receitas" />
-          <Bar dataKey="despesas" fill="#c97b5c" radius={[2, 2, 0, 0]} name="Despesas" />
+          <Bar dataKey="receitas" fill="#8b9d7a" radius={[2, 2, 0, 0]} name="Receitas"
+               style={{ cursor: 'pointer' }}
+               onClick={(d) => d?.mes && setDetailMonth(d.mes)} />
+          <Bar dataKey="despesas" fill="#c97b5c" radius={[2, 2, 0, 0]} name="Despesas"
+               style={{ cursor: 'pointer' }}
+               onClick={(d) => d?.mes && setDetailMonth(d.mes)} />
           <Line type="monotone" dataKey="economia" stroke="#d4a574" strokeWidth={2} dot={{ r: 3, fill: '#d4a574', stroke: '#d4a574' }} activeDot={{ r: 5 }} name="Economia" />
           <Legend content={() => null} />
         </BarChart>
       </ResponsiveContainer>
+      {detailMonth && (
+        <FluxoDetail month={detailMonth} onClose={() => setDetailMonth(null)} />
+      )}
+    </div>
+  );
+}
+
+function FluxoDetail({ month, onClose }) {
+  const { data, error, loading } = useApi(`/api/flow?month=${month}`, [month]);
+  if (loading) return <div style={{ marginTop: 20 }}><Spinner /></div>;
+  if (error) return <ErrorBox msg={error} />;
+  return (
+    <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #3a3632' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#d4a574', textTransform: 'uppercase' }}>
+          Detalhe · {formatMonthBR(month)}
+        </div>
+        <button onClick={onClose} className="sans" style={{ ...navBtnStyle, fontSize: 11 }}>Fechar</button>
+      </div>
+      {/* Sankey + tables rendered in Tasks D3/D4 */}
+      <pre style={{ color: '#8a8275', fontSize: 11, overflowX: 'auto' }}>{JSON.stringify(data, null, 2)}</pre>
     </div>
   );
 }
