@@ -550,9 +550,7 @@ def budget(month: Optional[str] = None, user: Optional[str] = Depends(get_curren
                 continue
 
             pct = round((realizado / orcado) * 100) if orcado > 0 else 0
-            # Extract display name: last part of "expenses:category:subcategory"
-            parts = name.split(":")
-            display = parts[-1].capitalize() if len(parts) > 1 else name.capitalize()
+            display = format_category(name)
 
             cats.append({
                 "nome": display,
@@ -616,8 +614,7 @@ def _parse_budget_text(begin: str, end: str, month_label: str):
 
             realizado = parse_brl(realized_str)
             orcado = parse_brl(budgeted_str)
-            parts = name.split(":")
-            display = parts[-1].capitalize() if len(parts) > 1 else name.capitalize()
+            display = format_category(name)
 
             cats.append({
                 "nome": display,
@@ -659,7 +656,8 @@ def top_expenses(month: Optional[str] = None, limit: int = 10,
                 txs.append({
                     "data": tx_date,
                     "descricao": tx_desc,
-                    "categoria": account.split(":")[-1] if account else "",
+                    "categoria": format_category(account),
+                    "conta_raw": account,
                     "valor": round(amount, 2),
                 })
 
@@ -756,7 +754,8 @@ def transactions(
                 "data": tx_date,
                 "descricao": tx_desc,
                 "conta": account,
-                "categoria": account.split(":")[-1] if account else "",
+                "categoria": format_category(account),
+                "conta_raw": account,
                 "valor": round(amount, 2),
             })
 
@@ -890,11 +889,11 @@ def alerts(month: Optional[str] = None, user: Optional[str] = Depends(get_curren
         pct_above = ((current - avg) / avg) * 100
         if pct_above > 25:
             alertas.append({
-                "categoria": cat.capitalize(),
+                "categoria": _display_segment(cat),
                 "atual": round(current, 2),
                 "media": round(avg, 2),
                 "percentual_acima": round(pct_above, 1),
-                "mensagem": f"{cat.capitalize()} está {round(pct_above)}% acima da média (R$ {current:.2f} vs R$ {avg:.2f}/mês)",
+                "mensagem": f"{_display_segment(cat)} está {round(pct_above)}% acima da média (R$ {current:.2f} vs R$ {avg:.2f}/mês)",
             })
 
     alertas.sort(key=lambda a: a["percentual_acima"], reverse=True)
@@ -919,11 +918,7 @@ def accounts(user: Optional[str] = Depends(get_current_user)):
         # Determine type from account path
         tipo = "ativo" if name.startswith("assets") else "passivo"
         # Display name: last two parts capitalized
-        parts = name.split(":")
-        if len(parts) >= 2:
-            display = parts[-2].capitalize() + " " + parts[-1].capitalize()
-        else:
-            display = parts[0].capitalize()
+        display = format_account_name(name)
         result.append({
             "nome": display,
             "caminho": name,
