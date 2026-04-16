@@ -194,6 +194,7 @@ function Resumo() {
   const { data: goal, loading: l4 } = useApi(
     `/api/savings-goal?monthly_target=${CONFIG.savingsGoal.monthly}&annual_target=${CONFIG.savingsGoal.annual}`, [refreshKey]
   );
+  const { data: flow } = useApi(`/api/flow?month=${selectedMonth}`, [selectedMonth, refreshKey]);
 
   const { data: alertasData } = useApi(`/api/alerts?month=${selectedMonth}`, [selectedMonth, refreshKey]);
   const alertas = alertasData?.alertas || [];
@@ -279,6 +280,48 @@ function Resumo() {
           delta={compareMode && compSummary ? <DeltaBadge current={summary?.saldo} previous={compSummary?.saldo} /> : null}
         />
       </div>
+
+      {/* Reconciliação accrual × caixa: só aparece quando há movimento de cartão no mês */}
+      {flow && (() => {
+        const contasFlow = flow?.contas || [];
+        const ativos = contasFlow.filter(c => c.tipo === 'ativo');
+        const passivos = contasFlow.filter(c => c.tipo === 'passivo');
+        const sumBy = (arr, k) => arr.reduce((s, c) => s + (c[k] || 0), 0);
+        const economia = flow?.total_economia ?? 0;
+        const caixaLiq = ativos.reduce((s, c) => s + ((c.saldo_final || 0) - (c.saldo_inicial || 0)), 0);
+        const pagamentosFatura = sumBy(passivos, 'entradas_externas') + sumBy(passivos, 'transfers_in');
+        const novosGastosCartao = sumBy(passivos, 'saidas_externas') + sumBy(passivos, 'transfers_out');
+        const temCartao = passivos.length > 0 && (pagamentosFatura > 0 || novosGastosCartao > 0);
+        if (!temCartao) return null;
+        const steps = [
+          { label: 'Economia contábil', value: economia, cor: '#d4a574', bold: true },
+          pagamentosFatura > 0 && { label: '− Pagto fatura antiga', value: pagamentosFatura, cor: '#c97b5c' },
+          novosGastosCartao > 0 && { label: '+ Novos gastos cartão', value: novosGastosCartao, cor: '#8b9d7a' },
+          { label: 'Sobrou em caixa', value: caixaLiq, cor: caixaLiq >= 0 ? '#8b9d7a' : '#c97b5c', bold: true },
+        ].filter(Boolean);
+        return (
+          <div className="card" style={{ borderLeft: `3px solid ${caixaLiq >= 0 ? '#8b9d7a' : '#c97b5c'}` }}>
+            <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Wallet size={14} style={{ color: '#d4a574' }} /> Economia contábil × Caixa real
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(150px, 1fr))`, gap: 16 }}>
+              {steps.map((s, i) => (
+                <div key={i}>
+                  <div className="sans" style={{ fontSize: 10, color: '#8a8275', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{s.label}</div>
+                  <div className="serif" style={{ fontSize: s.bold ? 24 : 20, color: s.cor, fontWeight: 600, letterSpacing: '-0.01em' }}>{BRL(s.value)}</div>
+                </div>
+              ))}
+            </div>
+            <div className="sans" style={{ fontSize: 12, color: '#8a8275', marginTop: 14, lineHeight: 1.6 }}>
+              {pagamentosFatura > 0 && <>Pagou <strong style={{ color: '#c4bcab' }}>{BRL(pagamentosFatura)}</strong> de fatura de meses anteriores. </>}
+              {novosGastosCartao > 0 && <>Novos <strong style={{ color: '#c4bcab' }}>{BRL(novosGastosCartao)}</strong> em gastos no cartão vão sair da conta nos próximos meses. </>}
+              {caixaLiq >= 0
+                ? <>De fato, sobraram <strong style={{ color: '#8b9d7a' }}>{BRL(caixaLiq)}</strong> em caixa.</>
+                : <>Na prática, consumiu <strong style={{ color: '#c97b5c' }}>{BRL(Math.abs(caixaLiq))}</strong> da reserva.</>}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Meta de economia */}
       {goal && !l4 && (() => {
@@ -498,16 +541,19 @@ function SankeyNode({ x, y, width, height, payload }) {
   const isEndpoint = payload.name === 'Entradas' || payload.name === 'Saídas';
   const fill = payload.name === 'Entradas' ? '#8b9d7a'
              : payload.name === 'Saídas'  ? '#c97b5c'
-             : '#d4a574';
+             : payload.isLiability         ? '#6a6258'
+                                           : '#d4a574';
+  const fillOpacity = payload.isLiability ? 0.55 : 0.9;
+  const textColor = payload.isLiability ? '#8a8275' : '#c4bcab';
   return (
     <Layer>
-      <Rectangle x={x} y={y} width={width} height={height} fill={fill} fillOpacity={0.9} />
+      <Rectangle x={x} y={y} width={width} height={height} fill={fill} fillOpacity={fillOpacity} />
       <text
         x={x + (isEndpoint ? -6 : width + 6)}
         y={y + height / 2}
         textAnchor={isEndpoint ? 'end' : 'start'}
         alignmentBaseline="middle"
-        fill="#c4bcab"
+        fill={textColor}
         fontSize={12}
         fontFamily="Inter, sans-serif"
       >
@@ -525,7 +571,7 @@ function buildSankey(data) {
   const idx = { 'Entradas': 0, 'Saídas': 1 };
   (data.contas || []).forEach(c => {
     idx[c.conta] = nodes.length;
-    nodes.push({ name: c.nome, isAccount: true });
+    nodes.push({ name: c.nome, isAccount: true, isLiability: c.tipo === 'passivo' });
   });
   const links = [];
   (data.contas || []).forEach(c => {
@@ -565,15 +611,53 @@ function FluxoDetail({ month, onClose }) {
   if (loading) return <div style={{ marginTop: 20 }}><Spinner /></div>;
   if (error) return <ErrorBox msg={error} />;
   const sankey = buildSankey(data || { contas: [], transferencias: [] });
+  // Accrual × cash reconciliation: Economia contábil = Δ ativos + Δ passivos.
+  // Breaking out passivo inflows/outflows as "fatura paga" / "novo gasto no cartão"
+  // lets the user see why a headline "economia" doesn't match actual cash saved.
+  const contas = data?.contas || [];
+  const ativos = contas.filter(c => c.tipo === 'ativo');
+  const passivos = contas.filter(c => c.tipo === 'passivo');
+  const sumBy = (arr, k) => arr.reduce((s, c) => s + (c[k] || 0), 0);
+  const economia = data?.total_economia ?? 0;
+  const caixaLiq = ativos.reduce((s, c) => s + (c.saldo_final - c.saldo_inicial), 0);
+  const pagamentosFatura = sumBy(passivos, 'entradas_externas') + sumBy(passivos, 'transfers_in');
+  const novosGastosCartao = sumBy(passivos, 'saidas_externas') + sumBy(passivos, 'transfers_out');
+  const deltaDividaReduzida = pagamentosFatura - novosGastosCartao;
+  const temCartao = passivos.length > 0 && (pagamentosFatura > 0 || novosGastosCartao > 0);
   const thStyleFluxo = { textAlign: 'left', padding: '8px 10px', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8a8275', borderBottom: '1px solid #3a3632', fontWeight: 500 };
   const tdStyleFluxo = { padding: '10px', fontSize: 13, borderBottom: '1px solid #2a2724', color: '#c4bcab' };
+  const kpis = [
+    { label: 'Receitas', value: data?.total_entradas ?? 0, cor: '#8b9d7a' },
+    { label: 'Despesas', value: data?.total_saidas ?? 0, cor: '#c97b5c' },
+    { label: 'Economia contábil', value: economia, cor: economia >= 0 ? '#d4a574' : '#c97b5c', emphasis: true, hint: 'Rec − Desp' },
+    { label: 'Fluxo caixa líquido', value: caixaLiq, cor: caixaLiq >= 0 ? '#8b9d7a' : '#c97b5c', hint: 'Δ ativos' },
+  ];
+  if (temCartao) {
+    kpis.push({
+      label: 'Δ Dívida',
+      value: deltaDividaReduzida,
+      cor: deltaDividaReduzida > 0 ? '#8b9d7a' : deltaDividaReduzida < 0 ? '#c97b5c' : '#8a8275',
+      hint: deltaDividaReduzida > 0 ? 'pagou' : deltaDividaReduzida < 0 ? 'cresceu' : '',
+    });
+  }
   return (
     <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #3a3632' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 12 }}>
         <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#d4a574', textTransform: 'uppercase' }}>
-          Detalhe · {formatMonthBR(month)} · Entradas {BRL(data?.total_entradas ?? 0)} · Saídas {BRL(data?.total_saidas ?? 0)} · Economia {BRL(data?.total_economia ?? 0)}
+          Detalhe · {formatMonthBR(month)}
         </div>
         <button onClick={onClose} className="sans" style={{ ...navBtnStyle, fontSize: 11 }}>Fechar</button>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8, marginBottom: 20 }}>
+        {kpis.map((k, i) => (
+          <div key={i} style={{ padding: '10px 12px', border: '1px solid #2a2724', borderRadius: 3, background: k.emphasis ? 'rgba(212,165,116,0.04)' : 'transparent' }}>
+            <div className="sans" style={{ fontSize: 10, letterSpacing: '0.1em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 4 }}>{k.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 600, color: k.cor, fontFamily: "'Fraunces', Georgia, serif" }}>
+              {BRL(k.value)}
+            </div>
+            {k.hint && <div className="sans" style={{ fontSize: 10, color: '#6a6258', marginTop: 2 }}>{k.hint}</div>}
+          </div>
+        ))}
       </div>
       {sankey ? (
         <ResponsiveContainer width="100%" height={Math.max(420, 64 * sankey.nodes.length)}>
@@ -655,6 +739,45 @@ function FluxoDetail({ month, onClose }) {
         </table>
       </div>
 
+      {temCartao && (() => {
+        const rows = [
+          { label: 'Receitas', sign: '+', value: data?.total_entradas ?? 0, cor: '#8b9d7a' },
+          { label: 'Despesas do mês (inclui gastos no cartão)', sign: '−', value: data?.total_saidas ?? 0, cor: '#c97b5c' },
+          { label: 'Economia contábil', sign: '=', value: economia, cor: '#d4a574', divider: true, bold: true },
+          { label: 'Pagamento de faturas antigas', sign: '−', value: pagamentosFatura, cor: '#c97b5c', hide: pagamentosFatura === 0 },
+          { label: 'Novos gastos no cartão (a pagar depois)', sign: '+', value: novosGastosCartao, cor: '#8b9d7a', hide: novosGastosCartao === 0 },
+          { label: 'Mudou em caixa (ativos líquidos)', sign: '=', value: caixaLiq, cor: caixaLiq >= 0 ? '#8b9d7a' : '#c97b5c', divider: true, bold: true, strong: true },
+        ].filter(r => !r.hide);
+        return (
+          <>
+            <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', margin: '24px 0 12px' }}>
+              Reconciliação · contábil × caixa
+            </div>
+            <div style={{ border: '1px solid #2a2724', borderRadius: 3, padding: '4px 16px', background: 'rgba(26,24,21,0.4)' }}>
+              {rows.map((r, i) => (
+                <div key={i} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+                  padding: '10px 0',
+                  borderTop: r.divider ? '1px solid #3a3632' : 'none',
+                }}>
+                  <span className="sans" style={{ fontSize: r.strong ? 13 : 12, color: r.strong ? '#e8e2d5' : '#c4bcab' }}>
+                    {r.label}
+                  </span>
+                  <span style={{
+                    fontFamily: "'Fraunces', Georgia, serif",
+                    fontSize: r.strong ? 16 : 14,
+                    fontWeight: r.bold ? 600 : 400,
+                    color: r.cor,
+                  }}>
+                    <span style={{ color: '#6a6258', marginRight: 8 }}>{r.sign}</span>{BRLc(r.value)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        );
+      })()}
+
       {(data?.transferencias || []).length > 0 && (
         <>
           <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', margin: '24px 0 12px' }}>
@@ -683,10 +806,12 @@ function FluxoDetail({ month, onClose }) {
         </>
       )}
 
-      <div className="sans" style={{ fontSize: 12, color: '#8a8275', marginTop: 16, lineHeight: 1.5 }}>
-        {(data?.total_economia ?? 0) >= 0
-          ? <>Sobrou {BRL(data?.total_economia ?? 0)} no mês. Veja acima em quais contas o saldo aumentou.</>
-          : <>Faltou {BRL(Math.abs(data?.total_economia ?? 0))} no mês. Veja acima em quais contas o saldo caiu.</>}
+      <div className="sans" style={{ fontSize: 12, color: '#8a8275', marginTop: 16, lineHeight: 1.6 }}>
+        {caixaLiq >= 0
+          ? <>Sobrou <strong style={{ color: '#c4bcab' }}>{BRL(caixaLiq)}</strong> em caixa neste mês.</>
+          : <>Faltou <strong style={{ color: '#c97b5c' }}>{BRL(Math.abs(caixaLiq))}</strong> em caixa neste mês (consumiu reserva).</>}
+        {temCartao && deltaDividaReduzida > 0 && <> Você reduziu dívida em <strong style={{ color: '#8b9d7a' }}>{BRL(deltaDividaReduzida)}</strong>.</>}
+        {temCartao && deltaDividaReduzida < 0 && <> Dívida cresceu em <strong style={{ color: '#c97b5c' }}>{BRL(Math.abs(deltaDividaReduzida))}</strong> — a pagar em meses futuros.</>}
       </div>
     </div>
   );
@@ -1210,6 +1335,7 @@ function Previsao() {
 function Contas() {
   const { refreshKey } = useMonth();
   const { data, error, loading } = useApi('/api/accounts', [refreshKey]);
+  const { data: nwHist } = useApi('/api/networth?months=2', [refreshKey]);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [rangeStart, setRangeStart] = useState('');
   const [rangeEnd, setRangeEnd] = useState('');
@@ -1271,6 +1397,18 @@ function Contas() {
 
   const totalAtivos = ativos.reduce((s, c) => s + c.saldo, 0);
   const totalPassivos = passivos.reduce((s, c) => s + c.saldo, 0);
+  // hledger devolve saldos de passivo com sinal do razão (negativo = você deve),
+  // então somar já equivale a ativos − dívida.
+  const patrimonioLiquido = totalAtivos + totalPassivos;
+  const passivosOwed = Math.abs(totalPassivos);
+
+  // Delta vs mês anterior: /api/networth?months=2 devolve [mês-1, mês-atual].
+  const nwMonths = nwHist?.months || [];
+  const plPrev = nwMonths.length >= 2 ? nwMonths[0] : null;
+  const plCurr = nwMonths.length >= 1 ? nwMonths[nwMonths.length - 1] : null;
+  const plDelta = plPrev && plCurr ? (plCurr.net - plPrev.net) : null;
+  const plDeltaPct = plDelta != null && plPrev && plPrev.net !== 0 ? (plDelta / Math.abs(plPrev.net)) * 100 : null;
+  const plDeltaCor = plDelta == null ? '#8a8275' : plDelta >= 0 ? '#8b9d7a' : '#c97b5c';
 
   return (
     <div className="grid">
@@ -1281,21 +1419,32 @@ function Contas() {
           valor={totalAtivos}
           icon={<ArrowUpRight size={15} />}
           cor="#8b9d7a"
-          destaque
         />
         <KPI
           label="Total Passivos"
-          valor={Math.abs(totalPassivos)}
+          valor={passivosOwed}
           icon={<ArrowDownRight size={15} />}
           cor="#c97b5c"
         />
-        <KPI
-          label="Patrimônio Líquido"
-          valor={totalAtivos + totalPassivos}
-          icon={<Wallet size={15} />}
-          cor="#d4a574"
-          destaque
-        />
+        {/* Patrimônio Líquido — card custom pra mostrar Δ vs mês anterior e o breakdown A − P */}
+        <div className="card" style={{ borderLeft: '3px solid #d4a574' }}>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ color: '#d4a574' }}><Wallet size={15} /></span> Patrimônio Líquido
+          </div>
+          <div className="serif" style={{ fontSize: 38, fontWeight: 600, color: '#d4a574', letterSpacing: '-0.02em', lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+            {BRL(patrimonioLiquido)}
+            {plDelta != null && (
+              <span className="sans" style={{ fontSize: 13, color: plDeltaCor, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                {plDelta >= 0 ? '+' : '−'}{BRL(Math.abs(plDelta))}
+                {plDeltaPct != null && <span style={{ color: plDeltaCor, opacity: 0.75, marginLeft: 4 }}>({plDelta >= 0 ? '+' : ''}{plDeltaPct.toFixed(1)}%)</span>}
+              </span>
+            )}
+          </div>
+          <div className="sans" style={{ fontSize: 11, color: '#6a6258', marginTop: 8, letterSpacing: '0.02em' }}>
+            {BRL(totalAtivos)} <span style={{ color: '#4a4640' }}>(ativos)</span> − {BRL(passivosOwed)} <span style={{ color: '#4a4640' }}>(passivos)</span>
+            {plPrev && <> · <span style={{ color: '#8a8275' }}>Δ vs {plPrev.mes.slice(5)}/{plPrev.mes.slice(2, 4)}</span></>}
+          </div>
+        </div>
       </div>
 
       <div className="grid g3">
