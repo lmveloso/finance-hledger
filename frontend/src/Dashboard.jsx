@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { ArrowUpRight, ArrowDownRight, Wallet, AlertCircle, ChevronRight, ArrowLeft, PiggyBank, Loader2, ChevronLeft, CalendarDays, RefreshCw } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend, Sankey, Layer, Rectangle } from 'recharts';
+import { LineChart, Line, BarChart, Bar, ComposedChart, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend, Sankey, Layer, Rectangle } from 'recharts';
 import { useApi, fetchCategoryDetail } from './api.js';
 import { CONFIG } from './config.js';
 import { usePullToRefresh } from './hooks/usePullToRefresh.js';
@@ -468,7 +468,7 @@ function Fluxo() {
         </span>
       </div>
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={meses} barGap={2}>
+        <ComposedChart data={meses} barGap={2}>
           <CartesianGrid strokeDasharray="3 3" stroke="#3a3632" />
           <XAxis dataKey="label" tick={{ fill: '#8a8275', fontSize: 12, fontFamily: 'Inter, sans-serif' }} axisLine={{ stroke: '#3a3632' }} tickLine={false} />
           <YAxis tick={{ fill: '#8a8275', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => BRL(v)} width={72} />
@@ -485,7 +485,7 @@ function Fluxo() {
                onClick={(d) => d?.mes && setDetailMonth(d.mes)} />
           <Line type="monotone" dataKey="economia" stroke="#d4a574" strokeWidth={2} dot={{ r: 3, fill: '#d4a574', stroke: '#d4a574' }} activeDot={{ r: 5 }} name="Economia" />
           <Legend content={() => null} />
-        </BarChart>
+        </ComposedChart>
       </ResponsiveContainer>
       {detailMonth && (
         <FluxoDetail month={detailMonth} onClose={() => setDetailMonth(null)} />
@@ -518,11 +518,9 @@ function SankeyNode({ x, y, width, height, payload }) {
 }
 
 function buildSankey(data) {
-  // Nodes: "Entradas" (source), "Saídas" (sink), and each account from contas[].
-  // Links:
-  //   Entradas -> Conta  (external income into account)
-  //   Conta -> Saídas    (external expenses out of account)
-  //   Conta -> Conta     (transfers between accounts)
+  // Recharts <Sankey> requires a DAG. Opposing transfers (A→B and B→A in the
+  // same month — e.g. a top-up corrected by a sweep) form a 2-cycle and crash
+  // the layout with a stack overflow, so we collapse them to the net direction.
   const nodes = [{ name: 'Entradas' }, { name: 'Saídas' }];
   const idx = { 'Entradas': 0, 'Saídas': 1 };
   (data.contas || []).forEach(c => {
@@ -538,11 +536,26 @@ function buildSankey(data) {
       links.push({ source: idx[c.conta], target: idx['Saídas'], value: c.saidas_externas });
     }
   });
+
+  const pair = new Map();
   (data.transferencias || []).forEach(t => {
-    if (idx[t.from] != null && idx[t.to] != null && t.valor > 0) {
-      links.push({ source: idx[t.from], target: idx[t.to], value: t.valor });
-    }
+    if (idx[t.from] == null || idx[t.to] == null || !(t.valor > 0)) return;
+    const key = `${t.from}|${t.to}`;
+    pair.set(key, (pair.get(key) || 0) + t.valor);
   });
+  const consumed = new Set();
+  for (const [key, val] of pair) {
+    if (consumed.has(key)) continue;
+    const [from, to] = key.split('|');
+    const revKey = `${to}|${from}`;
+    const rev = pair.get(revKey) || 0;
+    consumed.add(key);
+    consumed.add(revKey);
+    const net = val - rev;
+    if (net > 0) links.push({ source: idx[from], target: idx[to], value: net });
+    else if (net < 0) links.push({ source: idx[to], target: idx[from], value: -net });
+  }
+
   if (links.length === 0) return null;
   return { nodes, links };
 }
@@ -563,13 +576,14 @@ function FluxoDetail({ month, onClose }) {
         <button onClick={onClose} className="sans" style={{ ...navBtnStyle, fontSize: 11 }}>Fechar</button>
       </div>
       {sankey ? (
-        <ResponsiveContainer width="100%" height={Math.max(300, 40 * sankey.nodes.length)}>
+        <ResponsiveContainer width="100%" height={Math.max(420, 64 * sankey.nodes.length)}>
           <Sankey
             data={sankey}
             nodeWidth={12}
-            nodePadding={20}
+            nodePadding={28}
             linkCurvature={0.5}
             iterations={64}
+            margin={{ top: 16, right: 160, bottom: 16, left: 90 }}
             link={{ stroke: '#6b8ca3', strokeOpacity: 0.2, fill: '#6b8ca3', fillOpacity: 0.3 }}
             node={<SankeyNode />}
           >
@@ -596,6 +610,7 @@ function FluxoDetail({ month, onClose }) {
               <th style={{ ...thStyleFluxo, textAlign: 'right' }}>Transf. +</th>
               <th style={{ ...thStyleFluxo, textAlign: 'right' }}>Transf. −</th>
               <th style={{ ...thStyleFluxo, textAlign: 'right' }}>Saldo final</th>
+              <th style={{ ...thStyleFluxo, textAlign: 'right' }}>Δ Saldo</th>
             </tr>
           </thead>
           <tbody>
@@ -610,10 +625,33 @@ function FluxoDetail({ month, onClose }) {
                   <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.transfers_in > 0 ? '#6b8ca3' : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.transfers_in > 0 ? BRLc(c.transfers_in) : '—'}</td>
                   <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.transfers_out > 0 ? '#6b8ca3' : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.transfers_out > 0 ? BRLc(c.transfers_out) : '—'}</td>
                   <td style={{ ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, color: delta > 0 ? '#8b9d7a' : delta < 0 ? '#c97b5c' : '#c4bcab' }}>{BRLc(c.saldo_final)}</td>
+                  <td style={{ ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, color: delta > 0 ? '#8b9d7a' : delta < 0 ? '#c97b5c' : '#8a8275' }}>{delta === 0 ? '—' : BRLc(delta)}</td>
                 </tr>
               );
             })}
           </tbody>
+          {(data?.contas || []).length > 0 && (() => {
+            const contas = data.contas;
+            const sum = (k) => contas.reduce((s, c) => s + (c[k] || 0), 0);
+            const totInicial = sum('saldo_inicial');
+            const totFinal = sum('saldo_final');
+            const totDelta = totFinal - totInicial;
+            const tfCell = { ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, borderTop: '1px solid #3a3632', borderBottom: 'none', color: '#e8e2d5' };
+            return (
+              <tfoot>
+                <tr>
+                  <td style={{ ...tdStyleFluxo, borderTop: '1px solid #3a3632', borderBottom: 'none', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8a8275', fontWeight: 500 }} className="sans">Total</td>
+                  <td style={tfCell}>{BRLc(totInicial)}</td>
+                  <td style={{ ...tfCell, color: '#8b9d7a' }}>{BRLc(sum('entradas_externas'))}</td>
+                  <td style={{ ...tfCell, color: '#c97b5c' }}>{BRLc(sum('saidas_externas'))}</td>
+                  <td style={{ ...tfCell, color: '#6b8ca3' }}>{BRLc(sum('transfers_in'))}</td>
+                  <td style={{ ...tfCell, color: '#6b8ca3' }}>{BRLc(sum('transfers_out'))}</td>
+                  <td style={tfCell}>{BRLc(totFinal)}</td>
+                  <td style={{ ...tfCell, color: totDelta > 0 ? '#8b9d7a' : totDelta < 0 ? '#c97b5c' : '#e8e2d5' }}>{BRLc(totDelta)}</td>
+                </tr>
+              </tfoot>
+            );
+          })()}
         </table>
       </div>
 
