@@ -683,6 +683,69 @@ def tags(user: Optional[str] = Depends(get_current_user)):
     return {"tags": result}
 
 
+def _transactions_for_account(account: str, begin: str, end: str) -> list[dict]:
+    """Lista transações tocando uma conta específica com contra-posting.
+
+    Usa `hledger print` para obter a transação completa (todos os postings)
+    e derivar o contra-lado do posting que toca `account`.
+
+    Retorna rows com:
+      - data, descricao, conta, valor (sign do posting em account)
+      - contra_conta: primeiro posting cujo account != account
+      - categoria: format_category(contra_conta)
+      - tipo_movimento: "credito"|"debito"|"transferencia"|"saldo_inicial"
+    """
+    data = hledger("print", f"acct:^{account}$", "-b", begin, "-e", end)
+    txs = []
+    if not isinstance(data, list):
+        return txs
+    for t in data:
+        if not isinstance(t, dict):
+            continue
+        tx_date = t.get("tdate", "")
+        tx_desc = t.get("tdescription", "")
+        postings = t.get("tpostings", [])
+        own = None
+        contra = None
+        for p in postings:
+            pacct = p.get("paccount", "")
+            if pacct == account and own is None:
+                own = p
+            elif pacct != account and contra is None:
+                contra = p
+        if own is None:
+            continue
+
+        pamount = own.get("pamount", [])
+        valor = 0.0
+        if isinstance(pamount, list) and pamount:
+            a = pamount[0]
+            if isinstance(a, dict):
+                valor = float(a.get("aquantity", {}).get("floatingPoint", 0))
+
+        contra_acct = contra.get("paccount", "") if contra else ""
+
+        if contra_acct == "equity:saldo-inicial":
+            tipo = "saldo_inicial"
+        elif contra_acct.startswith("assets:") or contra_acct.startswith("liabilities:"):
+            tipo = "transferencia"
+        elif valor >= 0:
+            tipo = "credito"
+        else:
+            tipo = "debito"
+
+        txs.append({
+            "data": tx_date,
+            "descricao": tx_desc,
+            "conta": account,
+            "valor": round(valor, 2),
+            "contra_conta": contra_acct,
+            "categoria": format_category(contra_acct) if contra_acct else "",
+            "tipo_movimento": tipo,
+        })
+    return txs
+
+
 @app.get("/api/transactions")
 def transactions(
     month: Optional[str] = None,
@@ -707,14 +770,30 @@ def transactions(
     else:
         begin, period_end = month_bounds()
 
+    # Per-account path uses `hledger print` to expose contra-posting
+    if account:
+        txs = _transactions_for_account(account, begin, period_end)
+        if search:
+            txs = [tx for tx in txs if search.lower() in tx["descricao"].lower()]
+        # Tag filter not supported for per-account path yet (matches previous behavior for Contas tab)
+        reverse = order.lower() == "desc"
+        if sort == "amount":
+            txs.sort(key=lambda x: x["valor"], reverse=reverse)
+        else:
+            txs.sort(key=lambda x: x["data"], reverse=reverse)
+        total = len(txs)
+        return {
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "transactions": txs[offset:offset + limit],
+        }
+
     # Construir args do hledger register
     cmd_args = ["register"]
 
-    # Filtro por conta específica (usado na aba Contas)
-    if account:
-        cmd_args.append(account)
     # Filtro por categoria
-    elif category:
+    if category:
         cmd_args.append(f"expenses:{category}")
     else:
         cmd_args.append("expenses")
