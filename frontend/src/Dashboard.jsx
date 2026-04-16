@@ -552,6 +552,8 @@ function FluxoDetail({ month, onClose }) {
   if (loading) return <div style={{ marginTop: 20 }}><Spinner /></div>;
   if (error) return <ErrorBox msg={error} />;
   const sankey = buildSankey(data || { contas: [], transferencias: [] });
+  const thStyleFluxo = { textAlign: 'left', padding: '8px 10px', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8a8275', borderBottom: '1px solid #3a3632', fontWeight: 500 };
+  const tdStyleFluxo = { padding: '10px', fontSize: 13, borderBottom: '1px solid #2a2724', color: '#c4bcab' };
   return (
     <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #3a3632' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
@@ -580,7 +582,74 @@ function FluxoDetail({ month, onClose }) {
       ) : (
         <div className="sans" style={{ fontSize: 13, color: '#8a8275' }}>Sem movimentação para exibir fluxograma.</div>
       )}
-      {/* Tables rendered in Task D4 */}
+      <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', margin: '24px 0 12px' }}>
+        Por conta
+      </div>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={thStyleFluxo}>Conta</th>
+              <th style={{ ...thStyleFluxo, textAlign: 'right' }}>Saldo inicial</th>
+              <th style={{ ...thStyleFluxo, textAlign: 'right' }}>Entradas</th>
+              <th style={{ ...thStyleFluxo, textAlign: 'right' }}>Saídas</th>
+              <th style={{ ...thStyleFluxo, textAlign: 'right' }}>Transf. +</th>
+              <th style={{ ...thStyleFluxo, textAlign: 'right' }}>Transf. −</th>
+              <th style={{ ...thStyleFluxo, textAlign: 'right' }}>Saldo final</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(data?.contas || []).map(c => {
+              const delta = c.saldo_final - c.saldo_inicial;
+              return (
+                <tr key={c.conta}>
+                  <td style={tdStyleFluxo}>{c.nome}</td>
+                  <td style={{ ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif' }}>{BRLc(c.saldo_inicial)}</td>
+                  <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.entradas_externas > 0 ? '#8b9d7a' : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.entradas_externas > 0 ? BRLc(c.entradas_externas) : '—'}</td>
+                  <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.saidas_externas > 0 ? '#c97b5c' : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.saidas_externas > 0 ? BRLc(c.saidas_externas) : '—'}</td>
+                  <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.transfers_in > 0 ? '#6b8ca3' : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.transfers_in > 0 ? BRLc(c.transfers_in) : '—'}</td>
+                  <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.transfers_out > 0 ? '#6b8ca3' : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.transfers_out > 0 ? BRLc(c.transfers_out) : '—'}</td>
+                  <td style={{ ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, color: delta > 0 ? '#8b9d7a' : delta < 0 ? '#c97b5c' : '#c4bcab' }}>{BRLc(c.saldo_final)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {(data?.transferencias || []).length > 0 && (
+        <>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', margin: '24px 0 12px' }}>
+            Transferências entre contas
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={thStyleFluxo}>De</th>
+                  <th style={thStyleFluxo}>Para</th>
+                  <th style={{ ...thStyleFluxo, textAlign: 'right' }}>Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.transferencias.map((t, i) => (
+                  <tr key={i}>
+                    <td style={tdStyleFluxo}>{t.from_nome}</td>
+                    <td style={tdStyleFluxo}>{t.to_nome}</td>
+                    <td style={{ ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, color: '#6b8ca3' }}>{BRLc(t.valor)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      <div className="sans" style={{ fontSize: 12, color: '#8a8275', marginTop: 16, lineHeight: 1.5 }}>
+        {(data?.total_economia ?? 0) >= 0
+          ? <>Sobrou {BRL(data?.total_economia ?? 0)} no mês. Veja acima em quais contas o saldo aumentou.</>
+          : <>Faltou {BRL(Math.abs(data?.total_economia ?? 0))} no mês. Veja acima em quais contas o saldo caiu.</>}
+      </div>
     </div>
   );
 }
