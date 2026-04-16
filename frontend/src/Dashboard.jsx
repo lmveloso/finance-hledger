@@ -1117,6 +1117,23 @@ function Contas() {
   );
 }
 
+function TipoChip({ tipo }) {
+  const map = {
+    credito:       { label: 'Crédito',       bg: 'rgba(139,157,122,0.15)', fg: '#8b9d7a' },
+    debito:        { label: 'Débito',        bg: 'rgba(201,123,92,0.15)',  fg: '#c97b5c' },
+    transferencia: { label: 'Transferência', bg: 'rgba(107,140,163,0.15)', fg: '#6b8ca3' },
+    saldo_inicial: { label: 'Saldo inicial', bg: 'rgba(138,130,117,0.18)', fg: '#8a8275' },
+  };
+  const s = map[tipo] || map.debito;
+  return (
+    <span className="sans" style={{
+      fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase',
+      background: s.bg, color: s.fg, border: `1px solid ${s.fg}33`,
+      borderRadius: 3, padding: '2px 6px', whiteSpace: 'nowrap',
+    }}>{s.label}</span>
+  );
+}
+
 function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, setRangeEnd, showStatement, setShowStatement, refreshKey }) {
   // Recent transactions (last 20)
   const { data: txData, loading: txLoading, error: txError } = useApi(
@@ -1231,29 +1248,37 @@ function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, s
                   <tr>
                     <th style={thStyle}>Data</th>
                     <th style={thStyle}>Descrição</th>
+                    <th style={thStyle}>Categoria</th>
+                    <th style={{ ...thStyle, textAlign: 'center' }}>Tipo</th>
                     <th style={{ ...thStyle, textAlign: 'right' }}>Valor</th>
                     <th style={{ ...thStyle, textAlign: 'right' }}>Saldo</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {stmtWithBalance.map((tx, i) => (
-                    <tr key={i}
-                      onMouseEnter={e => e.currentTarget.style.background = '#2a2724'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#8a8275', fontSize: 12 }}>{tx.data}</td>
-                      <td style={tdStyle}>{tx.descricao}</td>
-                      <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? '#8b9d7a' : tx.valor < 0 ? '#c97b5c' : 'inherit' }}>
-                        {BRLc(tx.valor)}
-                      </td>
-                      <td style={{
-                        ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600,
-                        color: tx.runningBalance < 0 ? '#c97b5c' : '#8b9d7a',
-                      }}>
-                        {BRLc(tx.runningBalance)}
-                      </td>
-                    </tr>
-                  ))}
+                  {stmtWithBalance.map((tx, i) => {
+                    const isOpening = tx.tipo_movimento === 'saldo_inicial';
+                    return (
+                      <tr key={i}
+                        onMouseEnter={e => e.currentTarget.style.background = '#2a2724'}
+                        onMouseLeave={e => e.currentTarget.style.background = isOpening ? '#242220' : 'transparent'}
+                        style={isOpening ? { background: '#242220', fontStyle: 'italic' } : {}}
+                      >
+                        <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#8a8275', fontSize: 12 }}>{tx.data}</td>
+                        <td style={tdStyle}>{tx.descricao}</td>
+                        <td style={{ ...tdStyle, color: '#8a8275', fontSize: 12 }}>{tx.categoria}</td>
+                        <td style={{ ...tdStyle, textAlign: 'center' }}><TipoChip tipo={tx.tipo_movimento} /></td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? '#8b9d7a' : tx.valor < 0 ? '#c97b5c' : 'inherit' }}>
+                          {BRLc(tx.valor)}
+                        </td>
+                        <td style={{
+                          ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600,
+                          color: tx.runningBalance < 0 ? '#c97b5c' : '#8b9d7a',
+                        }}>
+                          {BRLc(tx.runningBalance)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               <div className="sans" style={{ fontSize: 12, color: '#8a8275', marginTop: 12, paddingTop: 12, borderTop: '1px solid #3a3632' }}>
@@ -1279,22 +1304,30 @@ function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, s
                   <tr>
                     <th style={thStyle}>Data</th>
                     <th style={thStyle}>Descrição</th>
+                    <th style={thStyle}>Categoria</th>
+                    <th style={{ ...thStyle, textAlign: 'center' }}>Tipo</th>
                     <th style={{ ...thStyle, textAlign: 'right' }}>Valor</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(txData?.transactions || []).map((tx, i) => (
-                    <tr key={i}
-                      onMouseEnter={e => e.currentTarget.style.background = '#2a2724'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#8a8275', fontSize: 12 }}>{tx.data}</td>
-                      <td style={tdStyle}>{tx.descricao}</td>
-                      <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? '#8b9d7a' : tx.valor < 0 ? '#c97b5c' : 'inherit' }}>
-                        {BRLc(tx.valor)}
-                      </td>
-                    </tr>
-                  ))}
+                  {(txData?.transactions || []).map((tx, i) => {
+                    const isOpening = tx.tipo_movimento === 'saldo_inicial';
+                    return (
+                      <tr key={i}
+                        onMouseEnter={e => e.currentTarget.style.background = '#2a2724'}
+                        onMouseLeave={e => e.currentTarget.style.background = isOpening ? '#242220' : 'transparent'}
+                        style={isOpening ? { background: '#242220', fontStyle: 'italic' } : {}}
+                      >
+                        <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#8a8275', fontSize: 12 }}>{tx.data}</td>
+                        <td style={tdStyle}>{tx.descricao}</td>
+                        <td style={{ ...tdStyle, color: '#8a8275', fontSize: 12 }}>{tx.categoria}</td>
+                        <td style={{ ...tdStyle, textAlign: 'center' }}><TipoChip tipo={tx.tipo_movimento} /></td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? '#8b9d7a' : tx.valor < 0 ? '#c97b5c' : 'inherit' }}>
+                          {BRLc(tx.valor)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
