@@ -406,7 +406,7 @@ def category_detail(category: str, month: Optional[str] = None, user: Optional[s
                 if len(parts) >= 3:  # expenses:category:subcategory
                     amount = abs(_amount({"amount": row[3]}))
                     if amount > 0:
-                        subs.append({"nome": parts[-1].capitalize(), "valor": round(amount, 2)})
+                        subs.append({"nome": _display_segment(parts[-1]), "valor": round(amount, 2)})
 
     return {"category": category, "subcategorias": subs}
 

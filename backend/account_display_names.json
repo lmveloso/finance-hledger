@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "description": "Mapeia segmentos de account path para nomes de exibicao com acentos. Aplicado em main.py:format_account_display().",
+  "description": "Mapeia segmentos de account path para nomes de exibicao com acentos. Usado por _display_segment/format_category/format_account_name em main.py.",
   "segments": {
     "expenses": "Despesas",
     "income": "Receitas",

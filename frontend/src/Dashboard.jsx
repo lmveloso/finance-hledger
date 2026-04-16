@@ -215,7 +215,7 @@ function Resumo() {
     let cancelled = false;
     setLoadingCatTop(true);
     const API = import.meta.env.VITE_API_URL || '';
-    fetch(`${API}/api/top-expenses?month=${selectedMonth}&limit=20&category=${encodeURIComponent(detalhe.nome)}`)
+    fetch(`${API}/api/top-expenses?month=${selectedMonth}&limit=20&category=${encodeURIComponent(detalhe.segmento_raw || detalhe.nome)}`)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(d => { if (!cancelled) setCatTopExpenses(d); })
       .catch(() => { if (!cancelled) setCatTopExpenses(null); })
@@ -231,7 +231,7 @@ function Resumo() {
   const openCat = async (cat) => {
     setLoadingDet(true);
     try {
-      const r = await fetchCategoryDetail(cat.nome, selectedMonth);
+      const r = await fetchCategoryDetail(cat.segmento_raw || cat.nome, selectedMonth);
       setDetalhe({ ...cat, subcats: r.subcategorias || [] });
     } catch (e) {
       setDetalhe({ ...cat, subcats: [], error: e.message });
@@ -395,7 +395,7 @@ function Resumo() {
                 ))}
                 {hasMore && (
                   <button
-                    onClick={() => goToTransactions(detalhe ? detalhe.nome : null)}
+                    onClick={() => goToTransactions(detalhe ? (detalhe.segmento_raw || detalhe.nome) : null)}
                     className="sans"
                     style={{
                       background: 'none',
