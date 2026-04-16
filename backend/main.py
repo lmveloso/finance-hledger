@@ -25,6 +25,13 @@ LEDGER_FILE = os.environ.get("LEDGER_FILE", os.path.expanduser("~/finances/2026.
 HLEDGER = os.environ.get("HLEDGER_PATH", "hledger")
 FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
 
+_DISPLAY_NAMES_PATH = Path(__file__).parent / "account_display_names.json"
+try:
+    _DISPLAY_NAMES = json.loads(_DISPLAY_NAMES_PATH.read_text()).get("segments", {})
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    logger.warning("account_display_names.json não carregado: %s", e)
+    _DISPLAY_NAMES = {}
+
 # ── Auth ─────────────────────────────────────────────────────────────────────
 USERS = {}
 _lucas_pw = os.environ.get("PASSWORD_LUCAS")
@@ -233,6 +240,58 @@ def _amount(row) -> float:
     logger.warning("_amount: nenhuma chave de amount encontrada em row com keys=%s",
                     list(row.keys()))
     return 0.0
+
+
+def _display_segment(segment: str) -> str:
+    """Converte um segmento de account path em nome de exibição."""
+    if not segment:
+        return ""
+    lookup = _DISPLAY_NAMES.get(segment.lower())
+    if lookup:
+        return lookup
+    # Fallback: capitalize palavras separadas por '-'
+    return " ".join(p.capitalize() for p in segment.split("-"))
+
+
+def format_category(account: str) -> str:
+    """Formata account path de despesa/receita para exibição humana.
+
+    Regras:
+      - Remove top-level (expenses/income) se presente
+      - 1 segmento restante: "Seguro"
+      - 2+ segmentos: "Alimentação: Restaurante"
+      - Conta equity:saldo-inicial → "Patrimônio: Saldo Inicial"
+
+    Ex:
+      expenses:alimentacao:restaurante → "Alimentação: Restaurante"
+      expenses:seguro                  → "Seguro"
+      equity:saldo-inicial             → "Patrimônio: Saldo Inicial"
+      assets:banco:caixa:corrente      → "Ativos: Banco: Caixa: Corrente"
+    """
+    if not account:
+        return ""
+    parts = account.split(":")
+    # Strip top-level root for expenses/income only; keep for assets/liabilities/equity
+    if parts and parts[0] in ("expenses", "income"):
+        parts = parts[1:]
+    if not parts:
+        return ""
+    labels = [_display_segment(p) for p in parts]
+    return ": ".join(labels)
+
+
+def format_account_name(account: str) -> str:
+    """Formata account path de ativo/passivo para nome curto da conta.
+
+    Usa os dois últimos segmentos. Ex:
+      assets:banco:caixa:corrente → "Caixa: Corrente"
+      liabilities:cartao:nubank   → "Cartão: Nubank"
+    """
+    if not account:
+        return ""
+    parts = account.split(":")
+    tail = parts[-2:] if len(parts) >= 2 else parts
+    return ": ".join(_display_segment(p) for p in tail)
 
 
 def _category_spending(month: str) -> dict[str, float]:
