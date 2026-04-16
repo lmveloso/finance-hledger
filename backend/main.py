@@ -528,6 +528,9 @@ def flow(month: Optional[str] = None, user: Optional[str] = Depends(get_current_
 
             # Opening-balance transaction: has equity:saldo-inicial posting
             if equity_pairs:
+                # No double-count with `opening`: `--historical -e begin` covers postings
+                # strictly before the month, and `print -b begin` covers postings within —
+                # the two date ranges are disjoint.
                 for (a, v) in own_pairs:
                     bucket(a)["saldo_inicial_postings"] += v
                 continue  # skip flow classification
@@ -556,7 +559,10 @@ def flow(month: Optional[str] = None, user: Optional[str] = Depends(get_current_
             if len(own_pairs) >= 2 and not expense_pairs and not income_pairs:
                 senders = [(a, v) for (a, v) in own_pairs if v < 0]
                 receivers = [(a, v) for (a, v) in own_pairs if v > 0]
-                # Naive 1:1 pairing — exact for typical 2-leg transfers
+                # Naive 1:1 pairing — exact for typical 2-leg transfers. For 3+ leg
+                # splits, receiver amounts are not mutated across pairings, so a
+                # second sender may over-credit a receiver. Revisit if split-transfer
+                # patterns emerge in the journal.
                 for (sa, sv) in senders:
                     remaining = abs(sv)
                     for (ra, rv) in receivers:
