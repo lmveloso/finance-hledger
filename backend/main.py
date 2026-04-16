@@ -463,6 +463,162 @@ def cashflow(months: int = 12, user: Optional[str] = Depends(get_current_user)):
     return {"months": result}
 
 
+@app.get("/api/flow")
+def flow(month: Optional[str] = None, user: Optional[str] = Depends(get_current_user)):
+    """Detalha movimentação do mês: por conta (saldo inicial/final, entradas, saídas,
+    transferências) + matriz de transferências entre contas próprias.
+
+    Ignora postings em equity:saldo-inicial em todos os totais de fluxo; os trata
+    como 'saldo inicial' separadamente.
+    """
+    begin, end = month_bounds(month)
+
+    # 1) Opening balances per account (saldo no início do mês): balance -e begin --historical
+    opening_raw = hledger("balance", "assets", "liabilities",
+                          "-e", begin, "--historical", "--flat")
+    opening = {}
+    rows = opening_raw[0] if isinstance(opening_raw, list) and opening_raw and isinstance(opening_raw[0], list) else []
+    for row in rows:
+        if isinstance(row, list) and len(row) >= 4 and isinstance(row[0], str):
+            opening[row[0]] = _amount({"amount": row[3]}) if isinstance(row[3], list) else 0.0
+
+    # 2) All transactions in month via print
+    tx_data = hledger("print", "-b", begin, "-e", end)
+
+    # Per-account accumulators
+    per_account: dict[str, dict] = {}
+    transfers: dict[tuple, float] = {}  # (from_account, to_account) -> value
+
+    def bucket(acct: str) -> dict:
+        if acct not in per_account:
+            per_account[acct] = {
+                "conta": acct,
+                "nome": format_account_name(acct),
+                "saldo_inicial": round(opening.get(acct, 0.0), 2),
+                "entradas_externas": 0.0,
+                "saidas_externas": 0.0,
+                "transfers_in": 0.0,
+                "transfers_out": 0.0,
+                "saldo_inicial_postings": 0.0,  # postings contra equity:saldo-inicial
+            }
+        return per_account[acct]
+
+    if isinstance(tx_data, list):
+        for t in tx_data:
+            if not isinstance(t, dict):
+                continue
+            postings = t.get("tpostings", [])
+            # Extract (account, value) tuples
+            pairs = []
+            for p in postings:
+                acct = p.get("paccount", "")
+                pamount = p.get("pamount", [])
+                val = 0.0
+                if isinstance(pamount, list) and pamount:
+                    a = pamount[0]
+                    if isinstance(a, dict):
+                        val = float(a.get("aquantity", {}).get("floatingPoint", 0))
+                pairs.append((acct, val))
+
+            own_pairs = [(a, v) for (a, v) in pairs
+                         if a.startswith("assets:") or a.startswith("liabilities:")]
+            expense_pairs = [(a, v) for (a, v) in pairs if a.startswith("expenses:")]
+            income_pairs = [(a, v) for (a, v) in pairs if a.startswith("income:")]
+            equity_pairs = [(a, v) for (a, v) in pairs if a == "equity:saldo-inicial"]
+
+            # Opening-balance transaction: has equity:saldo-inicial posting
+            if equity_pairs:
+                for (a, v) in own_pairs:
+                    bucket(a)["saldo_inicial_postings"] += v
+                continue  # skip flow classification
+
+            # External expense: own posting + expenses:* contra
+            if expense_pairs and own_pairs:
+                for (a, v) in own_pairs:
+                    # own posting is negative for an expense payment
+                    if v < 0:
+                        bucket(a)["saidas_externas"] += abs(v)
+                    else:
+                        # a refund / credit adjustment in an expense tx — treat as entrada
+                        bucket(a)["entradas_externas"] += v
+                continue
+
+            # External income: income:* contra + own posting
+            if income_pairs and own_pairs:
+                for (a, v) in own_pairs:
+                    if v > 0:
+                        bucket(a)["entradas_externas"] += v
+                    else:
+                        bucket(a)["saidas_externas"] += abs(v)
+                continue
+
+            # Internal transfer: 2+ own postings, no external leg
+            if len(own_pairs) >= 2 and not expense_pairs and not income_pairs:
+                senders = [(a, v) for (a, v) in own_pairs if v < 0]
+                receivers = [(a, v) for (a, v) in own_pairs if v > 0]
+                # Naive 1:1 pairing — exact for typical 2-leg transfers
+                for (sa, sv) in senders:
+                    remaining = abs(sv)
+                    for (ra, rv) in receivers:
+                        if remaining <= 0:
+                            break
+                        amount = min(remaining, rv)
+                        if amount <= 0:
+                            continue
+                        transfers[(sa, ra)] = transfers.get((sa, ra), 0.0) + amount
+                        bucket(sa)["transfers_out"] += amount
+                        bucket(ra)["transfers_in"] += amount
+                        remaining -= amount
+
+    # Finalize per-account rows
+    contas = []
+    for acct, b in per_account.items():
+        entradas = round(b["entradas_externas"], 2)
+        saidas = round(b["saidas_externas"], 2)
+        tin = round(b["transfers_in"], 2)
+        tout = round(b["transfers_out"], 2)
+        saldo_final = round(
+            b["saldo_inicial"] + entradas - saidas + tin - tout + b["saldo_inicial_postings"],
+            2
+        )
+        contas.append({
+            "conta": acct,
+            "nome": b["nome"],
+            "tipo": "ativo" if acct.startswith("assets") else "passivo",
+            "saldo_inicial": b["saldo_inicial"],
+            "entradas_externas": entradas,
+            "saidas_externas": saidas,
+            "transfers_in": tin,
+            "transfers_out": tout,
+            "saldo_final": saldo_final,
+        })
+    contas.sort(key=lambda c: (0 if c["tipo"] == "ativo" else 1, c["conta"]))
+
+    transfer_list = [
+        {
+            "from": sa,
+            "from_nome": format_account_name(sa),
+            "to": ra,
+            "to_nome": format_account_name(ra),
+            "valor": round(v, 2),
+        }
+        for (sa, ra), v in transfers.items() if v > 0
+    ]
+    transfer_list.sort(key=lambda t: t["valor"], reverse=True)
+
+    total_entradas = round(sum(c["entradas_externas"] for c in contas), 2)
+    total_saidas = round(sum(c["saidas_externas"] for c in contas), 2)
+
+    return {
+        "month": month or date.today().strftime("%Y-%m"),
+        "total_entradas": total_entradas,
+        "total_saidas": total_saidas,
+        "total_economia": round(total_entradas - total_saidas, 2),
+        "contas": contas,
+        "transferencias": transfer_list,
+    }
+
+
 @app.get("/api/networth")
 def networth(months: int = 12, user: Optional[str] = Depends(get_current_user)):
     """Patrimônio líquido ao longo do tempo."""
