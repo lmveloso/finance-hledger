@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { ArrowUpRight, ArrowDownRight, Wallet, AlertCircle, ChevronRight, ArrowLeft, PiggyBank, Loader2, ChevronLeft, CalendarDays, RefreshCw } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend } from 'recharts';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend, Sankey, Layer, Rectangle } from 'recharts';
 import { useApi, fetchCategoryDetail } from './api.js';
 import { CONFIG } from './config.js';
 import { usePullToRefresh } from './hooks/usePullToRefresh.js';
@@ -494,20 +494,93 @@ function Fluxo() {
   );
 }
 
+function SankeyNode({ x, y, width, height, payload }) {
+  const isEndpoint = payload.name === 'Entradas' || payload.name === 'Saídas';
+  const fill = payload.name === 'Entradas' ? '#8b9d7a'
+             : payload.name === 'Saídas'  ? '#c97b5c'
+             : '#d4a574';
+  return (
+    <Layer>
+      <Rectangle x={x} y={y} width={width} height={height} fill={fill} fillOpacity={0.9} />
+      <text
+        x={x + (isEndpoint ? -6 : width + 6)}
+        y={y + height / 2}
+        textAnchor={isEndpoint ? 'end' : 'start'}
+        alignmentBaseline="middle"
+        fill="#c4bcab"
+        fontSize={12}
+        fontFamily="Inter, sans-serif"
+      >
+        {payload.name}
+      </text>
+    </Layer>
+  );
+}
+
+function buildSankey(data) {
+  // Nodes: "Entradas" (source), "Saídas" (sink), and each account from contas[].
+  // Links:
+  //   Entradas -> Conta  (external income into account)
+  //   Conta -> Saídas    (external expenses out of account)
+  //   Conta -> Conta     (transfers between accounts)
+  const nodes = [{ name: 'Entradas' }, { name: 'Saídas' }];
+  const idx = { 'Entradas': 0, 'Saídas': 1 };
+  (data.contas || []).forEach(c => {
+    idx[c.conta] = nodes.length;
+    nodes.push({ name: c.nome, isAccount: true });
+  });
+  const links = [];
+  (data.contas || []).forEach(c => {
+    if (c.entradas_externas > 0) {
+      links.push({ source: idx['Entradas'], target: idx[c.conta], value: c.entradas_externas });
+    }
+    if (c.saidas_externas > 0) {
+      links.push({ source: idx[c.conta], target: idx['Saídas'], value: c.saidas_externas });
+    }
+  });
+  (data.transferencias || []).forEach(t => {
+    if (idx[t.from] != null && idx[t.to] != null && t.valor > 0) {
+      links.push({ source: idx[t.from], target: idx[t.to], value: t.valor });
+    }
+  });
+  if (links.length === 0) return null;
+  return { nodes, links };
+}
+
 function FluxoDetail({ month, onClose }) {
   const { data, error, loading } = useApi(`/api/flow?month=${month}`, [month]);
   if (loading) return <div style={{ marginTop: 20 }}><Spinner /></div>;
   if (error) return <ErrorBox msg={error} />;
+  const sankey = buildSankey(data || { contas: [], transferencias: [] });
   return (
     <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #3a3632' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
         <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#d4a574', textTransform: 'uppercase' }}>
-          Detalhe · {formatMonthBR(month)}
+          Detalhe · {formatMonthBR(month)} · Entradas {BRL(data?.total_entradas ?? 0)} · Saídas {BRL(data?.total_saidas ?? 0)} · Economia {BRL(data?.total_economia ?? 0)}
         </div>
         <button onClick={onClose} className="sans" style={{ ...navBtnStyle, fontSize: 11 }}>Fechar</button>
       </div>
-      {/* Sankey + tables rendered in Tasks D3/D4 */}
-      <pre style={{ color: '#8a8275', fontSize: 11, overflowX: 'auto' }}>{JSON.stringify(data, null, 2)}</pre>
+      {sankey ? (
+        <ResponsiveContainer width="100%" height={Math.max(300, 40 * sankey.nodes.length)}>
+          <Sankey
+            data={sankey}
+            nodeWidth={12}
+            nodePadding={20}
+            linkCurvature={0.5}
+            iterations={64}
+            link={{ stroke: '#6b8ca3', strokeOpacity: 0.2, fill: '#6b8ca3', fillOpacity: 0.3 }}
+            node={<SankeyNode />}
+          >
+            <Tooltip
+              contentStyle={{ background: '#1a1815', border: '1px solid #3a3632', borderRadius: 2, fontFamily: 'Inter', fontSize: 12, color: '#e8e2d5' }}
+              formatter={(value) => BRL(value)}
+            />
+          </Sankey>
+        </ResponsiveContainer>
+      ) : (
+        <div className="sans" style={{ fontSize: 13, color: '#8a8275' }}>Sem movimentação para exibir fluxograma.</div>
+      )}
+      {/* Tables rendered in Task D4 */}
     </div>
   );
 }
