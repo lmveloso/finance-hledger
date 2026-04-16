@@ -623,7 +623,7 @@ function Transacoes() {
 
   // Fetch categories for the filter dropdown
   const { data: catsData } = useApi(`/api/categories?month=${selectedMonth}&depth=2`, [selectedMonth, refreshKey]);
-  const categories = (catsData?.categorias || []).map(c => c.nome);
+  const categories = catsData?.categorias || [];
 
   // Fetch tags
   const { data: tagsData } = useApi('/api/tags', [refreshKey]);
@@ -692,7 +692,7 @@ function Transacoes() {
         <div style={{ flex: '0 1 180px' }}>
           <select value={category} onChange={e => { setCategory(e.target.value); setPage(0); }} style={selectStyle}>
             <option value="">Todas categorias</option>
-            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+            {categories.map(c => <option key={c.segmento_raw} value={c.segmento_raw}>{c.nome}</option>)}
           </select>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

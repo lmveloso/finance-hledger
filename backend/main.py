@@ -376,10 +376,15 @@ def categories(month: Optional[str] = None, depth: int = 2, tag: Optional[list[s
     if isinstance(data, list) and len(data) >= 1:
         for row in data[0]:
             if isinstance(row, list) and len(row) >= 4:
-                name = row[0].split(":")[-1] if isinstance(row[0], str) else str(row[0])
+                full = row[0] if isinstance(row[0], str) else ""
+                segmento_raw = full.split(":")[-1] if full else ""
                 amount = abs(_amount({"amount": row[3]})) if isinstance(row[3], list) else 0
                 if amount > 0:
-                    cats.append({"nome": name.capitalize(), "valor": round(amount, 2)})
+                    cats.append({
+                        "nome": _display_segment(segmento_raw),
+                        "segmento_raw": segmento_raw,
+                        "valor": round(amount, 2),
+                    })
 
     cats.sort(key=lambda c: c["valor"], reverse=True)
     return {"month": month or date.today().strftime("%Y-%m"), "categorias": cats}
