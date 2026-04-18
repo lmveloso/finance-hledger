@@ -7,6 +7,7 @@ import { usePullToRefresh } from './hooks/usePullToRefresh.js';
 import { color } from './theme/tokens';
 import Spinner from './components/Spinner.jsx';
 import ErrorBox from './components/ErrorBox.jsx';
+import KPI from './components/KPI.jsx';
 
 const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -151,21 +152,6 @@ function DeltaBadge({ current, previous }) {
     }}>
       {isUp ? '+' : ''}{Math.round(delta)}%
     </span>
-  );
-}
-
-// ── UI atoms ────────────────────────────────────────────────────────────
-function KPI({ label, valor, icon, cor, destaque, loading, delta }) {
-  return (
-    <div className="card" style={{ borderLeft: destaque ? `3px solid ${cor}` : `1px solid ${color.border.default}` }}>
-      <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ color: cor }}>{icon}</span> {label}
-      </div>
-      <div className="serif" style={{ fontSize: destaque ? 38 : 30, fontWeight: 600, color: destaque ? cor : color.text.primary, letterSpacing: '-0.02em', lineHeight: 1, display: 'flex', alignItems: 'baseline', flexWrap: 'wrap' }}>
-        {loading ? '···' : BRL(valor)}
-        {delta}
-      </div>
-    </div>
   );
 }
 
