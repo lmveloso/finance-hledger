@@ -22,6 +22,7 @@ from app.config import get_settings, Settings
 from app.deps import get_current_user, _tokens
 from app.hledger.client import HledgerClient
 from app.hledger.errors import HledgerNotFound, HledgerTimeout, HledgerCallError
+from app.hledger.helpers import month_bounds, months_back_bounds, months_forward_bounds, add_month_str
 from app.hledger.parsers import cashflow_from_incomestatement, networth_from_balancesheet, parse_income_statement, parse_period_report
 
 logger = logging.getLogger("finance-hledger")
@@ -56,6 +57,19 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+# ── Route modules ───────────────────────────────────────────────────────
+from app.routes.health import router as health_router
+from app.routes.summary import router as summary_router
+from app.routes.cashflow import router as cashflow_router
+from app.routes.networth import router as networth_router
+from app.routes.savings import router as savings_router
+
+app.include_router(health_router)
+app.include_router(summary_router)
+app.include_router(cashflow_router)
+app.include_router(networth_router)
+app.include_router(savings_router)
 # HledgerClient instance -- single subprocess point.
 _hledger_client = HledgerClient(ledger_file=LEDGER_FILE, binary=HLEDGER)
 
@@ -79,49 +93,6 @@ def hledger(*args: str, output_format: str = "json",
         raise HTTPException(500, f"hledger: {e}")
 
 
-
-
-def month_bounds(month: Optional[str] = None) -> tuple[str, str]:
-    """Retorna (begin, end) ISO pro mês dado (YYYY-MM) ou mês atual."""
-    if month:
-        y, m = map(int, month.split("-"))
-    else:
-        today = date.today()
-        y, m = today.year, today.month
-    begin = f"{y:04d}-{m:02d}-01"
-    end = f"{y + 1:04d}-01-01" if m == 12 else f"{y:04d}-{m + 1:02d}-01"
-    return begin, end
-
-
-def months_back_bounds(n: int) -> tuple[str, str]:
-    today = date.today().replace(day=1)
-    for _ in range(n):
-        today = (today - timedelta(days=1)).replace(day=1)
-    begin = today.isoformat()
-    end = date.today().replace(day=1)
-    end = end.replace(year=end.year + 1, month=1) if end.month == 12 else end.replace(month=end.month + 1)
-    return begin, end.isoformat()
-
-
-def months_forward_bounds(n: int) -> tuple[str, str]:
-    """Retorna (hoje, hoje + n meses) em ISO."""
-    begin = date.today().replace(day=1).isoformat()
-    end = date.today()
-    for _ in range(n):
-        if end.month == 12:
-            end = end.replace(year=end.year + 1, month=1)
-        else:
-            end = end.replace(month=end.month + 1)
-    return begin, end.isoformat()
-
-
-def add_month_str(ym: str, delta: int) -> str:
-    """Adiciona/subtrai meses de uma string YYYY-MM."""
-    y, m = map(int, ym.split("-"))
-    m += delta
-    while m > 12: m -= 12; y += 1
-    while m < 1: m += 12; y -= 1
-    return f"{y:04d}-{m:02d}"
 
 
 # ── Helpers pra extrair números do JSON do hledger (1.52+) ───────────────
@@ -282,20 +253,6 @@ def _category_spending(month: str) -> dict[str, float]:
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────
-@app.post("/api/login")
-async def login(request: Request):
-    """Autentica por senha e retorna token."""
-    body = await request.json()
-    password = body.get("password", "")
-    for username, pw in USERS.items():
-        if hmac.compare_digest(password, pw):
-            token = secrets.token_hex(32)
-            _tokens[token] = username
-            return {"token": token, "user": username}
-    raise HTTPException(401, "Senha incorreta")
-
-
-@app.get("/api/health")
 def health():
     version = hledger("--version", output_format="text")
     return {
@@ -306,7 +263,6 @@ def health():
     }
 
 
-@app.get("/api/summary")
 def summary(month: Optional[str] = None, user: Optional[str] = Depends(get_current_user)):
     """Receitas, despesas e saldo do mês."""
     begin, end = month_bounds(month)
@@ -376,7 +332,6 @@ def category_detail(category: str, month: Optional[str] = None, user: Optional[s
     return {"category": category, "subcategorias": subs}
 
 
-@app.get("/api/cashflow")
 def cashflow(months: int = 12, user: Optional[str] = Depends(get_current_user)):
     """Fluxo mensal (receitas/despesas).
 
@@ -550,7 +505,6 @@ def flow(month: Optional[str] = None, user: Optional[str] = Depends(get_current_
     }
 
 
-@app.get("/api/networth")
 def networth(months: int = 12, user: Optional[str] = Depends(get_current_user)):
     """Patrimônio líquido ao longo do tempo."""
     begin, end = months_back_bounds(months - 1)
@@ -908,7 +862,6 @@ def transactions(
     }
 
 
-@app.get("/api/savings-goal")
 def savings_goal(monthly_target: float = 5000, annual_target: float = 60000, user: Optional[str] = Depends(get_current_user)):
     """Progresso de meta de economia (mensal + anual)."""
     year = date.today().year
@@ -941,7 +894,6 @@ def savings_goal(monthly_target: float = 5000, annual_target: float = 60000, use
     }
 
 
-@app.get("/api/forecast")
 def forecast(months: int = 6, user: Optional[str] = Depends(get_current_user)):
     """Projeção de saldo N meses à frente baseada em transações periódicas."""
     begin, end = months_forward_bounds(months)
@@ -957,7 +909,6 @@ def forecast(months: int = 6, user: Optional[str] = Depends(get_current_user)):
     return {"months": [], "forecast": True}
 
 
-@app.get("/api/alerts")
 def alerts(month: Optional[str] = None, user: Optional[str] = Depends(get_current_user)):
     """Alertas: categorias com gasto >25% acima da média dos últimos 3 meses."""
     target_month = month or date.today().strftime("%Y-%m")
@@ -993,7 +944,6 @@ def alerts(month: Optional[str] = None, user: Optional[str] = Depends(get_curren
     return {"month": target_month, "alertas": alertas}
 
 
-@app.get("/api/accounts")
 def accounts(user: Optional[str] = Depends(get_current_user)):
     """Lista todas as contas (ativos + passivos) com saldo atual."""
     data = hledger("balance", "assets", "liabilities", "--flat")
@@ -1023,7 +973,6 @@ def accounts(user: Optional[str] = Depends(get_current_user)):
     return {"contas": result}
 
 
-@app.get("/api/accounts/{account_path:path}/balance-history")
 def account_balance_history(
     account_path: str,
     months: int = 12,
