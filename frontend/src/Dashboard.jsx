@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowUpRight, ArrowDownRight, Wallet, AlertCircle, ChevronRight, ArrowLeft, PiggyBank, ChevronLeft, CalendarDays, RefreshCw } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, ComposedChart, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend, Sankey, Layer, Rectangle } from 'recharts';
 import { useApi, fetchCategoryDetail } from './api.js';
@@ -11,6 +11,7 @@ import KPI from './components/KPI.jsx';
 import DeltaBadge from './components/DeltaBadge.jsx';
 import TipoChip from './components/TipoChip.jsx';
 import { MonthProvider, useMonth } from './contexts/MonthContext.jsx';
+import { NavProvider, useNav } from './contexts/NavContext.jsx';
 
 const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -1645,18 +1646,10 @@ function PullIndicator({ pullState, pullDistance }) {
   );
 }
 
-// ── Navigation context (for cross-tab navigation) ───────────────────────
-const NavContext = createContext();
-
-function useNav() {
-  return useContext(NavContext);
-}
-
 // ── Main ────────────────────────────────────────────────────────────────
+// `NavProvider` / `useNav` moved to contexts/NavContext.jsx in PR-F3.
 export default function Dashboard() {
-  const [aba, setAba] = useState('resumo');
   const [refreshKey, setRefreshKey] = useState(0);
-  const [navCategory, setNavCategory] = useState(null);
 
   const doRefresh = useCallback(() => {
     return new Promise(resolve => {
@@ -1666,25 +1659,21 @@ export default function Dashboard() {
     });
   }, []);
 
-  const goToTransactions = useCallback((category) => {
-    setNavCategory(category || null);
-    setAba('transações');
-  }, []);
-
   const { pullDistance, pullState } = usePullToRefresh(doRefresh, 80);
 
   return (
     <MonthProvider refreshKey={refreshKey}>
-      <NavContext.Provider value={{ goToTransactions, navCategory, setNavCategory }}>
+      <NavProvider>
         <PullIndicator pullState={pullState} pullDistance={pullDistance} />
-        <DashboardInner aba={aba} setAba={setAba} />
-      </NavContext.Provider>
+        <DashboardInner />
+      </NavProvider>
     </MonthProvider>
   );
 }
 
-function DashboardInner({ aba, setAba }) {
+function DashboardInner() {
   const { selectedMonth } = useMonth();
+  const { activeTab, setActiveTab, tabs } = useNav();
   return (
     <div style={{ minHeight: '100vh', background: color.bg.page, color: color.text.primary, fontFamily: 'Georgia, serif' }}>
       <style>{`
@@ -1720,17 +1709,17 @@ function DashboardInner({ aba, setAba }) {
         </header>
 
         <nav style={{ display: 'flex', gap: 2, marginBottom: 24, borderBottom: `1px solid ${color.border.default}`, overflowX: 'auto' }}>
-          {['resumo', 'fluxo', 'orçamento', 'previsão', 'contas', 'transações'].map(t => (
-            <button key={t} className={`tab ${aba === t ? 'active' : ''}`} onClick={() => setAba(t)}>{t}</button>
+          {tabs.map(t => (
+            <button key={t} className={`tab ${activeTab === t ? 'active' : ''}`} onClick={() => setActiveTab(t)}>{t}</button>
           ))}
         </nav>
 
-        {aba === 'resumo' && <Resumo />}
-        {aba === 'fluxo' && <Fluxo />}
-        {aba === 'orçamento' && <Orcamento />}
-        {aba === 'previsão' && <Previsao />}
-        {aba === 'contas' && <Contas />}
-        {aba === 'transações' && <Transacoes />}
+        {activeTab === 'resumo' && <Resumo />}
+        {activeTab === 'fluxo' && <Fluxo />}
+        {activeTab === 'orçamento' && <Orcamento />}
+        {activeTab === 'previsão' && <Previsao />}
+        {activeTab === 'contas' && <Contas />}
+        {activeTab === 'transações' && <Transacoes />}
 
         <footer className="sans" style={{ marginTop: 48, paddingTop: 20, borderTop: `1px solid ${color.border.default}`, fontSize: 11, color: color.text.disabled, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
           hledger · via Tailscale
