@@ -41,7 +41,9 @@ def load_mapping(path: Path) -> PrincipleMapping:
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise PrincipleMappingError(f"principles file is not valid JSON: {exc}") from exc
+        raise PrincipleMappingError(
+            f"principles file is not valid JSON: {exc}"
+        ) from exc
 
     if not isinstance(raw, dict):
         raise PrincipleMappingError("principles file must be a JSON object")
@@ -78,7 +80,9 @@ def load_mapping(path: Path) -> PrincipleMapping:
     rules: dict[str, str] = {}
     for pattern, pid in rules_raw.items():
         if not isinstance(pattern, str) or not pattern:
-            raise PrincipleMappingError(f"rule pattern must be non-empty string: {pattern!r}")
+            raise PrincipleMappingError(
+                f"rule pattern must be non-empty string: {pattern!r}"
+            )
         if pid not in VALID_PRINCIPLE_IDS:
             raise PrincipleMappingError(
                 f"rule {pattern!r} points to unknown principle: {pid!r}"

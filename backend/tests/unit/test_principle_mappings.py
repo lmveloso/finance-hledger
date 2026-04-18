@@ -25,13 +25,29 @@ def _valid_payload(**overrides) -> dict:
     base = {
         "default": "custos-fixos",
         "principles": [
-            {"id": "custos-fixos", "display_key": "principle.custos-fixos", "target_pct": 40},
+            {
+                "id": "custos-fixos",
+                "display_key": "principle.custos-fixos",
+                "target_pct": 40,
+            },
             {"id": "conforto", "display_key": "principle.conforto", "target_pct": 20},
             {"id": "metas", "display_key": "principle.metas", "target_pct": 5},
             {"id": "prazeres", "display_key": "principle.prazeres", "target_pct": 5},
-            {"id": "liberdade-financeira", "display_key": "principle.liberdade-financeira", "target_pct": 25},
-            {"id": "aumentar-renda", "display_key": "principle.aumentar-renda", "target_pct": 5},
-            {"id": "reserva-oportunidade", "display_key": "principle.reserva-oportunidade", "target_pct": 0},
+            {
+                "id": "liberdade-financeira",
+                "display_key": "principle.liberdade-financeira",
+                "target_pct": 25,
+            },
+            {
+                "id": "aumentar-renda",
+                "display_key": "principle.aumentar-renda",
+                "target_pct": 5,
+            },
+            {
+                "id": "reserva-oportunidade",
+                "display_key": "principle.reserva-oportunidade",
+                "target_pct": 0,
+            },
         ],
         "rules": {
             "expenses:moradia:água": "custos-fixos",

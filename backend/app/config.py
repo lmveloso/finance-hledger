@@ -57,6 +57,13 @@ class Settings(BaseSettings):
         default="json",
         description="Structured log output format. 'console' for local dev.",
     )
+    principles_file: Path = Field(
+        default=Path(__file__).parent / "principles" / "principles.default.json",
+        description=(
+            "JSON mapping of category → principle (ADR-008). Env override: "
+            "PRINCIPLES_FILE=/custom/path.json."
+        ),
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

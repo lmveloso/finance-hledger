@@ -24,13 +24,27 @@ def mapping() -> PrincipleMapping:
             "expenses:educação:livros:*": "aumentar-renda",
         },
         principles=[
-            Principle(id="custos-fixos", display_key="principle.custos-fixos", target_pct=40),
+            Principle(
+                id="custos-fixos", display_key="principle.custos-fixos", target_pct=40
+            ),
             Principle(id="conforto", display_key="principle.conforto", target_pct=20),
             Principle(id="metas", display_key="principle.metas", target_pct=5),
             Principle(id="prazeres", display_key="principle.prazeres", target_pct=5),
-            Principle(id="liberdade-financeira", display_key="principle.liberdade-financeira", target_pct=25),
-            Principle(id="aumentar-renda", display_key="principle.aumentar-renda", target_pct=5),
-            Principle(id="reserva-oportunidade", display_key="principle.reserva-oportunidade", target_pct=0),
+            Principle(
+                id="liberdade-financeira",
+                display_key="principle.liberdade-financeira",
+                target_pct=25,
+            ),
+            Principle(
+                id="aumentar-renda",
+                display_key="principle.aumentar-renda",
+                target_pct=5,
+            ),
+            Principle(
+                id="reserva-oportunidade",
+                display_key="principle.reserva-oportunidade",
+                target_pct=0,
+            ),
         ],
     )
 
@@ -70,9 +84,7 @@ def test_resolve_longer_wildcard_wins(mapping):
 
 
 def test_resolve_fallback_to_default(mapping):
-    pid, fallback = resolve_principle(
-        "expenses:desconhecido:categoria", None, mapping
-    )
+    pid, fallback = resolve_principle("expenses:desconhecido:categoria", None, mapping)
     assert pid == "custos-fixos"
     assert fallback is True
 

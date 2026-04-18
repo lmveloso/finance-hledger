@@ -1,0 +1,31 @@
+; Fixture journal for principle dimension tests.
+; Covers:
+;   - exact-match mapped category   (expenses:moradia:água  -> custos-fixos)
+;   - wildcard-mapped category      (expenses:lazer:*       -> prazeres)
+;   - explicit tag override         (restaurante com tag principio:metas)
+;   - unmapped category             (expenses:nova-categoria -> default, uncovered)
+;   - revenue used as denominator
+
+2026-04-01 * Salário
+    assets:banco:nubank                         10000.00
+    income:salário
+
+2026-04-05 * Água
+    expenses:moradia:água                         150.00
+    assets:banco:nubank
+
+2026-04-10 * Cinema ; some-other-tag: foo
+    expenses:lazer:cinema                          60.00
+    assets:banco:nubank
+
+2026-04-15 * Jantar aniversario
+    expenses:alimentação:restaurantes             280.00  ; principio: metas
+    assets:banco:nubank
+
+2026-04-20 * Supermercado
+    expenses:alimentação:supermercado             500.00
+    assets:banco:nubank
+
+2026-04-25 * Gasto em categoria nova
+    expenses:nova-categoria:teste                  40.00
+    assets:banco:nubank
