@@ -2,7 +2,7 @@
 //
 // Dark editorial palette — centralizes every color literal used across the app.
 // Fase 0 rule: zero visual change. Every hex below is a value that already
-// exists in Dashboard.jsx, Login.jsx, or config.js. Variants (*Alt) preserve
+// exists in App.jsx, Login.jsx, or config.js. Variants (*Alt) preserve
 // near-duplicates that shipped historically; collapse them only via a
 // follow-up ADR after confirming visual parity.
 //
@@ -13,7 +13,7 @@
 
 export const color = {
   bg: {
-    page:     '#1a1815',  // Dashboard root, tooltip bg
+    page:     '#1a1815',  // App root, tooltip bg
     pageAlt:  '#1a1816',  // Login wrapper + input bg (1-digit variant, preserved)
     card:     '#252220',
     hover:    '#2a2724',
@@ -32,7 +32,7 @@ export const color = {
     muted:       '#8a8275',
     disabled:    '#6a6258',
     faint:       '#4a4642',
-    faintAlt:    '#4a4640',  // Dashboard PL breakdown label, preserved
+    faintAlt:    '#4a4640',  // Contas PL breakdown label, preserved
   },
 
   accent: {
@@ -73,8 +73,8 @@ export const color = {
     saldoInicial:   'rgba(138,130,117,0.18)',  // muted.18
     accentWarmSoft: 'rgba(212,165,116,0.04)',  // KPI emphasis background
     pageScrim:      'rgba(26,24,21,0.4)',      // subtle panel overlay
-    // Heat-map cell fill is computed with a dynamic alpha — see Dashboard.jsx
-    // line ~1315. Not tokenized because the alpha is data-driven.
+    // Heat-map cell fill is computed with a dynamic alpha — see
+    // features/previsao/Previsao.jsx. Not tokenized because the alpha is data-driven.
   },
 };
 

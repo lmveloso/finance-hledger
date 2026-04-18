@@ -3,7 +3,7 @@ import { AlertCircle } from 'lucide-react';
 import { color } from '../theme/tokens';
 
 // Inline error banner used by every tab when a useApi call fails.
-// Behavior preserved from the previous inline definition in Dashboard.jsx.
+// Behavior preserved from the previous inline definition in App.jsx (formerly Dashboard.jsx).
 // Note: strings remain hardcoded pt-BR until the i18n pass (post PR-F9).
 const ErrorBox = ({ msg }) => (
   <div className="card" style={{ borderLeft: `3px solid ${color.accent.secondary}` }}>

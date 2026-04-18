@@ -4,7 +4,7 @@ import { color } from '../theme/tokens';
 // Small percentage-delta badge rendered next to KPI values when comparison mode
 // is on (e.g. current month vs. same month last year). Returns null when the
 // previous value is missing or zero to avoid division-by-zero noise.
-// Behavior preserved from the previous inline definition in Dashboard.jsx.
+// Behavior preserved from the previous inline definition in App.jsx (formerly Dashboard.jsx).
 function DeltaBadge({ current, previous }) {
   if (previous == null || previous === 0) return null;
   const delta = ((current - previous) / Math.abs(previous)) * 100;

@@ -142,7 +142,7 @@ function PullIndicator({ pullState, pullDistance }) {
 
 // ── Main ────────────────────────────────────────────────────────────────
 // `NavProvider` / `useNav` moved to contexts/NavContext.jsx in PR-F3.
-export default function Dashboard() {
+export default function App() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const doRefresh = useCallback(() => {
@@ -159,13 +159,13 @@ export default function Dashboard() {
     <MonthProvider refreshKey={refreshKey}>
       <NavProvider>
         <PullIndicator pullState={pullState} pullDistance={pullDistance} />
-        <DashboardInner />
+        <AppInner />
       </NavProvider>
     </MonthProvider>
   );
 }
 
-function DashboardInner() {
+function AppInner() {
   const { selectedMonth } = useMonth();
   const { activeTab, setActiveTab, tabs } = useNav();
   return (

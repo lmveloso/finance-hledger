@@ -4,7 +4,7 @@ import { color } from '../theme/tokens';
 // Small uppercase chip that labels a transaction movement type.
 // Accepted `tipo` values: 'credito', 'debito', 'transferencia', 'saldo_inicial'.
 // Unknown values fall back to the 'debito' styling, matching the previous
-// inline definition in Dashboard.jsx. Strings remain hardcoded pt-BR until
+// inline definition in App.jsx (formerly Dashboard.jsx). Strings remain hardcoded pt-BR until
 // the i18n pass (post PR-F9).
 function TipoChip({ tipo }) {
   const map = {

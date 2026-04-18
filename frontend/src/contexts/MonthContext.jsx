@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useCallback, useState } from 'react';
 
-// Month-related state lifted out of Dashboard.jsx during PR-F3.
+// Month-related state lifted out of App.jsx (formerly Dashboard.jsx) during PR-F3.
 // Holds the selected YYYY-MM, compare-mode toggle, navigation helpers and
 // a pass-through `refreshKey` used to force re-fetches from the pull-to-refresh
-// gesture owned by Dashboard.
+// gesture owned by App.
 //
 // Naming note: the field is called `selectedMonth` (preserved from the original
 // inline implementation) rather than `currentMonth` — keeping the name avoids

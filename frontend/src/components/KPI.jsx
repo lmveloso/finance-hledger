@@ -1,7 +1,7 @@
 import React from 'react';
 import { color } from '../theme/tokens';
 
-// Local BRL formatter — duplicated from Dashboard.jsx so this component stays
+// Local BRL formatter — duplicated from App.jsx (formerly Dashboard.jsx) so this component stays
 // self-contained. A shared formatters module is out of scope for PR-F2 and will
 // likely land with the i18n/currency decoupling noted in docs §6.2.
 const BRL = (n) =>
@@ -14,7 +14,7 @@ const BRL = (n) =>
 // KPI card used across tabs: label in small caps, large BRL value, optional
 // colored left border for emphasis, optional delta badge (rendered by the
 // caller and forwarded verbatim), placeholder '···' while loading.
-// Behavior preserved from the previous inline definition in Dashboard.jsx.
+// Behavior preserved from the previous inline definition in App.jsx (formerly Dashboard.jsx).
 function KPI({ label, valor, icon, cor, destaque, loading, delta }) {
   return (
     <div

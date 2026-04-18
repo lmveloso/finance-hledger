@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
-import Dashboard from './Dashboard.jsx';
+import App from './App.jsx';
 import Login from './Login.jsx';
 import { isLoggedIn } from './api.js';
 
@@ -13,15 +13,15 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-function App() {
+function Root() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   return loggedIn
-    ? <Dashboard />
+    ? <App />
     : <Login onLogin={() => setLoggedIn(true)} />;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <Root />
   </React.StrictMode>
 );

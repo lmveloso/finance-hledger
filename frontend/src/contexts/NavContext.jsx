@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useCallback, useState } from 'react';
 
-// Navigation state lifted out of Dashboard.jsx during PR-F3.
+// Navigation state lifted out of App.jsx (formerly Dashboard.jsx) during PR-F3.
 //
 // Holds:
 //   - activeTab / setActiveTab — which top-level tab is rendered. Was called
-//     `aba` inline in Dashboard.jsx; renamed to align with the PR-F3 spec and
+//     `aba` inline in the monolith; renamed to align with the PR-F3 spec and
 //     to read naturally in English.
 //   - navCategory / setNavCategory — cross-tab handoff value used by
 //     `goToTransactions` so the Transações tab can pre-filter by category.

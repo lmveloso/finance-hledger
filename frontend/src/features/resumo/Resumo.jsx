@@ -25,7 +25,7 @@ import DeltaBadge from '../../components/DeltaBadge.jsx';
 import { useMonth } from '../../contexts/MonthContext.jsx';
 import { useNav } from '../../contexts/NavContext.jsx';
 
-// Local formatters — duplicated from Dashboard.jsx so this feature stays
+// Local formatters — duplicated from App.jsx so this feature stays
 // self-contained. A shared formatters module will likely land with the
 // i18n/currency decoupling noted in docs §6.2.
 const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });

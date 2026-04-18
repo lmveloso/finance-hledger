@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { color } from '../theme/tokens';
 
 // Static loading spinner used across tabs while data is being fetched.
-// Behavior preserved from the previous inline definition in Dashboard.jsx.
+// Behavior preserved from the previous inline definition in App.jsx (formerly Dashboard.jsx).
 const Spinner = () => (
   <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
     <Loader2
