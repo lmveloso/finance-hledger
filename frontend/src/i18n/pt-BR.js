@@ -67,6 +67,52 @@ const dict = {
 
   // Navigation
   'nav.plano': 'Plano',
+
+  // ── Patrimonio tab ─────────────────────────────────────────────────────
+  'patrimonio.header': 'Patrimônio',
+  'patrimonio.hero.title': 'Patrimônio Líquido',
+  'patrimonio.hero.vs12months': 'vs 12 meses atrás',
+  'patrimonio.hero.sparkEmpty': 'Histórico insuficiente',
+  'patrimonio.evolution.title': 'Evolução histórica',
+  'patrimonio.evolution.empty': 'Sem dados de patrimônio para o período selecionado.',
+  'patrimonio.assets': 'Ativos',
+  'patrimonio.liabilities': 'Passivos',
+  'patrimonio.net': 'Patrimônio líquido',
+  'patrimonio.empty.assets': 'Nenhuma conta de ativo encontrada.',
+  'patrimonio.empty.liabilities': 'Nenhuma conta de passivo encontrada.',
+
+  // Settings panel
+  'patrimonio.period.label': 'Período',
+  'patrimonio.period.6': '6m',
+  'patrimonio.period.12': '12m',
+  'patrimonio.period.24': '24m',
+  'patrimonio.period.36': '36m',
+  'patrimonio.period.all': 'Tudo',
+  'patrimonio.hideZero': 'Ocultar contas zeradas',
+
+  // Account detail
+  'patrimonio.detail.back': 'Voltar para contas',
+  'patrimonio.detail.statement': 'Extrato',
+  'patrimonio.detail.until': 'até',
+  'patrimonio.detail.search': 'Buscar',
+  'patrimonio.detail.clear': 'Limpar',
+  'patrimonio.detail.statementRange': 'Extrato · {start} a {end}',
+  'patrimonio.detail.emptyRange': 'Nenhuma transação no período selecionado.',
+  'patrimonio.detail.count': '{count} transações',
+  'patrimonio.detail.final': 'Saldo final',
+  'patrimonio.detail.recent': 'Últimas transações',
+  'patrimonio.detail.emptyRecent': 'Nenhuma transação encontrada para esta conta.',
+
+  // Transactions table columns
+  'patrimonio.tx.date': 'Data',
+  'patrimonio.tx.description': 'Descrição',
+  'patrimonio.tx.category': 'Categoria',
+  'patrimonio.tx.type': 'Tipo',
+  'patrimonio.tx.amount': 'Valor',
+  'patrimonio.tx.balance': 'Saldo',
+
+  // Navigation
+  'nav.patrimonio': 'Patrimônio',
 };
 
 export default dict;

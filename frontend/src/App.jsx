@@ -11,7 +11,7 @@ import Plano from './features/plano';
 import Fluxo from './features/fluxo-reformado';
 import Orcamento from './features/orcamento';
 import Previsao from './features/previsao';
-import Contas from './features/contas';
+import Patrimonio from './features/patrimonio';
 import Transacoes from './features/transacoes';
 
 // ── Month helpers ──────────────────────────────────────────────────────
@@ -218,7 +218,7 @@ function AppInner() {
         {activeTab === 'fluxo' && <Fluxo />}
         {activeTab === 'orçamento' && <Orcamento />}
         {activeTab === 'previsão' && <Previsao />}
-        {activeTab === 'contas' && <Contas />}
+        {activeTab === 'patrimônio' && <Patrimonio />}
         {activeTab === 'transações' && <Transacoes />}
 
         <footer className="sans" style={{ marginTop: 48, paddingTop: 20, borderTop: `1px solid ${color.border.default}`, fontSize: 11, color: color.text.disabled, letterSpacing: '0.1em', textTransform: 'uppercase' }}>

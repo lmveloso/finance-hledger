@@ -64,6 +64,52 @@ const dict = {
 
   // Navigation
   'nav.plano': 'Plan',
+
+  // ── Patrimonio tab ─────────────────────────────────────────────────────
+  'patrimonio.header': 'Net Worth',
+  'patrimonio.hero.title': 'Net Worth',
+  'patrimonio.hero.vs12months': 'vs 12 months ago',
+  'patrimonio.hero.sparkEmpty': 'Not enough history',
+  'patrimonio.evolution.title': 'Historical evolution',
+  'patrimonio.evolution.empty': 'No net worth data for the selected period.',
+  'patrimonio.assets': 'Assets',
+  'patrimonio.liabilities': 'Liabilities',
+  'patrimonio.net': 'Net worth',
+  'patrimonio.empty.assets': 'No asset accounts found.',
+  'patrimonio.empty.liabilities': 'No liability accounts found.',
+
+  // Settings panel
+  'patrimonio.period.label': 'Period',
+  'patrimonio.period.6': '6m',
+  'patrimonio.period.12': '12m',
+  'patrimonio.period.24': '24m',
+  'patrimonio.period.36': '36m',
+  'patrimonio.period.all': 'All',
+  'patrimonio.hideZero': 'Hide empty accounts',
+
+  // Account detail
+  'patrimonio.detail.back': 'Back to accounts',
+  'patrimonio.detail.statement': 'Statement',
+  'patrimonio.detail.until': 'to',
+  'patrimonio.detail.search': 'Search',
+  'patrimonio.detail.clear': 'Clear',
+  'patrimonio.detail.statementRange': 'Statement · {start} to {end}',
+  'patrimonio.detail.emptyRange': 'No transactions in the selected range.',
+  'patrimonio.detail.count': '{count} transactions',
+  'patrimonio.detail.final': 'Final balance',
+  'patrimonio.detail.recent': 'Recent transactions',
+  'patrimonio.detail.emptyRecent': 'No transactions found for this account.',
+
+  // Transactions table columns
+  'patrimonio.tx.date': 'Date',
+  'patrimonio.tx.description': 'Description',
+  'patrimonio.tx.category': 'Category',
+  'patrimonio.tx.type': 'Type',
+  'patrimonio.tx.amount': 'Amount',
+  'patrimonio.tx.balance': 'Balance',
+
+  // Navigation
+  'nav.patrimonio': 'Net Worth',
 };
 
 export default dict;
