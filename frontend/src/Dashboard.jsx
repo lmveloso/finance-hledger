@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
-import { ArrowUpRight, ArrowDownRight, Wallet, AlertCircle, ChevronRight, ArrowLeft, PiggyBank, Loader2, ChevronLeft, CalendarDays, RefreshCw } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Wallet, AlertCircle, ChevronRight, ArrowLeft, PiggyBank, ChevronLeft, CalendarDays, RefreshCw } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, ComposedChart, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend, Sankey, Layer, Rectangle } from 'recharts';
 import { useApi, fetchCategoryDetail } from './api.js';
 import { CONFIG } from './config.js';
 import { usePullToRefresh } from './hooks/usePullToRefresh.js';
 import { color } from './theme/tokens';
+import Spinner from './components/Spinner.jsx';
 
 const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -153,12 +154,6 @@ function DeltaBadge({ current, previous }) {
 }
 
 // ── UI atoms ────────────────────────────────────────────────────────────
-const Spinner = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-    <Loader2 size={24} style={{ color: color.accent.warm, animation: 'spin 1s linear infinite' }} />
-  </div>
-);
-
 const ErrorBox = ({ msg }) => (
   <div className="card" style={{ borderLeft: `3px solid ${color.accent.secondary}` }}>
     <div className="sans" style={{ color: color.accent.secondary, fontSize: 13, display: 'flex', gap: 8, alignItems: 'center' }}>
