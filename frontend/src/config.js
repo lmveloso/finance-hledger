@@ -1,4 +1,6 @@
 // Configurações do dashboard — ajuste conforme sua realidade
+import { color } from './theme/tokens';
+
 export const CONFIG = {
   // Metas de economia (em BRL)
   savingsGoal: {
@@ -15,5 +17,5 @@ export const CONFIG = {
     { cat: 'Saúde', limite: 1500 },
   ],
   // Paleta fixa pras categorias (cicla se houver mais categorias que cores)
-  categoryColors: ['#d4a574', '#c97b5c', '#8b9d7a', '#6b8ca3', '#b8956a', '#9c7b9c', '#7a7a7a'],
+  categoryColors: color.chart.category,
 };

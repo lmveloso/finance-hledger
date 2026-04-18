@@ -4,11 +4,12 @@ import { LineChart, Line, BarChart, Bar, ComposedChart, PieChart, Pie, Cell, XAx
 import { useApi, fetchCategoryDetail } from './api.js';
 import { CONFIG } from './config.js';
 import { usePullToRefresh } from './hooks/usePullToRefresh.js';
+import { color } from './theme/tokens';
 
 const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const pct = (n) => `${Math.round(n)}%`;
-const color = (i) => CONFIG.categoryColors[i % CONFIG.categoryColors.length];
+const categoryColor = (i) => CONFIG.categoryColors[i % CONFIG.categoryColors.length];
 
 // ── Month context ──────────────────────────────────────────────────────
 function getCurrentMonth() {
@@ -79,7 +80,7 @@ function MonthPicker() {
         >
           <ChevronLeft size={16} />
         </button>
-        <span className="serif" style={{ fontSize: 18, fontWeight: 600, minWidth: 160, textAlign: 'center', color: '#e8e2d5' }}>
+        <span className="serif" style={{ fontSize: 18, fontWeight: 600, minWidth: 160, textAlign: 'center', color: color.text.primary }}>
           {formatMonthBR(selectedMonth)}
         </span>
         <button
@@ -109,13 +110,13 @@ function MonthPicker() {
       )}
       <label className="sans" style={{
         display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
-        fontSize: 12, color: '#8a8275', marginLeft: 8,
+        fontSize: 12, color: color.text.muted, marginLeft: 8,
       }}>
         <input
           type="checkbox"
           checked={compareMode}
           onChange={(e) => setCompareMode(e.target.checked)}
-          style={{ accentColor: '#d4a574' }}
+          style={{ accentColor: color.accent.warm }}
         />
         vs ano anterior
       </label>
@@ -124,10 +125,10 @@ function MonthPicker() {
 }
 
 const navBtnStyle = {
-  background: '#252220',
-  border: '1px solid #3a3632',
+  background: color.bg.card,
+  border: `1px solid ${color.border.default}`,
   borderRadius: 3,
-  color: '#d4a574',
+  color: color.accent.warm,
   cursor: 'pointer',
   padding: '4px 6px',
   display: 'flex',
@@ -141,10 +142,10 @@ function DeltaBadge({ current, previous }) {
   if (previous == null || previous === 0) return null;
   const delta = ((current - previous) / Math.abs(previous)) * 100;
   const isUp = delta >= 0;
-  const color = isUp ? '#8b9d7a' : '#c97b5c';
+  const deltaColor = isUp ? color.feedback.positive : color.feedback.negative;
   return (
     <span className="sans" style={{
-      fontSize: 11, color, marginLeft: 6, whiteSpace: 'nowrap',
+      fontSize: 11, color: deltaColor, marginLeft: 6, whiteSpace: 'nowrap',
     }}>
       {isUp ? '+' : ''}{Math.round(delta)}%
     </span>
@@ -154,16 +155,16 @@ function DeltaBadge({ current, previous }) {
 // ── UI atoms ────────────────────────────────────────────────────────────
 const Spinner = () => (
   <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-    <Loader2 size={24} style={{ color: '#d4a574', animation: 'spin 1s linear infinite' }} />
+    <Loader2 size={24} style={{ color: color.accent.warm, animation: 'spin 1s linear infinite' }} />
   </div>
 );
 
 const ErrorBox = ({ msg }) => (
-  <div className="card" style={{ borderLeft: '3px solid #c97b5c' }}>
-    <div className="sans" style={{ color: '#c97b5c', fontSize: 13, display: 'flex', gap: 8, alignItems: 'center' }}>
+  <div className="card" style={{ borderLeft: `3px solid ${color.accent.secondary}` }}>
+    <div className="sans" style={{ color: color.accent.secondary, fontSize: 13, display: 'flex', gap: 8, alignItems: 'center' }}>
       <AlertCircle size={16} /> Erro ao carregar: {msg}
     </div>
-    <div className="sans" style={{ color: '#8a8275', fontSize: 12, marginTop: 8 }}>
+    <div className="sans" style={{ color: color.text.muted, fontSize: 12, marginTop: 8 }}>
       Verifique se o backend está rodando e se LEDGER_FILE aponta pro journal correto.
     </div>
   </div>
@@ -171,11 +172,11 @@ const ErrorBox = ({ msg }) => (
 
 function KPI({ label, valor, icon, cor, destaque, loading, delta }) {
   return (
-    <div className="card" style={{ borderLeft: destaque ? `3px solid ${cor}` : '1px solid #3a3632' }}>
-      <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+    <div className="card" style={{ borderLeft: destaque ? `3px solid ${cor}` : `1px solid ${color.border.default}` }}>
+      <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ color: cor }}>{icon}</span> {label}
       </div>
-      <div className="serif" style={{ fontSize: destaque ? 38 : 30, fontWeight: 600, color: destaque ? cor : '#e8e2d5', letterSpacing: '-0.02em', lineHeight: 1, display: 'flex', alignItems: 'baseline', flexWrap: 'wrap' }}>
+      <div className="serif" style={{ fontSize: destaque ? 38 : 30, fontWeight: 600, color: destaque ? cor : color.text.primary, letterSpacing: '-0.02em', lineHeight: 1, display: 'flex', alignItems: 'baseline', flexWrap: 'wrap' }}>
         {loading ? '···' : BRL(valor)}
         {delta}
       </div>
@@ -227,7 +228,7 @@ function Resumo() {
   const err = e1 || e2 || e3;
   if (err) return <ErrorBox msg={err} />;
 
-  const categorias = (cats?.categorias || []).map((c, i) => ({ ...c, cor: color(i) }));
+  const categorias = (cats?.categorias || []).map((c, i) => ({ ...c, cor: categoryColor(i) }));
 
   const openCat = async (cat) => {
     setLoadingDet(true);
@@ -242,12 +243,12 @@ function Resumo() {
   return (
     <div className="grid">
       {alertas.length > 0 && (
-        <div style={{ background: '#3a2020', border: '1px solid #5a3030', borderRadius: 4, padding: '16px 20px' }}>
-          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.1em', color: '#c97b5c', textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ background: color.feedback.errorBg, border: `1px solid ${color.feedback.errorBorder}`, borderRadius: 4, padding: '16px 20px' }}>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.1em', color: color.accent.secondary, textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
             <AlertCircle size={14} /> Alertas de gastos
           </div>
           {alertas.map((a, i) => (
-            <div key={i} className="sans" style={{ fontSize: 13, color: '#e8e2d5', padding: '6px 0', borderTop: i > 0 ? '1px solid #4a2a2a' : 'none' }}>
+            <div key={i} className="sans" style={{ fontSize: 13, color: color.text.primary, padding: '6px 0', borderTop: i > 0 ? `1px solid ${color.feedback.errorRule}` : 'none' }}>
               <strong>{a.categoria}</strong> está {Math.round(a.percentual_acima)}% acima da média (atual: {BRLc(a.atual)} vs média: {BRLc(a.media)})
             </div>
           ))}
@@ -258,7 +259,7 @@ function Resumo() {
           label="Receitas"
           valor={summary?.receitas}
           icon={<ArrowUpRight size={15} />}
-          cor="#8b9d7a"
+          cor={color.feedback.positive}
           loading={l1}
           delta={compareMode && compSummary ? <DeltaBadge current={summary?.receitas} previous={compSummary?.receitas} /> : null}
         />
@@ -266,7 +267,7 @@ function Resumo() {
           label="Despesas"
           valor={summary?.despesas}
           icon={<ArrowDownRight size={15} />}
-          cor="#c97b5c"
+          cor={color.feedback.negative}
           loading={l1}
           delta={compareMode && compSummary ? <DeltaBadge current={summary?.despesas} previous={compSummary?.despesas} /> : null}
         />
@@ -274,7 +275,7 @@ function Resumo() {
           label="Saldo do mês"
           valor={summary?.saldo}
           icon={<Wallet size={15} />}
-          cor="#d4a574"
+          cor={color.accent.warm}
           destaque
           loading={l1}
           delta={compareMode && compSummary ? <DeltaBadge current={summary?.saldo} previous={compSummary?.saldo} /> : null}
@@ -294,30 +295,30 @@ function Resumo() {
         const temCartao = passivos.length > 0 && (pagamentosFatura > 0 || novosGastosCartao > 0);
         if (!temCartao) return null;
         const steps = [
-          { label: 'Economia contábil', value: economia, cor: '#d4a574', bold: true },
-          pagamentosFatura > 0 && { label: '− Pagto fatura antiga', value: pagamentosFatura, cor: '#c97b5c' },
-          novosGastosCartao > 0 && { label: '+ Novos gastos cartão', value: novosGastosCartao, cor: '#8b9d7a' },
-          { label: 'Sobrou em caixa', value: caixaLiq, cor: caixaLiq >= 0 ? '#8b9d7a' : '#c97b5c', bold: true },
+          { label: 'Economia contábil', value: economia, cor: color.accent.warm, bold: true },
+          pagamentosFatura > 0 && { label: '− Pagto fatura antiga', value: pagamentosFatura, cor: color.feedback.negative },
+          novosGastosCartao > 0 && { label: '+ Novos gastos cartão', value: novosGastosCartao, cor: color.feedback.positive },
+          { label: 'Sobrou em caixa', value: caixaLiq, cor: caixaLiq >= 0 ? color.feedback.positive : color.feedback.negative, bold: true },
         ].filter(Boolean);
         return (
-          <div className="card" style={{ borderLeft: `3px solid ${caixaLiq >= 0 ? '#8b9d7a' : '#c97b5c'}` }}>
-            <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Wallet size={14} style={{ color: '#d4a574' }} /> Economia contábil × Caixa real
+          <div className="card" style={{ borderLeft: `3px solid ${caixaLiq >= 0 ? color.feedback.positive : color.feedback.negative}` }}>
+            <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Wallet size={14} style={{ color: color.accent.warm }} /> Economia contábil × Caixa real
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(150px, 1fr))`, gap: 16 }}>
               {steps.map((s, i) => (
                 <div key={i}>
-                  <div className="sans" style={{ fontSize: 10, color: '#8a8275', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{s.label}</div>
+                  <div className="sans" style={{ fontSize: 10, color: color.text.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{s.label}</div>
                   <div className="serif" style={{ fontSize: s.bold ? 24 : 20, color: s.cor, fontWeight: 600, letterSpacing: '-0.01em' }}>{BRL(s.value)}</div>
                 </div>
               ))}
             </div>
-            <div className="sans" style={{ fontSize: 12, color: '#8a8275', marginTop: 14, lineHeight: 1.6 }}>
-              {pagamentosFatura > 0 && <>Pagou <strong style={{ color: '#c4bcab' }}>{BRL(pagamentosFatura)}</strong> de fatura de meses anteriores. </>}
-              {novosGastosCartao > 0 && <>Novos <strong style={{ color: '#c4bcab' }}>{BRL(novosGastosCartao)}</strong> em gastos no cartão vão sair da conta nos próximos meses. </>}
+            <div className="sans" style={{ fontSize: 12, color: color.text.muted, marginTop: 14, lineHeight: 1.6 }}>
+              {pagamentosFatura > 0 && <>Pagou <strong style={{ color: color.text.secondary }}>{BRL(pagamentosFatura)}</strong> de fatura de meses anteriores. </>}
+              {novosGastosCartao > 0 && <>Novos <strong style={{ color: color.text.secondary }}>{BRL(novosGastosCartao)}</strong> em gastos no cartão vão sair da conta nos próximos meses. </>}
               {caixaLiq >= 0
-                ? <>De fato, sobraram <strong style={{ color: '#8b9d7a' }}>{BRL(caixaLiq)}</strong> em caixa.</>
-                : <>Na prática, consumiu <strong style={{ color: '#c97b5c' }}>{BRL(Math.abs(caixaLiq))}</strong> da reserva.</>}
+                ? <>De fato, sobraram <strong style={{ color: color.feedback.positive }}>{BRL(caixaLiq)}</strong> em caixa.</>
+                : <>Na prática, consumiu <strong style={{ color: color.feedback.negative }}>{BRL(Math.abs(caixaLiq))}</strong> da reserva.</>}
             </div>
           </div>
         );
@@ -329,24 +330,24 @@ function Resumo() {
         const pa = (goal.annual.actual / goal.annual.target) * 100;
         const ok = pm >= 100;
         return (
-          <div className="card" style={{ borderLeft: `3px solid ${ok ? '#8b9d7a' : '#d4a574'}` }}>
-            <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <PiggyBank size={14} style={{ color: ok ? '#8b9d7a' : '#d4a574' }} /> Meta de economia
+          <div className="card" style={{ borderLeft: `3px solid ${ok ? color.feedback.positive : color.accent.warm}` }}>
+            <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <PiggyBank size={14} style={{ color: ok ? color.feedback.positive : color.accent.warm }} /> Meta de economia
             </div>
             <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap' }}>
               <div>
-                <div className="sans" style={{ fontSize: 11, color: '#8a8275', marginBottom: 4 }}>Este mês</div>
-                <div className="serif" style={{ fontSize: 28, color: ok ? '#8b9d7a' : '#e8e2d5', fontWeight: 600 }}>{BRL(goal.monthly.actual)}</div>
-                <div className="sans" style={{ fontSize: 12, color: ok ? '#8b9d7a' : '#c97b5c', marginTop: 2 }}>
+                <div className="sans" style={{ fontSize: 11, color: color.text.muted, marginBottom: 4 }}>Este mês</div>
+                <div className="serif" style={{ fontSize: 28, color: ok ? color.feedback.positive : color.text.primary, fontWeight: 600 }}>{BRL(goal.monthly.actual)}</div>
+                <div className="sans" style={{ fontSize: 12, color: ok ? color.feedback.positive : color.feedback.negative, marginTop: 2 }}>
                   {ok ? '✓' : '↓'} meta {BRL(goal.monthly.target)} ({pct(pm)})
                 </div>
               </div>
               <div>
-                <div className="sans" style={{ fontSize: 11, color: '#8a8275', marginBottom: 4 }}>Acumulado {new Date().getFullYear()}</div>
-                <div className="serif" style={{ fontSize: 28, color: '#e8e2d5', fontWeight: 600 }}>{BRL(goal.annual.actual)}</div>
-                <div className="sans" style={{ fontSize: 12, color: '#8a8275', marginTop: 2 }}>meta anual {BRL(goal.annual.target)} ({pct(pa)})</div>
-                <div style={{ height: 4, background: '#3a3632', marginTop: 8, width: 180 }}>
-                  <div style={{ height: '100%', width: `${Math.min(Math.max(pa, 0), 100)}%`, background: '#d4a574' }} />
+                <div className="sans" style={{ fontSize: 11, color: color.text.muted, marginBottom: 4 }}>Acumulado {new Date().getFullYear()}</div>
+                <div className="serif" style={{ fontSize: 28, color: color.text.primary, fontWeight: 600 }}>{BRL(goal.annual.actual)}</div>
+                <div className="sans" style={{ fontSize: 12, color: color.text.muted, marginTop: 2 }}>meta anual {BRL(goal.annual.target)} ({pct(pa)})</div>
+                <div style={{ height: 4, background: color.border.default, marginTop: 8, width: 180 }}>
+                  <div style={{ height: '100%', width: `${Math.min(Math.max(pa, 0), 100)}%`, background: color.accent.warm }} />
                 </div>
               </div>
             </div>
@@ -358,25 +359,25 @@ function Resumo() {
         <div className="card">
           {detalhe ? (
             <>
-              <button onClick={() => setDetalhe(null)} className="sans" style={{ background: 'none', border: 'none', color: '#d4a574', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, padding: 0, marginBottom: 20 }}>
+              <button onClick={() => setDetalhe(null)} className="sans" style={{ background: 'none', border: 'none', color: color.accent.warm, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, padding: 0, marginBottom: 20 }}>
                 <ArrowLeft size={14} /> Voltar
               </button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                 <span style={{ width: 14, height: 14, background: detalhe.cor, display: 'inline-block' }} />
                 <span className="serif" style={{ fontSize: 26, fontWeight: 600 }}>{detalhe.nome}</span>
-                <span className="serif" style={{ fontSize: 26, color: '#8a8275' }}>{BRL(detalhe.valor)}</span>
+                <span className="serif" style={{ fontSize: 26, color: color.text.muted }}>{BRL(detalhe.valor)}</span>
               </div>
               {detalhe.subcats.length === 0 ? (
-                <div className="sans" style={{ fontSize: 13, color: '#8a8275' }}>Sem subcategorias registradas neste mês.</div>
+                <div className="sans" style={{ fontSize: 13, color: color.text.muted }}>Sem subcategorias registradas neste mês.</div>
               ) : detalhe.subcats.map((s, i) => {
                 const p = (s.valor / detalhe.valor) * 100;
                 return (
                   <div key={i} style={{ marginBottom: 18 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                      <span className="sans" style={{ fontSize: 14, color: '#c4bcab' }}>{s.nome}</span>
-                      <span className="sans" style={{ fontSize: 14 }}>{BRLc(s.valor)} <span style={{ color: '#8a8275', fontSize: 12 }}>({pct(p)})</span></span>
+                      <span className="sans" style={{ fontSize: 14, color: color.text.secondary }}>{s.nome}</span>
+                      <span className="sans" style={{ fontSize: 14 }}>{BRLc(s.valor)} <span style={{ color: color.text.muted, fontSize: 12 }}>({pct(p)})</span></span>
                     </div>
-                    <div style={{ height: 4, background: '#3a3632' }}>
+                    <div style={{ height: 4, background: color.border.default }}>
                       <div style={{ height: '100%', width: `${p}%`, background: detalhe.cor, opacity: 0.8 }} />
                     </div>
                   </div>
@@ -385,27 +386,27 @@ function Resumo() {
             </>
           ) : l2 || loadingDet ? <Spinner /> : (
             <>
-              <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>
+              <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 16 }}>
                 Despesas por categoria
               </div>
               <ResponsiveContainer width="100%" height={210}>
                 <PieChart>
                   <Pie data={categorias} dataKey="valor" nameKey="nome" cx="40%" cy="50%" innerRadius={52} outerRadius={85} paddingAngle={2} style={{ cursor: 'pointer', outline: 'none' }}
                     onClick={(_, idx) => openCat(categorias[idx])}>
-                    {categorias.map((c, i) => <Cell key={i} fill={c.cor} stroke="#252220" strokeWidth={2} />)}
+                    {categorias.map((c, i) => <Cell key={i} fill={c.cor} stroke={color.bg.card} strokeWidth={2} />)}
                   </Pie>
-                  <Tooltip contentStyle={{ background: '#1a1815', border: '1px solid #3a3632', borderRadius: 2, fontFamily: 'Inter', fontSize: 12 }} formatter={(v) => BRLc(v)} />
+                  <Tooltip contentStyle={{ background: color.bg.page, border: `1px solid ${color.border.default}`, borderRadius: 2, fontFamily: 'Inter', fontSize: 12 }} formatter={(v) => BRLc(v)} />
                 </PieChart>
               </ResponsiveContainer>
               {categorias.map(c => (
                 <div key={c.nome} className="crow" onClick={() => openCat(c)}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ width: 10, height: 10, background: c.cor, flexShrink: 0 }} />
-                    <span className="sans" style={{ fontSize: 14, color: '#c4bcab' }}>{c.nome}</span>
+                    <span className="sans" style={{ fontSize: 14, color: color.text.secondary }}>{c.nome}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span className="serif" style={{ fontSize: 15 }}>{BRL(c.valor)}</span>
-                    <ChevronRight size={14} style={{ color: '#6a6258' }} />
+                    <ChevronRight size={14} style={{ color: color.text.disabled }} />
                   </div>
                 </div>
               ))}
@@ -414,7 +415,7 @@ function Resumo() {
         </div>
 
         <div className="card">
-          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 16 }}>
             {detalhe ? `Maiores gastos · ${detalhe.nome}` : 'Maiores gastos'}
           </div>
           {(() => {
@@ -428,12 +429,12 @@ function Resumo() {
             return (
               <>
                 {displayed.map((g, i, arr) => (
-                  <div key={i} style={{ padding: '14px 0', borderBottom: i < arr.length - 1 ? '1px solid #3a3632' : 'none' }}>
+                  <div key={i} style={{ padding: '14px 0', borderBottom: i < arr.length - 1 ? `1px solid ${color.border.default}` : 'none' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                       <span className="serif" style={{ fontSize: 15 }}>{g.descricao}</span>
-                      <span className="serif" style={{ fontSize: 16, color: '#d4a574', whiteSpace: 'nowrap' }}>{BRL(g.valor)}</span>
+                      <span className="serif" style={{ fontSize: 16, color: color.accent.warm, whiteSpace: 'nowrap' }}>{BRL(g.valor)}</span>
                     </div>
-                    <div className="sans" style={{ fontSize: 11, color: '#8a8275', marginTop: 2 }}>{g.categoria} · {g.data}</div>
+                    <div className="sans" style={{ fontSize: 11, color: color.text.muted, marginTop: 2 }}>{g.categoria} · {g.data}</div>
                   </div>
                 ))}
                 {hasMore && (
@@ -442,9 +443,9 @@ function Resumo() {
                     className="sans"
                     style={{
                       background: 'none',
-                      border: '1px solid #3a3632',
+                      border: `1px solid ${color.border.default}`,
                       borderRadius: 3,
-                      color: '#d4a574',
+                      color: color.accent.warm,
                       cursor: 'pointer',
                       fontSize: 12,
                       padding: '8px 12px',
@@ -456,7 +457,7 @@ function Resumo() {
                       gap: 6,
                       transition: 'background 0.12s',
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#2a2724'}
+                    onMouseEnter={e => e.currentTarget.style.background = color.bg.hover}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
                     Ver todas ({transactions.length}) <ChevronRight size={14} />
@@ -491,42 +492,42 @@ function Fluxo() {
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase' }}>Fluxo 12 meses</div>
-        <span className="sans" style={{ fontSize: 11, color: '#d4a574', background: '#2a2724', border: '1px solid #3a3632', borderRadius: 3, padding: '3px 8px', letterSpacing: '0.05em' }}>
+        <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase' }}>Fluxo 12 meses</div>
+        <span className="sans" style={{ fontSize: 11, color: color.accent.warm, background: color.bg.hover, border: `1px solid ${color.border.default}`, borderRadius: 3, padding: '3px 8px', letterSpacing: '0.05em' }}>
           meta: {BRL(metaMensal)}
         </span>
       </div>
       <div style={{ display: 'flex', gap: 20, marginBottom: 16, flexWrap: 'wrap' }}>
-        <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 10, height: 10, background: '#8b9d7a', display: 'inline-block' }} /> Receitas
+        <span className="sans" style={{ fontSize: 12, color: color.text.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 10, height: 10, background: color.feedback.positive, display: 'inline-block' }} /> Receitas
         </span>
-        <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 10, height: 10, background: '#c97b5c', display: 'inline-block' }} /> Despesas
+        <span className="sans" style={{ fontSize: 12, color: color.text.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 10, height: 10, background: color.feedback.negative, display: 'inline-block' }} /> Despesas
         </span>
-        <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 18, height: 2, background: '#d4a574', display: 'inline-block' }} /> Economia
+        <span className="sans" style={{ fontSize: 12, color: color.text.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 18, height: 2, background: color.accent.warm, display: 'inline-block' }} /> Economia
         </span>
-        <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 18, height: 0, borderTop: '2px dashed #6b8ca3', display: 'inline-block' }} /> Meta
+        <span className="sans" style={{ fontSize: 12, color: color.text.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 18, height: 0, borderTop: `2px dashed ${color.feedback.info}`, display: 'inline-block' }} /> Meta
         </span>
       </div>
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={meses} barGap={2}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#3a3632" />
-          <XAxis dataKey="label" tick={{ fill: '#8a8275', fontSize: 12, fontFamily: 'Inter, sans-serif' }} axisLine={{ stroke: '#3a3632' }} tickLine={false} />
-          <YAxis tick={{ fill: '#8a8275', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => BRL(v)} width={72} />
+          <CartesianGrid strokeDasharray="3 3" stroke={color.border.default} />
+          <XAxis dataKey="label" tick={{ fill: color.text.muted, fontSize: 12, fontFamily: 'Inter, sans-serif' }} axisLine={{ stroke: color.border.default }} tickLine={false} />
+          <YAxis tick={{ fill: color.text.muted, fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => BRL(v)} width={72} />
           <Tooltip
-            contentStyle={{ background: '#1a1815', border: '1px solid #3a3632', borderRadius: 2, fontFamily: 'Inter', fontSize: 12 }}
+            contentStyle={{ background: color.bg.page, border: `1px solid ${color.border.default}`, borderRadius: 2, fontFamily: 'Inter', fontSize: 12 }}
             formatter={(value, name) => [BRL(value), name]}
           />
-          <ReferenceLine y={metaMensal} stroke="#6b8ca3" strokeDasharray="6 4" strokeWidth={1.5} label={{ value: `Meta ${BRL(metaMensal)}`, position: 'insideTopRight', fill: '#6b8ca3', fontSize: 11, fontFamily: 'Inter' }} />
-          <Bar dataKey="receitas" fill="#8b9d7a" radius={[2, 2, 0, 0]} name="Receitas"
+          <ReferenceLine y={metaMensal} stroke={color.feedback.info} strokeDasharray="6 4" strokeWidth={1.5} label={{ value: `Meta ${BRL(metaMensal)}`, position: 'insideTopRight', fill: color.feedback.info, fontSize: 11, fontFamily: 'Inter' }} />
+          <Bar dataKey="receitas" fill={color.feedback.positive} radius={[2, 2, 0, 0]} name="Receitas"
                style={{ cursor: 'pointer' }}
                onClick={(d) => d?.mes && setDetailMonth(d.mes)} />
-          <Bar dataKey="despesas" fill="#c97b5c" radius={[2, 2, 0, 0]} name="Despesas"
+          <Bar dataKey="despesas" fill={color.feedback.negative} radius={[2, 2, 0, 0]} name="Despesas"
                style={{ cursor: 'pointer' }}
                onClick={(d) => d?.mes && setDetailMonth(d.mes)} />
-          <Line type="monotone" dataKey="economia" stroke="#d4a574" strokeWidth={2} dot={{ r: 3, fill: '#d4a574', stroke: '#d4a574' }} activeDot={{ r: 5 }} name="Economia" />
+          <Line type="monotone" dataKey="economia" stroke={color.accent.warm} strokeWidth={2} dot={{ r: 3, fill: color.accent.warm, stroke: color.accent.warm }} activeDot={{ r: 5 }} name="Economia" />
           <Legend content={() => null} />
         </ComposedChart>
       </ResponsiveContainer>
@@ -539,12 +540,12 @@ function Fluxo() {
 
 function SankeyNode({ x, y, width, height, payload }) {
   const isEndpoint = payload.name === 'Entradas' || payload.name === 'Saídas';
-  const fill = payload.name === 'Entradas' ? '#8b9d7a'
-             : payload.name === 'Saídas'  ? '#c97b5c'
-             : payload.isLiability         ? '#6a6258'
-                                           : '#d4a574';
+  const fill = payload.name === 'Entradas' ? color.feedback.positive
+             : payload.name === 'Saídas'  ? color.feedback.negative
+             : payload.isLiability         ? color.text.disabled
+                                           : color.accent.warm;
   const fillOpacity = payload.isLiability ? 0.55 : 0.9;
-  const textColor = payload.isLiability ? '#8a8275' : '#c4bcab';
+  const textColor = payload.isLiability ? color.text.muted : color.text.secondary;
   return (
     <Layer>
       <Rectangle x={x} y={y} width={width} height={height} fill={fill} fillOpacity={fillOpacity} />
@@ -624,38 +625,38 @@ function FluxoDetail({ month, onClose }) {
   const novosGastosCartao = sumBy(passivos, 'saidas_externas') + sumBy(passivos, 'transfers_out');
   const deltaDividaReduzida = pagamentosFatura - novosGastosCartao;
   const temCartao = passivos.length > 0 && (pagamentosFatura > 0 || novosGastosCartao > 0);
-  const thStyleFluxo = { textAlign: 'left', padding: '8px 10px', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8a8275', borderBottom: '1px solid #3a3632', fontWeight: 500 };
-  const tdStyleFluxo = { padding: '10px', fontSize: 13, borderBottom: '1px solid #2a2724', color: '#c4bcab' };
+  const thStyleFluxo = { textAlign: 'left', padding: '8px 10px', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: color.text.muted, borderBottom: `1px solid ${color.border.default}`, fontWeight: 500 };
+  const tdStyleFluxo = { padding: '10px', fontSize: 13, borderBottom: `1px solid ${color.border.subtle}`, color: color.text.secondary };
   const kpis = [
-    { label: 'Receitas', value: data?.total_entradas ?? 0, cor: '#8b9d7a' },
-    { label: 'Despesas', value: data?.total_saidas ?? 0, cor: '#c97b5c' },
-    { label: 'Economia contábil', value: economia, cor: economia >= 0 ? '#d4a574' : '#c97b5c', emphasis: true, hint: 'Rec − Desp' },
-    { label: 'Fluxo caixa líquido', value: caixaLiq, cor: caixaLiq >= 0 ? '#8b9d7a' : '#c97b5c', hint: 'Δ ativos' },
+    { label: 'Receitas', value: data?.total_entradas ?? 0, cor: color.feedback.positive },
+    { label: 'Despesas', value: data?.total_saidas ?? 0, cor: color.feedback.negative },
+    { label: 'Economia contábil', value: economia, cor: economia >= 0 ? color.accent.warm : color.feedback.negative, emphasis: true, hint: 'Rec − Desp' },
+    { label: 'Fluxo caixa líquido', value: caixaLiq, cor: caixaLiq >= 0 ? color.feedback.positive : color.feedback.negative, hint: 'Δ ativos' },
   ];
   if (temCartao) {
     kpis.push({
       label: 'Δ Dívida',
       value: deltaDividaReduzida,
-      cor: deltaDividaReduzida > 0 ? '#8b9d7a' : deltaDividaReduzida < 0 ? '#c97b5c' : '#8a8275',
+      cor: deltaDividaReduzida > 0 ? color.feedback.positive : deltaDividaReduzida < 0 ? color.feedback.negative : color.text.muted,
       hint: deltaDividaReduzida > 0 ? 'pagou' : deltaDividaReduzida < 0 ? 'cresceu' : '',
     });
   }
   return (
-    <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #3a3632' }}>
+    <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${color.border.default}` }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 12 }}>
-        <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#d4a574', textTransform: 'uppercase' }}>
+        <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.accent.warm, textTransform: 'uppercase' }}>
           Detalhe · {formatMonthBR(month)}
         </div>
         <button onClick={onClose} className="sans" style={{ ...navBtnStyle, fontSize: 11 }}>Fechar</button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8, marginBottom: 20 }}>
         {kpis.map((k, i) => (
-          <div key={i} style={{ padding: '10px 12px', border: '1px solid #2a2724', borderRadius: 3, background: k.emphasis ? 'rgba(212,165,116,0.04)' : 'transparent' }}>
-            <div className="sans" style={{ fontSize: 10, letterSpacing: '0.1em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 4 }}>{k.label}</div>
+          <div key={i} style={{ padding: '10px 12px', border: `1px solid ${color.border.subtle}`, borderRadius: 3, background: k.emphasis ? color.overlay.accentWarmSoft : 'transparent' }}>
+            <div className="sans" style={{ fontSize: 10, letterSpacing: '0.1em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 4 }}>{k.label}</div>
             <div style={{ fontSize: 18, fontWeight: 600, color: k.cor, fontFamily: "'Fraunces', Georgia, serif" }}>
               {BRL(k.value)}
             </div>
-            {k.hint && <div className="sans" style={{ fontSize: 10, color: '#6a6258', marginTop: 2 }}>{k.hint}</div>}
+            {k.hint && <div className="sans" style={{ fontSize: 10, color: color.text.disabled, marginTop: 2 }}>{k.hint}</div>}
           </div>
         ))}
       </div>
@@ -668,19 +669,19 @@ function FluxoDetail({ month, onClose }) {
             linkCurvature={0.5}
             iterations={64}
             margin={{ top: 16, right: 160, bottom: 16, left: 90 }}
-            link={{ stroke: '#6b8ca3', strokeOpacity: 0.2, fill: '#6b8ca3', fillOpacity: 0.3 }}
+            link={{ stroke: color.feedback.info, strokeOpacity: 0.2, fill: color.feedback.info, fillOpacity: 0.3 }}
             node={<SankeyNode />}
           >
             <Tooltip
-              contentStyle={{ background: '#1a1815', border: '1px solid #3a3632', borderRadius: 2, fontFamily: 'Inter', fontSize: 12, color: '#e8e2d5' }}
+              contentStyle={{ background: color.bg.page, border: `1px solid ${color.border.default}`, borderRadius: 2, fontFamily: 'Inter', fontSize: 12, color: color.text.primary }}
               formatter={(value) => BRL(value)}
             />
           </Sankey>
         </ResponsiveContainer>
       ) : (
-        <div className="sans" style={{ fontSize: 13, color: '#8a8275' }}>Sem movimentação para exibir fluxograma.</div>
+        <div className="sans" style={{ fontSize: 13, color: color.text.muted }}>Sem movimentação para exibir fluxograma.</div>
       )}
-      <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', margin: '24px 0 12px' }}>
+      <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', margin: '24px 0 12px' }}>
         Por conta
       </div>
       <div style={{ overflowX: 'auto' }}>
@@ -704,12 +705,12 @@ function FluxoDetail({ month, onClose }) {
                 <tr key={c.conta}>
                   <td style={tdStyleFluxo}>{c.nome}</td>
                   <td style={{ ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif' }}>{BRLc(c.saldo_inicial)}</td>
-                  <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.entradas_externas > 0 ? '#8b9d7a' : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.entradas_externas > 0 ? BRLc(c.entradas_externas) : '—'}</td>
-                  <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.saidas_externas > 0 ? '#c97b5c' : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.saidas_externas > 0 ? BRLc(c.saidas_externas) : '—'}</td>
-                  <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.transfers_in > 0 ? '#6b8ca3' : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.transfers_in > 0 ? BRLc(c.transfers_in) : '—'}</td>
-                  <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.transfers_out > 0 ? '#6b8ca3' : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.transfers_out > 0 ? BRLc(c.transfers_out) : '—'}</td>
-                  <td style={{ ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, color: delta > 0 ? '#8b9d7a' : delta < 0 ? '#c97b5c' : '#c4bcab' }}>{BRLc(c.saldo_final)}</td>
-                  <td style={{ ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, color: delta > 0 ? '#8b9d7a' : delta < 0 ? '#c97b5c' : '#8a8275' }}>{delta === 0 ? '—' : BRLc(delta)}</td>
+                  <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.entradas_externas > 0 ? color.feedback.positive : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.entradas_externas > 0 ? BRLc(c.entradas_externas) : '—'}</td>
+                  <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.saidas_externas > 0 ? color.feedback.negative : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.saidas_externas > 0 ? BRLc(c.saidas_externas) : '—'}</td>
+                  <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.transfers_in > 0 ? color.feedback.info : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.transfers_in > 0 ? BRLc(c.transfers_in) : '—'}</td>
+                  <td style={{ ...tdStyleFluxo, textAlign: 'right', color: c.transfers_out > 0 ? color.feedback.info : 'inherit', fontFamily: 'Fraunces, Georgia, serif' }}>{c.transfers_out > 0 ? BRLc(c.transfers_out) : '—'}</td>
+                  <td style={{ ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, color: delta > 0 ? color.feedback.positive : delta < 0 ? color.feedback.negative : color.text.secondary }}>{BRLc(c.saldo_final)}</td>
+                  <td style={{ ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, color: delta > 0 ? color.feedback.positive : delta < 0 ? color.feedback.negative : color.text.muted }}>{delta === 0 ? '—' : BRLc(delta)}</td>
                 </tr>
               );
             })}
@@ -720,18 +721,18 @@ function FluxoDetail({ month, onClose }) {
             const totInicial = sum('saldo_inicial');
             const totFinal = sum('saldo_final');
             const totDelta = totFinal - totInicial;
-            const tfCell = { ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, borderTop: '1px solid #3a3632', borderBottom: 'none', color: '#e8e2d5' };
+            const tfCell = { ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, borderTop: `1px solid ${color.border.default}`, borderBottom: 'none', color: color.text.primary };
             return (
               <tfoot>
                 <tr>
-                  <td style={{ ...tdStyleFluxo, borderTop: '1px solid #3a3632', borderBottom: 'none', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8a8275', fontWeight: 500 }} className="sans">Total</td>
+                  <td style={{ ...tdStyleFluxo, borderTop: `1px solid ${color.border.default}`, borderBottom: 'none', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: color.text.muted, fontWeight: 500 }} className="sans">Total</td>
                   <td style={tfCell}>{BRLc(totInicial)}</td>
-                  <td style={{ ...tfCell, color: '#8b9d7a' }}>{BRLc(sum('entradas_externas'))}</td>
-                  <td style={{ ...tfCell, color: '#c97b5c' }}>{BRLc(sum('saidas_externas'))}</td>
-                  <td style={{ ...tfCell, color: '#6b8ca3' }}>{BRLc(sum('transfers_in'))}</td>
-                  <td style={{ ...tfCell, color: '#6b8ca3' }}>{BRLc(sum('transfers_out'))}</td>
+                  <td style={{ ...tfCell, color: color.feedback.positive }}>{BRLc(sum('entradas_externas'))}</td>
+                  <td style={{ ...tfCell, color: color.feedback.negative }}>{BRLc(sum('saidas_externas'))}</td>
+                  <td style={{ ...tfCell, color: color.feedback.info }}>{BRLc(sum('transfers_in'))}</td>
+                  <td style={{ ...tfCell, color: color.feedback.info }}>{BRLc(sum('transfers_out'))}</td>
                   <td style={tfCell}>{BRLc(totFinal)}</td>
-                  <td style={{ ...tfCell, color: totDelta > 0 ? '#8b9d7a' : totDelta < 0 ? '#c97b5c' : '#e8e2d5' }}>{BRLc(totDelta)}</td>
+                  <td style={{ ...tfCell, color: totDelta > 0 ? color.feedback.positive : totDelta < 0 ? color.feedback.negative : color.text.primary }}>{BRLc(totDelta)}</td>
                 </tr>
               </tfoot>
             );
@@ -741,26 +742,26 @@ function FluxoDetail({ month, onClose }) {
 
       {temCartao && (() => {
         const rows = [
-          { label: 'Receitas', sign: '+', value: data?.total_entradas ?? 0, cor: '#8b9d7a' },
-          { label: 'Despesas do mês (inclui gastos no cartão)', sign: '−', value: data?.total_saidas ?? 0, cor: '#c97b5c' },
-          { label: 'Economia contábil', sign: '=', value: economia, cor: '#d4a574', divider: true, bold: true },
-          { label: 'Pagamento de faturas antigas', sign: '−', value: pagamentosFatura, cor: '#c97b5c', hide: pagamentosFatura === 0 },
-          { label: 'Novos gastos no cartão (a pagar depois)', sign: '+', value: novosGastosCartao, cor: '#8b9d7a', hide: novosGastosCartao === 0 },
-          { label: 'Mudou em caixa (ativos líquidos)', sign: '=', value: caixaLiq, cor: caixaLiq >= 0 ? '#8b9d7a' : '#c97b5c', divider: true, bold: true, strong: true },
+          { label: 'Receitas', sign: '+', value: data?.total_entradas ?? 0, cor: color.feedback.positive },
+          { label: 'Despesas do mês (inclui gastos no cartão)', sign: '−', value: data?.total_saidas ?? 0, cor: color.feedback.negative },
+          { label: 'Economia contábil', sign: '=', value: economia, cor: color.accent.warm, divider: true, bold: true },
+          { label: 'Pagamento de faturas antigas', sign: '−', value: pagamentosFatura, cor: color.feedback.negative, hide: pagamentosFatura === 0 },
+          { label: 'Novos gastos no cartão (a pagar depois)', sign: '+', value: novosGastosCartao, cor: color.feedback.positive, hide: novosGastosCartao === 0 },
+          { label: 'Mudou em caixa (ativos líquidos)', sign: '=', value: caixaLiq, cor: caixaLiq >= 0 ? color.feedback.positive : color.feedback.negative, divider: true, bold: true, strong: true },
         ].filter(r => !r.hide);
         return (
           <>
-            <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', margin: '24px 0 12px' }}>
+            <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', margin: '24px 0 12px' }}>
               Reconciliação · contábil × caixa
             </div>
-            <div style={{ border: '1px solid #2a2724', borderRadius: 3, padding: '4px 16px', background: 'rgba(26,24,21,0.4)' }}>
+            <div style={{ border: `1px solid ${color.border.subtle}`, borderRadius: 3, padding: '4px 16px', background: color.overlay.pageScrim }}>
               {rows.map((r, i) => (
                 <div key={i} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
                   padding: '10px 0',
-                  borderTop: r.divider ? '1px solid #3a3632' : 'none',
+                  borderTop: r.divider ? `1px solid ${color.border.default}` : 'none',
                 }}>
-                  <span className="sans" style={{ fontSize: r.strong ? 13 : 12, color: r.strong ? '#e8e2d5' : '#c4bcab' }}>
+                  <span className="sans" style={{ fontSize: r.strong ? 13 : 12, color: r.strong ? color.text.primary : color.text.secondary }}>
                     {r.label}
                   </span>
                   <span style={{
@@ -769,7 +770,7 @@ function FluxoDetail({ month, onClose }) {
                     fontWeight: r.bold ? 600 : 400,
                     color: r.cor,
                   }}>
-                    <span style={{ color: '#6a6258', marginRight: 8 }}>{r.sign}</span>{BRLc(r.value)}
+                    <span style={{ color: color.text.disabled, marginRight: 8 }}>{r.sign}</span>{BRLc(r.value)}
                   </span>
                 </div>
               ))}
@@ -780,7 +781,7 @@ function FluxoDetail({ month, onClose }) {
 
       {(data?.transferencias || []).length > 0 && (
         <>
-          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', margin: '24px 0 12px' }}>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', margin: '24px 0 12px' }}>
             Transferências entre contas
           </div>
           <div style={{ overflowX: 'auto' }}>
@@ -797,7 +798,7 @@ function FluxoDetail({ month, onClose }) {
                   <tr key={i}>
                     <td style={tdStyleFluxo}>{t.from_nome}</td>
                     <td style={tdStyleFluxo}>{t.to_nome}</td>
-                    <td style={{ ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, color: '#6b8ca3' }}>{BRLc(t.valor)}</td>
+                    <td style={{ ...tdStyleFluxo, textAlign: 'right', fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600, color: color.feedback.info }}>{BRLc(t.valor)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -806,12 +807,12 @@ function FluxoDetail({ month, onClose }) {
         </>
       )}
 
-      <div className="sans" style={{ fontSize: 12, color: '#8a8275', marginTop: 16, lineHeight: 1.6 }}>
+      <div className="sans" style={{ fontSize: 12, color: color.text.muted, marginTop: 16, lineHeight: 1.6 }}>
         {caixaLiq >= 0
-          ? <>Sobrou <strong style={{ color: '#c4bcab' }}>{BRL(caixaLiq)}</strong> em caixa neste mês.</>
-          : <>Faltou <strong style={{ color: '#c97b5c' }}>{BRL(Math.abs(caixaLiq))}</strong> em caixa neste mês (consumiu reserva).</>}
-        {temCartao && deltaDividaReduzida > 0 && <> Você reduziu dívida em <strong style={{ color: '#8b9d7a' }}>{BRL(deltaDividaReduzida)}</strong>.</>}
-        {temCartao && deltaDividaReduzida < 0 && <> Dívida cresceu em <strong style={{ color: '#c97b5c' }}>{BRL(Math.abs(deltaDividaReduzida))}</strong> — a pagar em meses futuros.</>}
+          ? <>Sobrou <strong style={{ color: color.text.secondary }}>{BRL(caixaLiq)}</strong> em caixa neste mês.</>
+          : <>Faltou <strong style={{ color: color.feedback.negative }}>{BRL(Math.abs(caixaLiq))}</strong> em caixa neste mês (consumiu reserva).</>}
+        {temCartao && deltaDividaReduzida > 0 && <> Você reduziu dívida em <strong style={{ color: color.feedback.positive }}>{BRL(deltaDividaReduzida)}</strong>.</>}
+        {temCartao && deltaDividaReduzida < 0 && <> Dívida cresceu em <strong style={{ color: color.feedback.negative }}>{BRL(Math.abs(deltaDividaReduzida))}</strong> — a pagar em meses futuros.</>}
       </div>
     </div>
   );
@@ -821,20 +822,20 @@ function FluxoDetail({ month, onClose }) {
 function BudgetBar({ nome, orcado, realizado, percentual, isTotal }) {
   const fillPct = orcado > 0 ? Math.min((realizado / orcado) * 100, 100) : 0;
   const overBudget = percentual > 100;
-  const barColor = overBudget ? '#c97b5c' : '#8b9d7a';
-  const barBg = '#3a3632';
+  const barColor = overBudget ? color.feedback.negative : color.feedback.positive;
+  const barBg = color.border.default;
 
   return (
     <div style={{ marginBottom: isTotal ? 0 : 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
         <span className="sans" style={{
           fontSize: isTotal ? 14 : 13,
-          color: isTotal ? '#e8e2d5' : '#c4bcab',
+          color: isTotal ? color.text.primary : color.text.secondary,
           fontWeight: isTotal ? 600 : 400,
         }}>
           {nome}
         </span>
-        <span className="sans" style={{ fontSize: 13, color: '#8a8275', whiteSpace: 'nowrap', marginLeft: 12 }}>
+        <span className="sans" style={{ fontSize: 13, color: color.text.muted, whiteSpace: 'nowrap', marginLeft: 12 }}>
           {BRLc(realizado)} / {BRLc(orcado)}{' '}
           <span style={{ color: barColor, fontWeight: 600 }}>({pct(percentual)})</span>
         </span>
@@ -870,10 +871,10 @@ function Orcamento() {
 
   return (
     <div className="card">
-      <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 20 }}>Orçamento vs realizado</div>
+      <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 20 }}>Orçamento vs realizado</div>
 
       {total && (
-        <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid #3a3632' }}>
+        <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${color.border.default}` }}>
           <BudgetBar
             nome="Total"
             orcado={total.orcado}
@@ -885,7 +886,7 @@ function Orcamento() {
       )}
 
       {categorias.length === 0 ? (
-        <div className="sans" style={{ color: '#8a8275', fontSize: 13 }}>
+        <div className="sans" style={{ color: color.text.muted, fontSize: 13 }}>
           Nenhuma categoria com orçamento definido. Adicione transações periódicas (~ monthly) no seu .journal.
         </div>
       ) : categorias.map((c, i) => (
@@ -985,27 +986,27 @@ function Transacoes() {
 
   const thStyle = {
     textAlign: 'left', padding: '10px 8px', fontSize: 11, letterSpacing: '0.08em',
-    textTransform: 'uppercase', color: '#8a8275', borderBottom: '1px solid #3a3632',
+    textTransform: 'uppercase', color: color.text.muted, borderBottom: `1px solid ${color.border.default}`,
     cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
   };
   const tdStyle = {
-    padding: '12px 8px', fontSize: 13, borderBottom: '1px solid #3a3632', color: '#c4bcab',
+    padding: '12px 8px', fontSize: 13, borderBottom: `1px solid ${color.border.default}`, color: color.text.secondary,
   };
   const inputStyle = {
-    background: '#1a1815', border: '1px solid #3a3632', borderRadius: 3, color: '#e8e2d5',
+    background: color.bg.page, border: `1px solid ${color.border.default}`, borderRadius: 3, color: color.text.primary,
     padding: '8px 12px', fontSize: 13, fontFamily: 'Inter, sans-serif', outline: 'none',
     width: '100%',
   };
   const selectStyle = { ...inputStyle, cursor: 'pointer' };
 
   const SortIcon = ({ field }) => {
-    if (sortBy !== field) return <span style={{ color: '#4a4642', marginLeft: 4 }}>&#8693;</span>;
-    return <span style={{ color: '#d4a574', marginLeft: 4 }}>{sortOrder === 'asc' ? '↑' : '↓'}</span>;
+    if (sortBy !== field) return <span style={{ color: color.text.faint, marginLeft: 4 }}>&#8693;</span>;
+    return <span style={{ color: color.accent.warm, marginLeft: 4 }}>{sortOrder === 'asc' ? '↑' : '↓'}</span>;
   };
 
   return (
     <div className="card">
-      <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 20 }}>
+      <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 20 }}>
         Transações
       </div>
 
@@ -1032,7 +1033,7 @@ function Transacoes() {
             onClick={() => setRangeMode(rangeMode === 'month' ? 'range' : 'month')}
             style={{
               ...navBtnStyle, fontSize: 11, padding: '6px 10px',
-              background: rangeMode === 'range' ? '#2a2724' : '#252220',
+              background: rangeMode === 'range' ? color.bg.hover : color.bg.card,
             }}
             title={rangeMode === 'month' ? 'Alternar para range de datas' : 'Voltar para mês único'}
           >
@@ -1047,7 +1048,7 @@ function Transacoes() {
           <div style={{ flex: '0 1 150px' }}>
             <input type="date" value={rangeStart} onChange={e => { setRangeStart(e.target.value); setPage(0); }} style={inputStyle} />
           </div>
-          <div className="sans" style={{ color: '#8a8275', fontSize: 13, display: 'flex', alignItems: 'center' }}>até</div>
+          <div className="sans" style={{ color: color.text.muted, fontSize: 13, display: 'flex', alignItems: 'center' }}>até</div>
           <div style={{ flex: '0 1 150px' }}>
             <input type="date" value={rangeEnd} onChange={e => { setRangeEnd(e.target.value); setPage(0); }} style={inputStyle} />
           </div>
@@ -1057,7 +1058,7 @@ function Transacoes() {
       {/* Tags filter */}
       {allTags.length > 0 && (
         <div style={{ marginBottom: 20 }}>
-          <div className="sans" style={{ fontSize: 11, color: '#8a8275', marginBottom: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          <div className="sans" style={{ fontSize: 11, color: color.text.muted, marginBottom: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             Tags
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -1069,10 +1070,10 @@ function Transacoes() {
                   onClick={() => toggleTag(t.tag)}
                   className="sans"
                   style={{
-                    background: isActive ? '#3a3632' : '#252220',
-                    border: `1px solid ${isActive ? '#d4a574' : '#3a3632'}`,
+                    background: isActive ? color.border.default : color.bg.card,
+                    border: `1px solid ${isActive ? color.accent.warm : color.border.default}`,
                     borderRadius: 12,
-                    color: isActive ? '#d4a574' : '#c4bcab',
+                    color: isActive ? color.accent.warm : color.text.secondary,
                     padding: '4px 12px',
                     fontSize: 12,
                     cursor: 'pointer',
@@ -1084,8 +1085,8 @@ function Transacoes() {
                 >
                   {t.tag}
                   <span style={{
-                    background: isActive ? '#d4a574' : '#3a3632',
-                    color: isActive ? '#1a1815' : '#8a8275',
+                    background: isActive ? color.accent.warm : color.border.default,
+                    color: isActive ? color.bg.page : color.text.muted,
                     borderRadius: 8,
                     padding: '0 6px',
                     fontSize: 10,
@@ -1103,7 +1104,7 @@ function Transacoes() {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#c97b5c',
+                  color: color.feedback.negative,
                   fontSize: 12,
                   cursor: 'pointer',
                   padding: '4px 8px',
@@ -1119,7 +1120,7 @@ function Transacoes() {
       {error && <ErrorBox msg={error} />}
 
       {loading ? <Spinner /> : txs.length === 0 ? (
-        <div className="sans" style={{ color: '#8a8275', fontSize: 13, padding: '20px 0' }}>
+        <div className="sans" style={{ color: color.text.muted, fontSize: 13, padding: '20px 0' }}>
           Nenhuma transação encontrada para os filtros selecionados.
         </div>
       ) : (
@@ -1141,12 +1142,12 @@ function Transacoes() {
               <tbody>
                 {txs.map((tx, i) => (
                   <tr key={i} style={{ transition: 'background 0.12s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#2a2724'}
+                    onMouseEnter={e => e.currentTarget.style.background = color.bg.hover}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#8a8275', fontSize: 12 }}>{tx.data}</td>
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: color.text.muted, fontSize: 12 }}>{tx.data}</td>
                     <td style={tdStyle}>{tx.descricao}</td>
-                    <td style={{ ...tdStyle, color: '#8a8275', fontSize: 12 }}>{tx.categoria}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? '#8b9d7a' : tx.valor < 0 ? '#c97b5c' : 'inherit' }}>
+                    <td style={{ ...tdStyle, color: color.text.muted, fontSize: 12 }}>{tx.categoria}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? color.feedback.positive : tx.valor < 0 ? color.feedback.negative : 'inherit' }}>
                       {BRLc(tx.valor)}
                     </td>
                   </tr>
@@ -1156,8 +1157,8 @@ function Transacoes() {
           </div>
 
           {/* Pagination */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: '1px solid #3a3632' }}>
-            <span className="sans" style={{ fontSize: 12, color: '#8a8275' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: `1px solid ${color.border.default}` }}>
+            <span className="sans" style={{ fontSize: 12, color: color.text.muted }}>
               {total > 0 ? `${startIdx}–${endIdx} de ${total}` : '0 resultados'}
             </span>
             <div style={{ display: 'flex', gap: 4 }}>
@@ -1232,43 +1233,43 @@ function Previsao() {
       {/* Forecast chart */}
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase' }}>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase' }}>
             Previsão de fluxo · 12 meses
           </div>
-          <span className="sans" style={{ fontSize: 12, color: '#d4a574', background: '#2a2724', border: '1px solid #3a3632', borderRadius: 3, padding: '3px 8px' }}>
+          <span className="sans" style={{ fontSize: 12, color: color.accent.warm, background: color.bg.hover, border: `1px solid ${color.border.default}`, borderRadius: 3, padding: '3px 8px' }}>
             Saldo projetado 6 meses: {BRL(projectedSaldo)}
           </span>
         </div>
         <div style={{ display: 'flex', gap: 20, marginBottom: 16, flexWrap: 'wrap' }}>
-          <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 10, height: 10, background: '#8b9d7a', display: 'inline-block' }} /> Receitas
+          <span className="sans" style={{ fontSize: 12, color: color.text.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 10, height: 10, background: color.feedback.positive, display: 'inline-block' }} /> Receitas
           </span>
-          <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 10, height: 10, background: '#c97b5c', display: 'inline-block' }} /> Despesas
+          <span className="sans" style={{ fontSize: 12, color: color.text.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 10, height: 10, background: color.feedback.negative, display: 'inline-block' }} /> Despesas
           </span>
-          <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 18, height: 2, background: '#6b8ca3', display: 'inline-block' }} /> Saldo
+          <span className="sans" style={{ fontSize: 12, color: color.text.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 18, height: 2, background: color.feedback.info, display: 'inline-block' }} /> Saldo
           </span>
-          <span className="sans" style={{ fontSize: 12, color: '#8a8275', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 18, height: 0, borderTop: '2px dashed #3a3632', display: 'inline-block', opacity: 0.5 }} /> Previsão
+          <span className="sans" style={{ fontSize: 12, color: color.text.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 18, height: 0, borderTop: `2px dashed ${color.border.default}`, display: 'inline-block', opacity: 0.5 }} /> Previsão
           </span>
         </div>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#3a3632" />
-            <XAxis dataKey="label" tick={{ fill: '#8a8275', fontSize: 12, fontFamily: 'Inter, sans-serif' }} axisLine={{ stroke: '#3a3632' }} tickLine={false} />
-            <YAxis tick={{ fill: '#8a8275', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => BRL(v)} width={72} />
+            <CartesianGrid strokeDasharray="3 3" stroke={color.border.default} />
+            <XAxis dataKey="label" tick={{ fill: color.text.muted, fontSize: 12, fontFamily: 'Inter, sans-serif' }} axisLine={{ stroke: color.border.default }} tickLine={false} />
+            <YAxis tick={{ fill: color.text.muted, fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => BRL(v)} width={72} />
             <Tooltip
-              contentStyle={{ background: '#1a1815', border: '1px solid #3a3632', borderRadius: 2, fontFamily: 'Inter', fontSize: 12 }}
+              contentStyle={{ background: color.bg.page, border: `1px solid ${color.border.default}`, borderRadius: 2, fontFamily: 'Inter', fontSize: 12 }}
               formatter={(value, name) => [BRL(value), name]}
               labelFormatter={(label, payload) => {
                 const item = payload?.[0]?.payload;
                 return item?.mes || label;
               }}
             />
-            <Line type="monotone" dataKey="receitas" stroke="#8b9d7a" strokeWidth={2} dot={{ r: 3, fill: '#8b9d7a' }} activeDot={{ r: 5 }} name="Receitas" strokeDasharray="" />
-            <Line type="monotone" dataKey="despesas" stroke="#c97b5c" strokeWidth={2} dot={{ r: 3, fill: '#c97b5c' }} activeDot={{ r: 5 }} name="Despesas" />
-            <Line type="monotone" dataKey="saldo" stroke="#6b8ca3" strokeWidth={2} dot={{ r: 3, fill: '#6b8ca3' }} activeDot={{ r: 5 }} name="Saldo" />
+            <Line type="monotone" dataKey="receitas" stroke={color.feedback.positive} strokeWidth={2} dot={{ r: 3, fill: color.feedback.positive }} activeDot={{ r: 5 }} name="Receitas" strokeDasharray="" />
+            <Line type="monotone" dataKey="despesas" stroke={color.feedback.negative} strokeWidth={2} dot={{ r: 3, fill: color.feedback.negative }} activeDot={{ r: 5 }} name="Despesas" />
+            <Line type="monotone" dataKey="saldo" stroke={color.feedback.info} strokeWidth={2} dot={{ r: 3, fill: color.feedback.info }} activeDot={{ r: 5 }} name="Saldo" />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -1276,16 +1277,16 @@ function Previsao() {
       {/* Seasonality heatmap */}
       {categorias.length > 0 && seasonMeses.length > 0 && (
         <div className="card">
-          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 16 }}>
             Sazonalidade · Despesas por categoria
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '8px 10px', color: '#8a8275', borderBottom: '1px solid #3a3632', fontWeight: 500, whiteSpace: 'nowrap' }}>Categoria</th>
+                  <th style={{ textAlign: 'left', padding: '8px 10px', color: color.text.muted, borderBottom: `1px solid ${color.border.default}`, fontWeight: 500, whiteSpace: 'nowrap' }}>Categoria</th>
                   {seasonMeses.map(m => (
-                    <th key={m.mes} style={{ textAlign: 'right', padding: '8px 8px', color: '#8a8275', borderBottom: '1px solid #3a3632', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                    <th key={m.mes} style={{ textAlign: 'right', padding: '8px 8px', color: color.text.muted, borderBottom: `1px solid ${color.border.default}`, fontWeight: 500, whiteSpace: 'nowrap' }}>
                       {monthLabel(m.mes)}
                     </th>
                   ))}
@@ -1294,7 +1295,7 @@ function Previsao() {
               <tbody>
                 {categorias.map(cat => (
                   <tr key={cat}>
-                    <td style={{ padding: '6px 10px', borderBottom: '1px solid #2a2724', color: '#c4bcab', whiteSpace: 'nowrap' }} className="sans">
+                    <td style={{ padding: '6px 10px', borderBottom: `1px solid ${color.border.subtle}`, color: color.text.secondary, whiteSpace: 'nowrap' }} className="sans">
                       {cat}
                     </td>
                     {seasonMeses.map(m => {
@@ -1308,10 +1309,11 @@ function Previsao() {
                           style={{
                             textAlign: 'right',
                             padding: '6px 8px',
-                            borderBottom: '1px solid #2a2724',
+                            borderBottom: `1px solid ${color.border.subtle}`,
                             fontFamily: "'Fraunces', Georgia, serif",
                             fontSize: 12,
-                            color: '#e8e2d5',
+                            color: color.text.primary,
+                            // Heat-map fill: data-driven alpha over color.accent.warm (#d4a574 = rgb(212,165,116))
                             background: val > 0 ? `rgba(212, 165, 116, ${opacity * 0.4})` : 'transparent',
                             whiteSpace: 'nowrap',
                           }}
@@ -1367,7 +1369,7 @@ function Contas() {
 
   const AccountCard = ({ conta }) => {
     const isNeg = conta.saldo < 0;
-    const saldoColor = conta.tipo === 'passivo' ? (isNeg ? '#c97b5c' : '#8b9d7a') : (isNeg ? '#c97b5c' : '#8b9d7a');
+    const saldoColor = conta.tipo === 'passivo' ? (isNeg ? color.feedback.negative : color.feedback.positive) : (isNeg ? color.feedback.negative : color.feedback.positive);
     return (
       <div
         className="crow"
@@ -1377,19 +1379,19 @@ function Contas() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{
             width: 8, height: 8, borderRadius: '50%',
-            background: conta.tipo === 'ativo' ? '#8b9d7a' : '#c97b5c',
+            background: conta.tipo === 'ativo' ? color.feedback.positive : color.feedback.negative,
             flexShrink: 0,
           }} />
           <div>
-            <div className="sans" style={{ fontSize: 14, color: '#c4bcab' }}>{conta.nome}</div>
-            <div className="sans" style={{ fontSize: 11, color: '#6a6258', marginTop: 2 }}>{conta.caminho}</div>
+            <div className="sans" style={{ fontSize: 14, color: color.text.secondary }}>{conta.nome}</div>
+            <div className="sans" style={{ fontSize: 11, color: color.text.disabled, marginTop: 2 }}>{conta.caminho}</div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span className="serif" style={{ fontSize: 16, fontWeight: 600, color: saldoColor }}>
             {BRLc(conta.saldo)}
           </span>
-          <ChevronRight size={14} style={{ color: '#6a6258' }} />
+          <ChevronRight size={14} style={{ color: color.text.disabled }} />
         </div>
       </div>
     );
@@ -1408,7 +1410,7 @@ function Contas() {
   const plCurr = nwMonths.length >= 1 ? nwMonths[nwMonths.length - 1] : null;
   const plDelta = plPrev && plCurr ? (plCurr.net - plPrev.net) : null;
   const plDeltaPct = plDelta != null && plPrev && plPrev.net !== 0 ? (plDelta / Math.abs(plPrev.net)) * 100 : null;
-  const plDeltaCor = plDelta == null ? '#8a8275' : plDelta >= 0 ? '#8b9d7a' : '#c97b5c';
+  const plDeltaCor = plDelta == null ? color.text.muted : plDelta >= 0 ? color.feedback.positive : color.feedback.negative;
 
   return (
     <div className="grid">
@@ -1418,20 +1420,20 @@ function Contas() {
           label="Total Ativos"
           valor={totalAtivos}
           icon={<ArrowUpRight size={15} />}
-          cor="#8b9d7a"
+          cor={color.feedback.positive}
         />
         <KPI
           label="Total Passivos"
           valor={passivosOwed}
           icon={<ArrowDownRight size={15} />}
-          cor="#c97b5c"
+          cor={color.feedback.negative}
         />
         {/* Patrimônio Líquido — card custom pra mostrar Δ vs mês anterior e o breakdown A − P */}
-        <div className="card" style={{ borderLeft: '3px solid #d4a574' }}>
-          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ color: '#d4a574' }}><Wallet size={15} /></span> Patrimônio Líquido
+        <div className="card" style={{ borderLeft: `3px solid ${color.accent.warm}` }}>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ color: color.accent.warm }}><Wallet size={15} /></span> Patrimônio Líquido
           </div>
-          <div className="serif" style={{ fontSize: 38, fontWeight: 600, color: '#d4a574', letterSpacing: '-0.02em', lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+          <div className="serif" style={{ fontSize: 38, fontWeight: 600, color: color.accent.warm, letterSpacing: '-0.02em', lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
             {BRL(patrimonioLiquido)}
             {plDelta != null && (
               <span className="sans" style={{ fontSize: 13, color: plDeltaCor, fontWeight: 500, whiteSpace: 'nowrap' }}>
@@ -1440,9 +1442,9 @@ function Contas() {
               </span>
             )}
           </div>
-          <div className="sans" style={{ fontSize: 11, color: '#6a6258', marginTop: 8, letterSpacing: '0.02em' }}>
-            {BRL(totalAtivos)} <span style={{ color: '#4a4640' }}>(ativos)</span> − {BRL(passivosOwed)} <span style={{ color: '#4a4640' }}>(passivos)</span>
-            {plPrev && <> · <span style={{ color: '#8a8275' }}>Δ vs {plPrev.mes.slice(5)}/{plPrev.mes.slice(2, 4)}</span></>}
+          <div className="sans" style={{ fontSize: 11, color: color.text.disabled, marginTop: 8, letterSpacing: '0.02em' }}>
+            {BRL(totalAtivos)} <span style={{ color: color.text.faintAlt }}>(ativos)</span> − {BRL(passivosOwed)} <span style={{ color: color.text.faintAlt }}>(passivos)</span>
+            {plPrev && <> · <span style={{ color: color.text.muted }}>Δ vs {plPrev.mes.slice(5)}/{plPrev.mes.slice(2, 4)}</span></>}
           </div>
         </div>
       </div>
@@ -1450,21 +1452,21 @@ function Contas() {
       <div className="grid g3">
         {/* Assets */}
         <div className="card">
-          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 16 }}>
             Ativos
           </div>
           {ativos.length === 0 ? (
-            <div className="sans" style={{ fontSize: 13, color: '#8a8275' }}>Nenhuma conta de ativo encontrada.</div>
+            <div className="sans" style={{ fontSize: 13, color: color.text.muted }}>Nenhuma conta de ativo encontrada.</div>
           ) : ativos.map(c => <AccountCard key={c.caminho} conta={c} />)}
         </div>
 
         {/* Liabilities */}
         <div className="card">
-          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 16 }}>
             Passivos
           </div>
           {passivos.length === 0 ? (
-            <div className="sans" style={{ fontSize: 13, color: '#8a8275' }}>Nenhuma conta de passivo encontrada.</div>
+            <div className="sans" style={{ fontSize: 13, color: color.text.muted }}>Nenhuma conta de passivo encontrada.</div>
           ) : passivos.map(c => <AccountCard key={c.caminho} conta={c} />)}
         </div>
       </div>
@@ -1474,10 +1476,10 @@ function Contas() {
 
 function TipoChip({ tipo }) {
   const map = {
-    credito:       { label: 'Crédito',       bg: 'rgba(139,157,122,0.15)', fg: '#8b9d7a' },
-    debito:        { label: 'Débito',        bg: 'rgba(201,123,92,0.15)',  fg: '#c97b5c' },
-    transferencia: { label: 'Transferência', bg: 'rgba(107,140,163,0.15)', fg: '#6b8ca3' },
-    saldo_inicial: { label: 'Saldo inicial', bg: 'rgba(138,130,117,0.18)', fg: '#8a8275' },
+    credito:       { label: 'Crédito',       bg: color.overlay.credito, fg: color.feedback.positive },
+    debito:        { label: 'Débito',        bg: color.overlay.debito,  fg: color.feedback.negative },
+    transferencia: { label: 'Transferência', bg: color.overlay.transferencia, fg: color.feedback.info },
+    saldo_inicial: { label: 'Saldo inicial', bg: color.overlay.saldoInicial, fg: color.text.muted },
   };
   const s = map[tipo] || map.debito;
   return (
@@ -1505,17 +1507,17 @@ function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, s
     [statementPath, refreshKey]
   );
 
-  const saldoColor = account.saldo < 0 ? '#c97b5c' : '#8b9d7a';
+  const saldoColor = account.saldo < 0 ? color.feedback.negative : color.feedback.positive;
 
   const thStyle = {
     textAlign: 'left', padding: '10px 8px', fontSize: 11, letterSpacing: '0.08em',
-    textTransform: 'uppercase', color: '#8a8275', borderBottom: '1px solid #3a3632',
+    textTransform: 'uppercase', color: color.text.muted, borderBottom: `1px solid ${color.border.default}`,
   };
   const tdStyle = {
-    padding: '12px 8px', fontSize: 13, borderBottom: '1px solid #3a3632', color: '#c4bcab',
+    padding: '12px 8px', fontSize: 13, borderBottom: `1px solid ${color.border.default}`, color: color.text.secondary,
   };
   const inputStyle = {
-    background: '#1a1815', border: '1px solid #3a3632', borderRadius: 3, color: '#e8e2d5',
+    background: color.bg.page, border: `1px solid ${color.border.default}`, borderRadius: 3, color: color.text.primary,
     padding: '8px 12px', fontSize: 13, fontFamily: 'Inter, sans-serif', outline: 'none',
   };
 
@@ -1537,7 +1539,7 @@ function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, s
     <div className="card">
       {/* Header */}
       <button onClick={onBack} className="sans" style={{
-        background: 'none', border: 'none', color: '#d4a574', cursor: 'pointer',
+        background: 'none', border: 'none', color: color.accent.warm, cursor: 'pointer',
         fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, padding: 0, marginBottom: 20,
       }}>
         <ArrowLeft size={14} /> Voltar para contas
@@ -1546,20 +1548,20 @@ function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, s
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
         <span style={{
           width: 10, height: 10, borderRadius: '50%',
-          background: account.tipo === 'ativo' ? '#8b9d7a' : '#c97b5c',
+          background: account.tipo === 'ativo' ? color.feedback.positive : color.feedback.negative,
         }} />
         <span className="serif" style={{ fontSize: 26, fontWeight: 600 }}>{account.nome}</span>
         <span className="serif" style={{ fontSize: 26, color: saldoColor, fontWeight: 600 }}>{BRLc(account.saldo)}</span>
-        <span className="sans" style={{ fontSize: 11, color: '#6a6258', marginLeft: 8 }}>{account.caminho}</span>
+        <span className="sans" style={{ fontSize: 11, color: color.text.disabled, marginLeft: 8 }}>{account.caminho}</span>
       </div>
 
       {/* Date range picker for statement */}
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
-        <div className="sans" style={{ fontSize: 11, color: '#8a8275', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+        <div className="sans" style={{ fontSize: 11, color: color.text.muted, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
           Extrato:
         </div>
         <input type="date" value={rangeStart} onChange={e => setRangeStart(e.target.value)} style={inputStyle} />
-        <span className="sans" style={{ color: '#8a8275', fontSize: 13 }}>até</span>
+        <span className="sans" style={{ color: color.text.muted, fontSize: 13 }}>até</span>
         <input type="date" value={rangeEnd} onChange={e => setRangeEnd(e.target.value)} style={inputStyle} />
         <button
           className="sans"
@@ -1579,7 +1581,7 @@ function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, s
             className="sans"
             onClick={() => { setShowStatement(false); setRangeStart(''); setRangeEnd(''); }}
             style={{
-              background: 'none', border: 'none', color: '#c97b5c', cursor: 'pointer',
+              background: 'none', border: 'none', color: color.accent.secondary, cursor: 'pointer',
               fontSize: 12, padding: '8px 8px',
             }}
           >
@@ -1591,11 +1593,11 @@ function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, s
       {/* Statement view */}
       {showStatement ? (
         <>
-          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 16 }}>
             Extrato · {rangeStart} a {rangeEnd}
           </div>
           {stmtLoading ? <Spinner /> : stmtError ? <ErrorBox msg={stmtError} /> : stmtTxs.length === 0 ? (
-            <div className="sans" style={{ fontSize: 13, color: '#8a8275' }}>Nenhuma transação no período selecionado.</div>
+            <div className="sans" style={{ fontSize: 13, color: color.text.muted }}>Nenhuma transação no período selecionado.</div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -1614,20 +1616,20 @@ function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, s
                     const isOpening = tx.tipo_movimento === 'saldo_inicial';
                     return (
                       <tr key={i}
-                        onMouseEnter={e => e.currentTarget.style.background = '#2a2724'}
-                        onMouseLeave={e => e.currentTarget.style.background = isOpening ? '#242220' : 'transparent'}
-                        style={isOpening ? { background: '#242220', fontStyle: 'italic' } : {}}
+                        onMouseEnter={e => e.currentTarget.style.background = color.bg.hover}
+                        onMouseLeave={e => e.currentTarget.style.background = isOpening ? color.bg.opening : 'transparent'}
+                        style={isOpening ? { background: color.bg.opening, fontStyle: 'italic' } : {}}
                       >
-                        <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#8a8275', fontSize: 12 }}>{tx.data}</td>
+                        <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: color.text.muted, fontSize: 12 }}>{tx.data}</td>
                         <td style={tdStyle}>{tx.descricao}</td>
-                        <td style={{ ...tdStyle, color: '#8a8275', fontSize: 12 }}>{tx.categoria}</td>
+                        <td style={{ ...tdStyle, color: color.text.muted, fontSize: 12 }}>{tx.categoria}</td>
                         <td style={{ ...tdStyle, textAlign: 'center' }}><TipoChip tipo={tx.tipo_movimento} /></td>
-                        <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? '#8b9d7a' : tx.valor < 0 ? '#c97b5c' : 'inherit' }}>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? color.feedback.positive : tx.valor < 0 ? color.feedback.negative : 'inherit' }}>
                           {BRLc(tx.valor)}
                         </td>
                         <td style={{
                           ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600,
-                          color: tx.runningBalance < 0 ? '#c97b5c' : '#8b9d7a',
+                          color: tx.runningBalance < 0 ? color.feedback.negative : color.feedback.positive,
                         }}>
                           {BRLc(tx.runningBalance)}
                         </td>
@@ -1636,8 +1638,8 @@ function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, s
                   })}
                 </tbody>
               </table>
-              <div className="sans" style={{ fontSize: 12, color: '#8a8275', marginTop: 12, paddingTop: 12, borderTop: '1px solid #3a3632' }}>
-                {stmtTxs.length} transações · Saldo final: <span className="serif" style={{ fontWeight: 600, color: stmtWithBalance[stmtWithBalance.length - 1]?.runningBalance < 0 ? '#c97b5c' : '#8b9d7a' }}>
+              <div className="sans" style={{ fontSize: 12, color: color.text.muted, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${color.border.default}` }}>
+                {stmtTxs.length} transações · Saldo final: <span className="serif" style={{ fontWeight: 600, color: stmtWithBalance[stmtWithBalance.length - 1]?.runningBalance < 0 ? color.feedback.negative : color.feedback.positive }}>
                   {BRLc(stmtWithBalance[stmtWithBalance.length - 1]?.runningBalance || 0)}
                 </span>
               </div>
@@ -1647,11 +1649,11 @@ function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, s
       ) : (
         /* Recent transactions */
         <>
-          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 16 }}>
+          <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 16 }}>
             Últimas transações
           </div>
           {txLoading ? <Spinner /> : txError ? <ErrorBox msg={txError} /> : (txData?.transactions || []).length === 0 ? (
-            <div className="sans" style={{ fontSize: 13, color: '#8a8275' }}>Nenhuma transação encontrada para esta conta.</div>
+            <div className="sans" style={{ fontSize: 13, color: color.text.muted }}>Nenhuma transação encontrada para esta conta.</div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -1669,15 +1671,15 @@ function AccountDetail({ account, onBack, rangeStart, setRangeStart, rangeEnd, s
                     const isOpening = tx.tipo_movimento === 'saldo_inicial';
                     return (
                       <tr key={i}
-                        onMouseEnter={e => e.currentTarget.style.background = '#2a2724'}
-                        onMouseLeave={e => e.currentTarget.style.background = isOpening ? '#242220' : 'transparent'}
-                        style={isOpening ? { background: '#242220', fontStyle: 'italic' } : {}}
+                        onMouseEnter={e => e.currentTarget.style.background = color.bg.hover}
+                        onMouseLeave={e => e.currentTarget.style.background = isOpening ? color.bg.opening : 'transparent'}
+                        style={isOpening ? { background: color.bg.opening, fontStyle: 'italic' } : {}}
                       >
-                        <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: '#8a8275', fontSize: 12 }}>{tx.data}</td>
+                        <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: color.text.muted, fontSize: 12 }}>{tx.data}</td>
                         <td style={tdStyle}>{tx.descricao}</td>
-                        <td style={{ ...tdStyle, color: '#8a8275', fontSize: 12 }}>{tx.categoria}</td>
+                        <td style={{ ...tdStyle, color: color.text.muted, fontSize: 12 }}>{tx.categoria}</td>
                         <td style={{ ...tdStyle, textAlign: 'center' }}><TipoChip tipo={tx.tipo_movimento} /></td>
-                        <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? '#8b9d7a' : tx.valor < 0 ? '#c97b5c' : 'inherit' }}>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? color.feedback.positive : tx.valor < 0 ? color.feedback.negative : 'inherit' }}>
                           {BRLc(tx.valor)}
                         </td>
                       </tr>
@@ -1715,8 +1717,8 @@ function PullIndicator({ pullState, pullDistance }) {
       justifyContent: 'center',
       gap: 8,
       padding: '10px 0',
-      background: 'linear-gradient(to bottom, #252220 0%, transparent 100%)',
-      color: pullState === 'ready' ? '#d4a574' : '#8a8275',
+      background: `linear-gradient(to bottom, ${color.bg.card} 0%, transparent 100%)`,
+      color: pullState === 'ready' ? color.accent.warm : color.text.muted,
       fontSize: 13,
       fontFamily: 'Inter, system-ui, sans-serif',
       transform: `translateY(${pullState === 'refreshing' ? 0 : pullDistance - 40}px)`,
@@ -1778,40 +1780,40 @@ export default function Dashboard() {
 function DashboardInner({ aba, setAba }) {
   const { selectedMonth } = useMonth();
   return (
-    <div style={{ minHeight: '100vh', background: '#1a1815', color: '#e8e2d5', fontFamily: 'Georgia, serif' }}>
+    <div style={{ minHeight: '100vh', background: color.bg.page, color: color.text.primary, fontFamily: 'Georgia, serif' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap');
         @keyframes spin { to { transform: rotate(360deg); } }
         * { box-sizing: border-box; margin: 0; }
         .serif { font-family: 'Fraunces', Georgia, serif; }
         .sans { font-family: 'Inter', system-ui, sans-serif; }
-        .card { background: #252220; border: 1px solid #3a3632; border-radius: 4px; padding: 24px; }
-        .tab { padding: 10px 16px; cursor: pointer; border: none; background: transparent; color: #8a8275; font-family: 'Inter', sans-serif; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid transparent; transition: all 0.15s; }
-        .tab:hover { color: #c4bcab; }
-        .tab.active { color: #d4a574; border-bottom-color: #d4a574; }
+        .card { background: ${color.bg.card}; border: 1px solid ${color.border.default}; border-radius: 4px; padding: 24px; }
+        .tab { padding: 10px 16px; cursor: pointer; border: none; background: transparent; color: ${color.text.muted}; font-family: 'Inter', sans-serif; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid transparent; transition: all 0.15s; }
+        .tab:hover { color: ${color.text.secondary}; }
+        .tab.active { color: ${color.accent.warm}; border-bottom-color: ${color.accent.warm}; }
         .grid { display: grid; gap: 20px; }
-        .crow { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #3a3632; cursor: pointer; transition: background 0.12s; }
-        .crow:hover { background: #2a2724; margin: 0 -24px; padding: 14px 24px; }
+        .crow { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid ${color.border.default}; cursor: pointer; transition: background 0.12s; }
+        .crow:hover { background: ${color.bg.hover}; margin: 0 -24px; padding: 14px 24px; }
         .crow:last-child { border-bottom: none; }
         @media (min-width: 900px) { .g3 { grid-template-columns: 2fr 1fr; } }
       `}</style>
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 20px' }}>
-        <header style={{ marginBottom: 36, borderBottom: '1px solid #3a3632', paddingBottom: 20 }}>
+        <header style={{ marginBottom: 36, borderBottom: `1px solid ${color.border.default}`, paddingBottom: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
             <div>
-              <div className="sans" style={{ fontSize: 11, letterSpacing: '0.2em', color: '#8a8275', textTransform: 'uppercase', marginBottom: 8 }}>
+              <div className="sans" style={{ fontSize: 11, letterSpacing: '0.2em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 8 }}>
                 {formatMonthBR(selectedMonth)} · Visão familiar
               </div>
               <h1 className="serif" style={{ fontSize: 'clamp(34px, 6vw, 58px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1 }}>
-                Finanças <em style={{ fontWeight: 400, color: '#d4a574' }}>Pessoais</em>
+                Finanças <em style={{ fontWeight: 400, color: color.accent.warm }}>Pessoais</em>
               </h1>
             </div>
             <MonthPicker />
           </div>
         </header>
 
-        <nav style={{ display: 'flex', gap: 2, marginBottom: 24, borderBottom: '1px solid #3a3632', overflowX: 'auto' }}>
+        <nav style={{ display: 'flex', gap: 2, marginBottom: 24, borderBottom: `1px solid ${color.border.default}`, overflowX: 'auto' }}>
           {['resumo', 'fluxo', 'orçamento', 'previsão', 'contas', 'transações'].map(t => (
             <button key={t} className={`tab ${aba === t ? 'active' : ''}`} onClick={() => setAba(t)}>{t}</button>
           ))}
@@ -1824,7 +1826,7 @@ function DashboardInner({ aba, setAba }) {
         {aba === 'contas' && <Contas />}
         {aba === 'transações' && <Transacoes />}
 
-        <footer className="sans" style={{ marginTop: 48, paddingTop: 20, borderTop: '1px solid #3a3632', fontSize: 11, color: '#6a6258', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+        <footer className="sans" style={{ marginTop: 48, paddingTop: 20, borderTop: `1px solid ${color.border.default}`, fontSize: 11, color: color.text.disabled, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
           hledger · via Tailscale
         </footer>
       </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { color } from './theme/tokens';
 
 const API = import.meta.env.VITE_API_URL || '';
 
@@ -8,19 +9,19 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#1a1816',
+    background: color.bg.pageAlt,
     fontFamily: 'system-ui, -apple-system, sans-serif',
   },
   card: {
-    background: '#252220',
-    border: '1px solid #3a3632',
+    background: color.bg.card,
+    border: `1px solid ${color.border.default}`,
     borderRadius: 12,
     padding: '2rem',
     width: 320,
     textAlign: 'center',
   },
   title: {
-    color: '#e8e0d4',
+    color: color.text.primaryAlt,
     fontSize: '1.4rem',
     fontWeight: 600,
     marginBottom: '1.5rem',
@@ -28,10 +29,10 @@ const styles = {
   input: {
     width: '100%',
     padding: '0.6rem 0.8rem',
-    border: '1px solid #3a3632',
+    border: `1px solid ${color.border.default}`,
     borderRadius: 8,
-    background: '#1a1816',
-    color: '#e8e0d4',
+    background: color.bg.pageAlt,
+    color: color.text.primaryAlt,
     fontSize: '1rem',
     outline: 'none',
     boxSizing: 'border-box',
@@ -42,14 +43,14 @@ const styles = {
     padding: '0.6rem',
     border: 'none',
     borderRadius: 8,
-    background: '#d4a574',
-    color: '#1a1816',
+    background: color.accent.warm,
+    color: color.bg.pageAlt,
     fontSize: '1rem',
     fontWeight: 600,
     cursor: 'pointer',
   },
   error: {
-    color: '#e05252',
+    color: color.feedback.errorText,
     fontSize: '0.85rem',
     marginTop: '0.75rem',
   },
