@@ -22,6 +22,7 @@ from app.config import get_settings, Settings
 from app.deps import get_current_user, _tokens
 from app.hledger.client import HledgerClient
 from app.hledger.errors import HledgerNotFound, HledgerTimeout, HledgerCallError
+from app.hledger.parsers import cashflow_from_incomestatement, parse_period_report
 
 logger = logging.getLogger("finance-hledger")
 
@@ -383,55 +384,15 @@ def category_detail(category: str, month: Optional[str] = None, user: Optional[s
 
 @app.get("/api/cashflow")
 def cashflow(months: int = 12, user: Optional[str] = Depends(get_current_user)):
-    """Fluxo mensal (receitas/despesas) dos últimos N meses."""
+    """Fluxo mensal (receitas/despesas).
+
+    Uses unified PeriodReport parser instead of inline cbrSubreports parsing.
+    """
     begin, end = months_back_bounds(months - 1)
     data = hledger("incomestatement", "-M", "-b", begin, "-e", end)
-
-    result = []
     if isinstance(data, dict):
-        cbr_dates = data.get("cbrDates", [])
-        subreports = data.get("cbrSubreports", [])
-
-        # Find Revenues and Expenses subreports
-        revenues_report = None
-        expenses_report = None
-        for sub in subreports:
-            title = (sub[0] if isinstance(sub, list) else "").lower()
-            report = sub[1] if isinstance(sub, list) else {}
-            if "revenue" in title or "income" in title:
-                revenues_report = report
-            elif "expense" in title:
-                expenses_report = report
-
-        # Iterate each period index
-        for period_idx, date_range in enumerate(cbr_dates):
-            # Extract YYYY-MM from first date in the range
-            first_date = date_range[0] if isinstance(date_range, list) else date_range
-            date_str = first_date.get("contents", "") if isinstance(first_date, dict) else str(first_date)
-            mes = date_str[:7]  # "2026-01"
-
-            receitas = 0.0
-            if revenues_report and "prRows" in revenues_report:
-                for row in revenues_report["prRows"]:
-                    amounts = row.get("prrAmounts", [])
-                    if period_idx < len(amounts) and amounts[period_idx]:
-                        receitas += abs(float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0)))
-
-            despesas = 0.0
-            if expenses_report and "prRows" in expenses_report:
-                for row in expenses_report["prRows"]:
-                    amounts = row.get("prrAmounts", [])
-                    if period_idx < len(amounts) and amounts[period_idx]:
-                        despesas += abs(float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0)))
-
-            result.append({
-                "mes": mes,
-                "receitas": round(receitas, 2),
-                "despesas": round(despesas, 2),
-            })
-
-    return {"months": result}
-
+        return {"months": cashflow_from_incomestatement(data)}
+    return {"months": []}
 
 @app.get("/api/flow")
 def flow(month: Optional[str] = None, user: Optional[str] = Depends(get_current_user)):

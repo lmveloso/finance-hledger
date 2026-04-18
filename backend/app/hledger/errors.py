@@ -20,3 +20,6 @@ class HledgerTimeout(HledgerError):
 
 class HledgerCallError(HledgerError):
     """hledger returned non-zero exit code."""
+
+class HledgerParseError(HledgerError):
+    """Unexpected JSON shape from hledger output."""
