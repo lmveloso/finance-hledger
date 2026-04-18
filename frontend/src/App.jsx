@@ -6,6 +6,7 @@ import { MonthProvider, useMonth } from './contexts/MonthContext.jsx';
 import { NavProvider, useNav } from './contexts/NavContext.jsx';
 import Mes from './features/mes';
 import Resumo from './features/resumo';
+import Ano from './features/ano';
 import Fluxo from './features/fluxo';
 import Orcamento from './features/orcamento';
 import Previsao from './features/previsao';
@@ -211,6 +212,7 @@ function AppInner() {
 
         {activeTab === 'mês' && <Mes />}
         {activeTab === 'resumo' && <Resumo />}
+        {activeTab === 'ano' && <Ano />}
         {activeTab === 'fluxo' && <Fluxo />}
         {activeTab === 'orçamento' && <Orcamento />}
         {activeTab === 'previsão' && <Previsao />}
