@@ -17,7 +17,7 @@ import React, { createContext, useContext, useCallback, useState } from 'react';
 
 const NavContext = createContext(null);
 
-const TABS = ['resumo', 'fluxo', 'orçamento', 'previsão', 'contas', 'transações'];
+const TABS = ['resumo', 'ano', 'fluxo', 'orçamento', 'previsão', 'contas', 'transações'];
 
 export function NavProvider({ children, initialTab = 'resumo' }) {
   const [activeTab, setActiveTab] = useState(initialTab);
