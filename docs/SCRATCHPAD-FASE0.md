@@ -1,14 +1,21 @@
-# Fase 0 Estabilizacao — COMPLETO
+# Fase 0 Estabilizacao — COMPLETO e MERGEADO
 
 **Ultima atualizacao:** 2026-04-18
-**Branch:** feat/fase0-config-deps
-**Status:** 100% COMPLETE — pronto para merge
+**Branch:** feat/fase0-config-deps → main (MERGED)
+**Tag:** v0.9.0-fase0
+**Status:** 100% COMPLETE e MERGEADO para main
 
 ---
 
+## Merge Summary
+
+Fase 0 completamente mergeada para main com 67 arquivos alterados.
+
+
+
 ## Resumo Executivo
 
-Toda a Fase 0 - Estabilizacao foi completada conforme docs/01-ESTABILIZACAO.md.
+Toda a Fase 0 - Estabilizacao foi completada e mergeada conforme docs/01-ESTABILIZACAO.md.
 Backend 100%, Frontend 100%.
 
 ## Backend — 100% (Ondas 1-4)
@@ -56,15 +63,25 @@ Backend 100%, Frontend 100%.
 - Dashboard.jsx → App.jsx
 - App.jsx: 224 linhas (composition root puro)
 
-## Estado Final
+## Estado Final (pos-merge)
 
 
 
-## Proximos Passos
+## Arquivos Criados (67 total)
 
-1. Merge feat/fase0-config-deps → main
-2. Tag: v0.9.0-fase0
-3. Iniciar Fase D (Dashboard 2.0) ou Fase 1 (Magic Import)
+Backend (29 novos):
+- app/auth/ (password.py, tailscale.py)
+- app/observability/ (logging.py)
+- app/hledger/ (client, models, parsers, errors, helpers)
+- app/routes/ (13 router modules)
+- tests/ (test_auth.py, test_logging.py, test_tailscale_auth.py)
+
+Frontend (34 novos):
+- components/ (5 atoms)
+- contexts/ (2 contexts)
+- features/ (6 features com 11 arquivos)
+- theme/ (tokens.js)
+- App.jsx
 
 ## Pendencias Identificadas (fora do escopo Fase 0)
 
@@ -72,3 +89,8 @@ Backend 100%, Frontend 100%.
 - Formatters compartilhados (BRL, BRLc duplicados)
 - MonthPicker extracao (deferred)
 - hledger 1.52 validacao (VM tem 1.25)
+
+## Proximos Passos (post-Fase 0)
+
+1. ✅ Fase 0 completa e mergeada
+2. 🔄 Escolher: Fase D (Dashboard 2.0) ou Fase 1 (Magic Import)
