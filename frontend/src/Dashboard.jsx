@@ -8,6 +8,7 @@ import { color } from './theme/tokens';
 import Spinner from './components/Spinner.jsx';
 import ErrorBox from './components/ErrorBox.jsx';
 import KPI from './components/KPI.jsx';
+import DeltaBadge from './components/DeltaBadge.jsx';
 
 const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -139,21 +140,6 @@ const navBtnStyle = {
   justifyContent: 'center',
   transition: 'background 0.12s',
 };
-
-// ── Delta badge ────────────────────────────────────────────────────────
-function DeltaBadge({ current, previous }) {
-  if (previous == null || previous === 0) return null;
-  const delta = ((current - previous) / Math.abs(previous)) * 100;
-  const isUp = delta >= 0;
-  const deltaColor = isUp ? color.feedback.positive : color.feedback.negative;
-  return (
-    <span className="sans" style={{
-      fontSize: 11, color: deltaColor, marginLeft: 6, whiteSpace: 'nowrap',
-    }}>
-      {isUp ? '+' : ''}{Math.round(delta)}%
-    </span>
-  );
-}
 
 // ── Resumo ──────────────────────────────────────────────────────────────
 function Resumo() {
