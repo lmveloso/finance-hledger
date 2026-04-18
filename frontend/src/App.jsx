@@ -8,7 +8,7 @@ import Mes from './features/mes';
 import Resumo from './features/resumo';
 import Ano from './features/ano';
 import Plano from './features/plano';
-import Fluxo from './features/fluxo';
+import Fluxo from './features/fluxo-reformado';
 import Orcamento from './features/orcamento';
 import Previsao from './features/previsao';
 import Contas from './features/contas';
