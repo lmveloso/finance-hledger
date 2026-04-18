@@ -14,6 +14,7 @@ import { MonthProvider, useMonth } from './contexts/MonthContext.jsx';
 import { NavProvider, useNav } from './contexts/NavContext.jsx';
 import Resumo from './features/resumo';
 import Fluxo from './features/fluxo';
+import Orcamento from './features/orcamento';
 
 const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -103,90 +104,6 @@ const navBtnStyle = {
   justifyContent: 'center',
   transition: 'background 0.12s',
 };
-
-// ── Orçamento ───────────────────────────────────────────────────────────
-function BudgetBar({ nome, orcado, realizado, percentual, isTotal }) {
-  const fillPct = orcado > 0 ? Math.min((realizado / orcado) * 100, 100) : 0;
-  const overBudget = percentual > 100;
-  const barColor = overBudget ? color.feedback.negative : color.feedback.positive;
-  const barBg = color.border.default;
-
-  return (
-    <div style={{ marginBottom: isTotal ? 0 : 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-        <span className="sans" style={{
-          fontSize: isTotal ? 14 : 13,
-          color: isTotal ? color.text.primary : color.text.secondary,
-          fontWeight: isTotal ? 600 : 400,
-        }}>
-          {nome}
-        </span>
-        <span className="sans" style={{ fontSize: 13, color: color.text.muted, whiteSpace: 'nowrap', marginLeft: 12 }}>
-          {BRLc(realizado)} / {BRLc(orcado)}{' '}
-          <span style={{ color: barColor, fontWeight: 600 }}>({pct(percentual)})</span>
-        </span>
-      </div>
-      <div style={{
-        height: isTotal ? 10 : 6,
-        background: barBg,
-        borderRadius: 3,
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          height: '100%',
-          width: `${fillPct}%`,
-          background: barColor,
-          borderRadius: 3,
-          transition: 'width 0.3s ease',
-        }} />
-      </div>
-    </div>
-  );
-}
-
-function Orcamento() {
-  const { selectedMonth, refreshKey } = useMonth();
-  const { data, error, loading } = useApi(`/api/budget?month=${selectedMonth}`, [selectedMonth, refreshKey]);
-  if (loading) return <Spinner />;
-  if (error) return <ErrorBox msg={error} />;
-
-  const categorias = (data?.categorias || [])
-    .filter(c => c.orcado > 0)
-    .sort((a, b) => b.percentual - a.percentual);
-  const total = data?.total;
-
-  return (
-    <div className="card">
-      <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 20 }}>Orçamento vs realizado</div>
-
-      {total && (
-        <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${color.border.default}` }}>
-          <BudgetBar
-            nome="Total"
-            orcado={total.orcado}
-            realizado={total.realizado}
-            percentual={total.percentual}
-            isTotal
-          />
-        </div>
-      )}
-
-      {categorias.length === 0 ? (
-        <div className="sans" style={{ color: color.text.muted, fontSize: 13 }}>
-          Nenhuma categoria com orçamento definido. Adicione transações periódicas (~ monthly) no seu .journal.
-        </div>
-      ) : categorias.map((c, i) => (
-        <BudgetBar
-          key={c.conta || i}
-          nome={c.nome}
-          orcado={c.orcado}
-          realizado={c.realizado}
-          percentual={c.percentual}
-        />
-      ))}
-    </div>
-  );
-}
 
 // ── Transações ──────────────────────────────────────────────────────────
 function Transacoes() {
