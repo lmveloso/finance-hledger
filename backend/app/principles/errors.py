@@ -1,6 +1,6 @@
 """Typed exceptions for the principles module.
 
-These are raised at load time by :class:`PrincipleMapping.from_file` so the
+These are raised at load time by :func:`load_mapping` from :mod:`app.principles.mappings` so the
 application fails fast if the factory JSON is malformed. The resolver itself
 is pure and never raises — invalid runtime inputs fall back to the default
 principle with a warning log (see :mod:`app.principles.resolver`).
