@@ -22,7 +22,7 @@ from app.config import get_settings, Settings
 from app.deps import get_current_user, _tokens
 from app.hledger.client import HledgerClient
 from app.hledger.errors import HledgerNotFound, HledgerTimeout, HledgerCallError
-from app.hledger.parsers import cashflow_from_incomestatement, parse_period_report
+from app.hledger.parsers import cashflow_from_incomestatement, networth_from_balancesheet, parse_income_statement, parse_period_report
 
 logger = logging.getLogger("finance-hledger")
 
@@ -314,15 +314,9 @@ def summary(month: Optional[str] = None, user: Optional[str] = Depends(get_curre
 
     receitas = despesas = 0.0
     if isinstance(data, dict):
-        # hledger incomestatement JSON tem estrutura com cbrSubreports
-        for sub in data.get("cbrSubreports", []):
-            title = (sub[0] if isinstance(sub, list) else sub.get("prrName", "")).lower()
-            report = sub[1] if isinstance(sub, list) else sub
-            total = abs(_amount(report.get("prTotals", {})))
-            if "revenue" in title or "income" in title or "receita" in title:
-                receitas = total
-            elif "expense" in title or "despesa" in title:
-                despesas = total
+        stmt = parse_income_statement(data)
+        receitas = stmt.revenues
+        despesas = stmt.expenses
 
     return {
         "month": month or date.today().strftime("%Y-%m"),
@@ -564,48 +558,8 @@ def networth(months: int = 12, user: Optional[str] = Depends(get_current_user)):
 
     result = []
     if isinstance(data, dict):
-        cbr_dates = data.get("cbrDates", [])
-        subreports = data.get("cbrSubreports", [])
-
-        # Find Assets and Liabilities subreports
-        assets_report = None
-        liabilities_report = None
-        for sub in subreports:
-            title = (sub[0] if isinstance(sub, list) else "").lower()
-            report = sub[1] if isinstance(sub, list) else {}
-            if "asset" in title:
-                assets_report = report
-            elif "liabilit" in title:
-                liabilities_report = report
-
-        # Iterate each period index
-        for period_idx, date_range in enumerate(cbr_dates):
-            first_date = date_range[0] if isinstance(date_range, list) else date_range
-            date_str = first_date.get("contents", "") if isinstance(first_date, dict) else str(first_date)
-            mes = date_str[:7]
-
-            assets = 0.0
-            if assets_report and "prRows" in assets_report:
-                for row in assets_report["prRows"]:
-                    amounts = row.get("prrAmounts", [])
-                    if period_idx < len(amounts) and amounts[period_idx]:
-                        assets += abs(float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0)))
-
-            liabilities = 0.0
-            if liabilities_report and "prRows" in liabilities_report:
-                for row in liabilities_report["prRows"]:
-                    amounts = row.get("prrAmounts", [])
-                    if period_idx < len(amounts) and amounts[period_idx]:
-                        liabilities += abs(float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0)))
-
-            result.append({
-                "mes": mes,
-                "assets": round(assets, 2),
-                "liabilities": round(liabilities, 2),
-                "net": round(assets - liabilities, 2),
-            })
-
-    return {"months": result}
+        return {"months": networth_from_balancesheet(data)}
+    return {"months": []}
 
 
 @app.get("/api/budget")
@@ -963,27 +917,17 @@ def savings_goal(monthly_target: float = 5000, annual_target: float = 60000, use
     mes_data = hledger("incomestatement", "-b", mb, "-e", me)
     mes_receitas = mes_despesas = 0.0
     if isinstance(mes_data, dict):
-        for sub in mes_data.get("cbrSubreports", []):
-            title = (sub[0] if isinstance(sub, list) else "").lower()
-            report = sub[1] if isinstance(sub, list) else {}
-            total = abs(_amount(report.get("prTotals", {})))
-            if "revenue" in title or "income" in title:
-                mes_receitas = total
-            elif "expense" in title:
-                mes_despesas = total
+        stmt = parse_income_statement(mes_data)
+        mes_receitas = stmt.revenues
+        mes_despesas = stmt.expenses
 
     # Ano acumulado
     ano_data = hledger("incomestatement", "-b", f"{year}-01-01", "-e", f"{year + 1}-01-01")
     ano_receitas = ano_despesas = 0.0
     if isinstance(ano_data, dict):
-        for sub in ano_data.get("cbrSubreports", []):
-            title = (sub[0] if isinstance(sub, list) else "").lower()
-            report = sub[1] if isinstance(sub, list) else {}
-            total = abs(_amount(report.get("prTotals", {})))
-            if "revenue" in title or "income" in title:
-                ano_receitas = total
-            elif "expense" in title:
-                ano_despesas = total
+        stmt = parse_income_statement(ano_data)
+        ano_receitas = stmt.revenues
+        ano_despesas = stmt.expenses
 
     return {
         "monthly": {
@@ -1004,41 +948,13 @@ def forecast(months: int = 6, user: Optional[str] = Depends(get_current_user)):
     data = hledger("incomestatement", "-M", "--forecast",
                    "-b", begin, "-e", end)
 
-    result = []
     if isinstance(data, dict):
-        cbr_dates = data.get("cbrDates", [])
-        subreports = data.get("cbrSubreports", [])
-        revenues_report = expenses_report = None
-        for sub in subreports:
-            title = (sub[0] if isinstance(sub, list) else "").lower()
-            report = sub[1] if isinstance(sub, list) else {}
-            if "revenue" in title or "income" in title:
-                revenues_report = report
-            elif "expense" in title:
-                expenses_report = report
-
-        for period_idx, date_range in enumerate(cbr_dates):
-            first_date = date_range[0] if isinstance(date_range, list) else date_range
-            date_str = first_date.get("contents", "") if isinstance(first_date, dict) else str(first_date)
-            mes = date_str[:7]
-            receitas = despesas = 0.0
-            if revenues_report and "prRows" in revenues_report:
-                for row in revenues_report["prRows"]:
-                    amounts = row.get("prrAmounts", [])
-                    if period_idx < len(amounts) and amounts[period_idx]:
-                        receitas += abs(float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0)))
-            if expenses_report and "prRows" in expenses_report:
-                for row in expenses_report["prRows"]:
-                    amounts = row.get("prrAmounts", [])
-                    if period_idx < len(amounts) and amounts[period_idx]:
-                        despesas += abs(float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0)))
-            result.append({
-                "mes": mes,
-                "receitas": round(receitas, 2),
-                "despesas": round(despesas, 2),
-                "saldo": round(receitas - despesas, 2),
-            })
-    return {"months": result, "forecast": True}
+        months = cashflow_from_incomestatement(data)
+        # Add saldo to each month
+        for m in months:
+            m["saldo"] = round(m["receitas"] - m["despesas"], 2)
+        return {"months": months, "forecast": True}
+    return {"months": [], "forecast": True}
 
 
 @app.get("/api/alerts")
@@ -1117,33 +1033,22 @@ def account_balance_history(
     begin, end = months_back_bounds(months - 1)
     data = hledger("balance", account_path, "-M", "-b", begin, "-e", end, "--historical")
 
-    result = []
     if isinstance(data, dict):
-        cbr_dates = data.get("cbrDates", [])
-        subreports = data.get("cbrSubreports", [])
-        # Find the account row
-        account_row = None
-        for sub in subreports:
-            report = sub[1] if isinstance(sub, list) else sub
-            for row in report.get("prRows", []):
-                if account_path in row.get("prrName", ""):
-                    account_row = row
-                    break
-            if account_row:
-                break
-
-        if account_row:
-            amounts = account_row.get("prrAmounts", [])
-            for period_idx, date_range in enumerate(cbr_dates):
-                first_date = date_range[0] if isinstance(date_range, list) else date_range
-                date_str = first_date.get("contents", "") if isinstance(first_date, dict) else str(first_date)
-                mes = date_str[:7]
-                val = 0.0
-                if period_idx < len(amounts) and amounts[period_idx]:
-                    val = float(amounts[period_idx][0].get("aquantity", {}).get("floatingPoint", 0))
-                result.append({"mes": mes, "saldo": round(val, 2)})
-
-    return {"account": account_path, "history": result}
+        report = parse_period_report(data)
+        result = []
+        # Find the account row across all subreports
+        for date_range in report.dates:
+            mes = date_range[0][:7] if date_range else ""
+            idx = report.dates.index(date_range) if date_range in report.dates else -1
+            val = 0.0
+            for sub in report.subreports:
+                for row in sub.rows:
+                    if account_path in row.name and 0 <= idx < len(row.amounts):
+                        val = row.amounts[idx]
+                        break
+            result.append({"mes": mes, "saldo": round(val, 2)})
+        return {"account": account_path, "history": result}
+    return {"account": account_path, "history": []}
 
 
 @app.get("/api/seasonality")

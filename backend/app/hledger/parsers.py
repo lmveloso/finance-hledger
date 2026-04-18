@@ -79,3 +79,41 @@ def cashflow_from_incomestatement(raw: Any) -> list[dict]:
         })
 
     return result
+
+
+def networth_from_balancesheet(raw: Any) -> list[dict]:
+    """Extract monthly net worth (assets/liabilities) from balancesheet JSON.
+
+    Returns a list of {"mes": "YYYY-MM", "assets": float,
+    "liabilities": float, "net": float} ready for the /api/networth endpoint.
+    """
+    report = PeriodReport.from_raw(raw)
+    result = []
+
+    for date_range in report.dates:
+        mes = date_range[0][:7] if date_range else ""
+        idx = report.dates.index(date_range) if date_range in report.dates else -1
+
+        assets_sub = report.subreport("asset")
+        liabilities_sub = report.subreport("liabilit")
+
+        assets = 0.0
+        if assets_sub and 0 <= idx < len(assets_sub.rows):
+            for row in assets_sub.rows:
+                if idx < len(row.amounts):
+                    assets += abs(row.amounts[idx])
+
+        liabilities = 0.0
+        if liabilities_sub and 0 <= idx < len(liabilities_sub.rows):
+            for row in liabilities_sub.rows:
+                if idx < len(row.amounts):
+                    liabilities += abs(row.amounts[idx])
+
+        result.append({
+            "mes": mes,
+            "assets": round(assets, 2),
+            "liabilities": round(liabilities, 2),
+            "net": round(assets - liabilities, 2),
+        })
+
+    return result
