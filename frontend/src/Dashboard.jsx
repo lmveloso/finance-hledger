@@ -6,6 +6,7 @@ import { CONFIG } from './config.js';
 import { usePullToRefresh } from './hooks/usePullToRefresh.js';
 import { color } from './theme/tokens';
 import Spinner from './components/Spinner.jsx';
+import ErrorBox from './components/ErrorBox.jsx';
 
 const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -154,17 +155,6 @@ function DeltaBadge({ current, previous }) {
 }
 
 // ── UI atoms ────────────────────────────────────────────────────────────
-const ErrorBox = ({ msg }) => (
-  <div className="card" style={{ borderLeft: `3px solid ${color.accent.secondary}` }}>
-    <div className="sans" style={{ color: color.accent.secondary, fontSize: 13, display: 'flex', gap: 8, alignItems: 'center' }}>
-      <AlertCircle size={16} /> Erro ao carregar: {msg}
-    </div>
-    <div className="sans" style={{ color: color.text.muted, fontSize: 12, marginTop: 8 }}>
-      Verifique se o backend está rodando e se LEDGER_FILE aponta pro journal correto.
-    </div>
-  </div>
-);
-
 function KPI({ label, valor, icon, cor, destaque, loading, delta }) {
   return (
     <div className="card" style={{ borderLeft: destaque ? `3px solid ${cor}` : `1px solid ${color.border.default}` }}>
