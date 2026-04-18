@@ -34,10 +34,15 @@ from app.principles.mappings import (
     extract_posting_tags,
     extract_transaction_tags,
 )
+from app.principles.pct import _balance_pct_matrix
 from app.principles.models import (
     PrincipleBreakdown,
     PrincipleMapping,
+    PrincipleMonthlyTotal,
     PrincipleSummary,
+    PrincipleYearly,
+    PrincipleYearlyCell,
+    PrincipleYearlyRow,
 )
 from app.principles.resolver import resolve_principle
 
@@ -76,6 +81,51 @@ class PrincipleService:
             breakdown=breakdown,
             uncovered_categories=sorted(uncovered_accounts),
         )
+
+    def yearly_by_principle(self, year: int) -> PrincipleYearly:
+        """Build the 7×12 principle/month matrix for one calendar year.
+
+        Iterates month-by-month reusing :meth:`_accumulate`; per-month pct
+        is rebalanced with largest-remainder so each column sums to 100.
+        """
+        months = [f"{year:04d}-{m:02d}" for m in range(1, 13)]
+        principle_ids = [p.id for p in self._mapping.principles]
+        per_month = {m: self._totals_for_month(m, principle_ids) for m in months}
+        pct = _balance_pct_matrix(months, principle_ids, per_month)
+        rows = [
+            PrincipleYearlyRow(
+                principle=p.id,
+                display_key=p.display_key,
+                target_pct=p.target_pct,
+                monthly=[
+                    PrincipleYearlyCell(
+                        month=m,
+                        value=round(per_month[m][p.id], 2),
+                        pct=pct[m][p.id],
+                    )
+                    for m in months
+                ],
+            )
+            for p in self._mapping.principles
+        ]
+        monthly_totals = [
+            PrincipleMonthlyTotal(month=m, value=round(sum(per_month[m].values()), 2))
+            for m in months
+        ]
+        return PrincipleYearly(
+            year=year, months=months, principles=rows, monthly_totals=monthly_totals
+        )
+
+    def _totals_for_month(
+        self, month: str, principle_ids: list[str]
+    ) -> dict[str, float]:
+        """Per-principle totals for ``month``; zeros when no transactions."""
+        begin, end = month_bounds(month)
+        totals = {pid: 0.0 for pid in principle_ids}
+        raw = self._client.run("print", "expenses", "-b", begin, "-e", end)
+        if isinstance(raw, list):
+            self._accumulate(raw, totals, set(), set())
+        return totals
 
     # ── internals ────────────────────────────────────────────────────
 

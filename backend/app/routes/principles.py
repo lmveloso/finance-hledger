@@ -2,6 +2,7 @@
 
 Exposes:
 - ``GET /api/principles/summary?month=YYYY-MM`` — per-principle totals.
+- ``GET /api/principles/yearly?year=YYYY`` — 7×12 principle × month matrix.
 - ``GET /api/principles/mapping`` — full mapping, for Settings/i18n UI.
 
 hledger errors raised by :class:`PrincipleService` bubble through a small
@@ -12,13 +13,14 @@ through :class:`HledgerClient` per ADR-004.
 from __future__ import annotations
 
 import re
+from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.deps import get_current_user, get_principle_service
 from app.hledger.errors import HledgerCallError, HledgerNotFound, HledgerTimeout
-from app.principles.models import PrincipleMapping, PrincipleSummary
+from app.principles.models import PrincipleMapping, PrincipleSummary, PrincipleYearly
 from app.principles.service import PrincipleService
 
 router = APIRouter(prefix="/api/principles", tags=["principles"])
@@ -41,6 +43,29 @@ def principles_summary(
 
     try:
         return service.monthly_summary(month)
+    except HledgerNotFound as exc:
+        raise HTTPException(503, str(exc)) from exc
+    except HledgerTimeout as exc:
+        raise HTTPException(504, str(exc)) from exc
+    except HledgerCallError as exc:
+        raise HTTPException(500, f"hledger: {exc}") from exc
+
+
+@router.get("/yearly", response_model=PrincipleYearly)
+def principles_yearly(
+    year: Optional[int] = Query(
+        default=None,
+        ge=1900,
+        le=2999,
+        description="Calendar year (YYYY). Defaults to the current year.",
+    ),
+    service: PrincipleService = Depends(get_principle_service),
+    user: Optional[str] = Depends(get_current_user),
+) -> PrincipleYearly:
+    """Return the 7 × 12 principle × month matrix for a calendar year."""
+    resolved_year = year if year is not None else date.today().year
+    try:
+        return service.yearly_by_principle(resolved_year)
     except HledgerNotFound as exc:
         raise HTTPException(503, str(exc)) from exc
     except HledgerTimeout as exc:

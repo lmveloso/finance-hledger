@@ -1,0 +1,84 @@
+; Fixture journal for /api/principles/yearly tests.
+; Covers multiple months across 2026 so the yearly matrix has real data
+; spread over the year. Two months (2026-07, 2026-08) are intentionally
+; empty to exercise the zero-total path.
+
+2026-01-01 * Salario
+    assets:banco:nubank                           8000.00
+    income:salario
+
+2026-01-10 * Agua
+    expenses:moradia:água                          150.00
+    assets:banco:nubank
+
+2026-01-12 * Cinema
+    expenses:lazer:cinema                           60.00
+    assets:banco:nubank
+
+2026-01-20 * Supermercado
+    expenses:alimentação:supermercado              500.00
+    assets:banco:nubank
+
+2026-02-01 * Salario
+    assets:banco:nubank                           8000.00
+    income:salario
+
+2026-02-05 * Agua
+    expenses:moradia:água                          155.00
+    assets:banco:nubank
+
+2026-02-18 * Restaurante
+    expenses:alimentação:restaurantes              200.00
+    assets:banco:nubank
+
+2026-03-05 * Salario
+    assets:banco:nubank                           8000.00
+    income:salario
+
+2026-03-12 * Supermercado
+    expenses:alimentação:supermercado              530.00
+    assets:banco:nubank
+
+2026-04-01 * Salario
+    assets:banco:nubank                          10000.00
+    income:salário
+
+2026-04-05 * Agua
+    expenses:moradia:água                          150.00
+    assets:banco:nubank
+
+2026-04-10 * Cinema
+    expenses:lazer:cinema                           60.00
+    assets:banco:nubank
+
+2026-04-15 * Jantar
+    expenses:alimentação:restaurantes              280.00  ; principio: metas
+    assets:banco:nubank
+
+2026-04-20 * Supermercado
+    expenses:alimentação:supermercado              500.00
+    assets:banco:nubank
+
+2026-05-04 * Supermercado
+    expenses:alimentação:supermercado              333.33
+    assets:banco:nubank
+
+2026-06-09 * Cinema
+    expenses:lazer:cinema                           99.99
+    assets:banco:nubank
+
+2026-09-03 * Agua
+    expenses:moradia:água                          120.00
+    assets:banco:nubank
+
+2026-10-10 * Livros
+    expenses:educação:livros                       200.00
+    assets:banco:nubank
+
+2026-11-11 * Restaurante
+    expenses:alimentação:restaurantes              111.11
+    assets:banco:nubank
+
+2026-12-20 * Supermercado
+    expenses:alimentação:supermercado              777.77
+    assets:banco:nubank

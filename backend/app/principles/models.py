@@ -95,3 +95,44 @@ class PrincipleSummary(BaseModel):
         default_factory=list,
         description="Accounts that fell to default — dashboard shows a warning.",
     )
+
+
+class PrincipleYearlyCell(BaseModel):
+    """One cell of the yearly matrix: value + share-of-month percentage."""
+
+    month: str = Field(description="Month in YYYY-MM format.")
+    value: float = Field(description="BRL realised for the principle in the month.")
+    pct: float = Field(
+        description=(
+            "Share of monthly expenses, 0–100. Sum across principles == 100 "
+            "(largest-remainder rounding) or 0 when the month has no expenses."
+        ),
+    )
+
+
+class PrincipleYearlyRow(BaseModel):
+    """One row of the yearly matrix: a principle across 12 months."""
+
+    principle: PrincipleId
+    display_key: str
+    target_pct: float = Field(ge=0.0, description="DSOP target, % of revenues.")
+    monthly: list[PrincipleYearlyCell] = Field(default_factory=list)
+
+
+class PrincipleMonthlyTotal(BaseModel):
+    """Monthly total of expenses — denominator used for ``pct`` per cell."""
+
+    month: str
+    value: float
+
+
+class PrincipleYearly(BaseModel):
+    """Output of ``GET /api/principles/yearly?year=YYYY``."""
+
+    year: int = Field(ge=1900, le=2999, description="Calendar year.")
+    months: list[str] = Field(
+        default_factory=list,
+        description="Ordered YYYY-MM labels for the 12 columns.",
+    )
+    principles: list[PrincipleYearlyRow] = Field(default_factory=list)
+    monthly_totals: list[PrincipleMonthlyTotal] = Field(default_factory=list)
