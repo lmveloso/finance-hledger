@@ -76,6 +76,7 @@ from app.routes.cashflow import router as cashflow_router
 from app.routes.categories import router as categories_router
 from app.routes.flow import router as flow_router
 from app.routes.health import router as health_router
+from app.routes.installments import router as installments_router
 from app.routes.networth import router as networth_router
 from app.routes.revenues import router as revenues_router
 from app.routes.principles import router as principles_router
@@ -99,6 +100,7 @@ app.include_router(transactions_router)
 app.include_router(tags_router)
 app.include_router(seasonality_router)
 app.include_router(principles_router)
+app.include_router(installments_router)
 
 # ── Servir frontend buildado ─────────────────────────────────────────────
 # Se existir frontend/dist, serve o SPA. Senão, só a API.

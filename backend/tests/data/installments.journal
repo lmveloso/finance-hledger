@@ -1,0 +1,32 @@
+; Fixture journal for installment (parcelamento) tests.
+; Covers:
+;   - one active installment (FOO) overlapping today
+;   - one fully-paid installment (OLDIE) that finished before today
+;   - one future-only installment (FUTURO) starting after today
+;   - ordinary transactions without parcelamento tag (ignored)
+
+2026-01-01 * Opening
+    assets:banco                  10000.00
+    equity:opening
+
+; Active parcelamento — 5 occurrences total, spanning 2026-01 .. 2026-05.
+; With a "today" around mid-2026, all forecast rows are in the past so
+; paid = 5. Use a narrower window below to exercise active state.
+~ monthly from 2026-03-01 to 2026-08-01
+    expenses:moradia:equipamentos          100.00  ; parcelamento: FOO 2/5
+    liabilities:cartao:nubank
+
+; Fully-finished parcelamento — 3 occurrences in early 2020.
+~ monthly from 2020-01-01 to 2020-04-01
+    expenses:outros                         50.00  ; parcelamento: OLDIE 1/3
+    liabilities:cartao:nubank
+
+; Future-only parcelamento — all occurrences strictly after 2100-01-01.
+~ monthly from 2100-01-01 to 2100-04-01
+    expenses:outros                         30.00  ; parcelamento: FUTURO 1/3
+    liabilities:cartao:nubank
+
+; Ordinary transaction (no parcelamento tag) — should be ignored.
+2026-01-15 * Supermercado
+    expenses:alimentação:supermercado      200.00
+    assets:banco
