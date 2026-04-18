@@ -22,8 +22,8 @@ This project is executed in **three sequential phases**. Always check which phas
 
 <!-- Edit the checkbox when a phase is completed, and set "← active" on the next one. -->
 
-- [ ] Fase 0 — Estabilização (see `docs/01-ESTABILIZACAO.md`) ← active
-- [ ] Fase D — Dashboard 2.0 (see `docs/02-PRD-dashboard-v2.md`)
+- [x] Fase 0 — Estabilização (see `docs/01-ESTABILIZACAO.md`) — COMPLETED
+- [ ] Fase D — Dashboard 2.0 (see `docs/02-PRD-dashboard-v2.md`) ← ACTIVE
 - [ ] Fase 1 — Magic Import (see `docs/03-PRD-magic-import.md`)
 
 ### Phase boundaries
