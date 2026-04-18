@@ -57,15 +57,15 @@ def alerts(
     user: Optional[str] = Depends(get_current_user),
 ):
     """Alertas: categorias com gasto >25% acima da media dos ultimos 3 meses."""
-    import main
+    from app.formatting import category_spending
 
     target_month = month or date.today().strftime("%Y-%m")
-    target_spending = main._category_spending(target_month)
+    target_spending = category_spending(target_month)
 
     historical: dict[str, list[float]] = {}
     for i in range(1, 4):
         hist_month = add_month_str(target_month, -i)
-        hist_spending = main._category_spending(hist_month)
+        hist_spending = category_spending(hist_month)
         for cat, val in hist_spending.items():
             historical.setdefault(cat, []).append(val)
 
