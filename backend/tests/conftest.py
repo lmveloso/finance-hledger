@@ -100,9 +100,11 @@ def journal_file():
 @pytest.fixture(scope="session")
 def client(journal_file):
     """TestClient do FastAPI com LEDGER_FILE apontando pro fixture."""
+    # Reset settings singleton so it picks up the new LEDGER_FILE env var
+    from app.config import reset_settings
+    reset_settings()
+
     # Precisa reimportar o módulo para capturar o LEDGER_FILE atualizado
-    # O main.py lê LEDGER_FILE no nível do módulo, então precisamos
-    # recarregar o módulo para que ele pegue o valor do fixture.
     import importlib
     import main as main_mod
     importlib.reload(main_mod)

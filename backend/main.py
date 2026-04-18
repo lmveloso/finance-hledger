@@ -18,11 +18,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
+from app.config import get_settings, Settings
+from app.deps import get_current_user, _tokens
+
 logger = logging.getLogger("finance-hledger")
 
 # ── Config ──────────────────────────────────────────────────────────────────
-LEDGER_FILE = os.environ.get("LEDGER_FILE", os.path.expanduser("~/finances/2026.journal"))
-HLEDGER = os.environ.get("HLEDGER_PATH", "hledger")
+settings = get_settings()
+LEDGER_FILE = str(settings.ledger_file)
+HLEDGER = settings.hledger_path
 FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
 
 _DISPLAY_NAMES_PATH = Path(__file__).parent / "account_display_names.json"
@@ -32,29 +36,11 @@ except (FileNotFoundError, json.JSONDecodeError) as e:
     logger.warning("account_display_names.json não carregado: %s", e)
     _DISPLAY_NAMES = {}
 
-# ── Auth ─────────────────────────────────────────────────────────────────────
-USERS = {}
-_lucas_pw = os.environ.get("PASSWORD_LUCAS")
-_gio_pw = os.environ.get("PASSWORD_GIO")
-if _lucas_pw:
-    USERS["lucas"] = _lucas_pw
-if _gio_pw:
-    USERS["gio"] = _gio_pw
-AUTH_ENABLED = bool(USERS)
-_tokens: dict[str, str] = {}  # token -> username
+# ── Auth ────────────────────────────────────────────────────────────────────────────
+USERS = settings.users
+AUTH_ENABLED = settings.auth_mode != "none"
+# _tokens and get_current_user are imported from app.deps
 
-
-def get_current_user(authorization: Optional[str] = Header(None)) -> Optional[str]:
-    """Valida token do header Authorization. Retorna username ou None."""
-    if not AUTH_ENABLED:
-        return None
-    if not authorization:
-        raise HTTPException(401, "Token necessário")
-    token = authorization.removeprefix("Bearer ").strip()
-    user = _tokens.get(token)
-    if not user:
-        raise HTTPException(401, "Token inválido")
-    return user
 
 
 app = FastAPI(title="finance-hledger", version="1.0.0")
@@ -63,7 +49,7 @@ app = FastAPI(title="finance-hledger", version="1.0.0")
 # Se hospedar frontend separado no futuro, restrinja a origins específicas.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
+    allow_origins=settings.cors_origins,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
