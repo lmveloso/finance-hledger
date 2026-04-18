@@ -18,6 +18,23 @@ from app.auth.password import (
 from app.config import Settings, get_settings
 
 
+def _make_request(headers: dict[str, str] | None = None):
+    """Build a minimal Starlette Request stand-in for unit tests."""
+    from starlette.requests import Request
+
+    header_pairs = [
+        (k.lower().encode("latin-1"), v.encode("latin-1"))
+        for k, v in (headers or {}).items()
+    ]
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "path": "/",
+        "headers": header_pairs,
+    }
+    return Request(scope)
+
+
 # ── verify_password ─────────────────────────────────────────────────────────
 
 
@@ -79,7 +96,9 @@ def _password_settings() -> Settings:
         auth_mode="password",
         password_lucas=None,
         password_gio=None,
+        tailscale_proxy_secret=None,
         log_level="INFO",
+        log_format="json",
     )
 
 
@@ -87,9 +106,8 @@ def test_get_current_user_valid_bearer_returns_username():
     settings = _password_settings()
     token = issue_token("lucas")
     try:
-        user = get_current_user(
-            authorization=f"Bearer {token}", settings=settings
-        )
+        req = _make_request({"authorization": f"Bearer {token}"})
+        user = get_current_user(request=req, settings=settings)
         assert user == "lucas"
     finally:
         _tokens.pop(token, None)
@@ -97,15 +115,17 @@ def test_get_current_user_valid_bearer_returns_username():
 
 def test_get_current_user_missing_header_raises_401():
     settings = _password_settings()
+    req = _make_request({})
     with pytest.raises(HTTPException) as exc:
-        get_current_user(authorization=None, settings=settings)
+        get_current_user(request=req, settings=settings)
     assert exc.value.status_code == 401
 
 
 def test_get_current_user_invalid_token_raises_401():
     settings = _password_settings()
+    req = _make_request({"authorization": "Bearer not-a-real-token"})
     with pytest.raises(HTTPException) as exc:
-        get_current_user(authorization="Bearer not-a-real-token", settings=settings)
+        get_current_user(request=req, settings=settings)
     assert exc.value.status_code == 401
 
 
@@ -128,7 +148,9 @@ def login_client(client):
             auth_mode="password",
             password_lucas="s3cret",
             password_gio=None,
+            tailscale_proxy_secret=None,
             log_level="INFO",
+            log_format="json",
         )
 
     overrides[get_settings] = override_settings

@@ -25,9 +25,15 @@ class Settings(BaseSettings):
         default=["*"],
         description="Allowed CORS origins (comma-separated in env)",
     )
-    auth_mode: Literal["password", "none"] = Field(
-        default="none",
-        description="Authentication mode",
+    auth_mode: Literal["password", "tailscale", "tailscale+password", "none"] = (
+        Field(
+            default="none",
+            description=(
+                "Authentication mode. Production should use 'password', "
+                "'tailscale', or 'tailscale+password' (Tailscale headers "
+                "first, Bearer token as fallback). 'none' is for local dev."
+            ),
+        )
     )
     password_lucas: str | None = Field(
         default=None,
@@ -37,7 +43,20 @@ class Settings(BaseSettings):
         default=None,
         alias="PASSWORD_GIO",
     )
+    tailscale_proxy_secret: str | None = Field(
+        default=None,
+        alias="TAILSCALE_PROXY_SECRET",
+        description=(
+            "Shared secret sent by the Tailscale reverse proxy as "
+            "X-Tailscale-Proxy-Secret. When set, incoming Tailscale headers "
+            "are trusted only if this header matches."
+        ),
+    )
     log_level: str = Field(default="INFO")
+    log_format: Literal["json", "console"] = Field(
+        default="json",
+        description="Structured log output format. 'console' for local dev.",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

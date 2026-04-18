@@ -6,21 +6,17 @@ All endpoints live in app/routes/*.py. This file is pure wiring.
 """
 
 import json
-import logging
-import os
 from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 
-from app.config import get_settings, Settings
+from app.config import get_settings
 from app.hledger.client import HledgerClient
-from app.hledger.errors import HledgerNotFound, HledgerTimeout, HledgerCallError
-
-logger = logging.getLogger("finance-hledger")
+from app.hledger.errors import HledgerCallError, HledgerNotFound, HledgerTimeout
+from app.observability import RequestIdMiddleware, configure_logging, get_logger
 
 # ── Config ──────────────────────────────────────────────────────────────────
 settings = get_settings()
@@ -28,17 +24,24 @@ LEDGER_FILE = str(settings.ledger_file)
 HLEDGER = settings.hledger_path
 FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
 
+# ── Logging ─────────────────────────────────────────────────────────────────
+configure_logging(level=settings.log_level, fmt=settings.log_format)
+logger = get_logger("finance-hledger")
+
 _DISPLAY_NAMES_PATH = Path(__file__).parent / "account_display_names.json"
 try:
     _DISPLAY_NAMES = json.loads(_DISPLAY_NAMES_PATH.read_text()).get("segments", {})
 except (FileNotFoundError, json.JSONDecodeError) as e:
-    logger.warning("account_display_names.json não carregado: %s", e)
+    logger.warning("display_names_load_failed", error=str(e))
     _DISPLAY_NAMES = {}
 
 
 # ── App ─────────────────────────────────────────────────────────────────────
 app = FastAPI(title="finance-hledger", version="1.0.0")
 
+# RequestIdMiddleware must be added BEFORE CORSMiddleware so it wraps the
+# entire request lifecycle including CORS preflight handling.
+app.add_middleware(RequestIdMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -68,17 +71,17 @@ def hledger(*args: str, output_format: str = "json",
 
 # ── Routes ──────────────────────────────────────────────────────────────────
 from app.routes.auth import router as auth_router
-from app.routes.health import router as health_router
-from app.routes.summary import router as summary_router
+from app.routes.budget import router as budget_router
 from app.routes.cashflow import router as cashflow_router
-from app.routes.networth import router as networth_router
-from app.routes.savings import router as savings_router
 from app.routes.categories import router as categories_router
 from app.routes.flow import router as flow_router
-from app.routes.budget import router as budget_router
-from app.routes.transactions import router as transactions_router
-from app.routes.tags import router as tags_router
+from app.routes.health import router as health_router
+from app.routes.networth import router as networth_router
+from app.routes.savings import router as savings_router
 from app.routes.seasonality import router as seasonality_router
+from app.routes.summary import router as summary_router
+from app.routes.tags import router as tags_router
+from app.routes.transactions import router as transactions_router
 
 app.include_router(auth_router)
 app.include_router(health_router)

@@ -1,7 +1,7 @@
 """Authentication package.
 
-Re-exports the password-based Bearer token flow so callers can import from
-`app.auth` directly without knowing the submodule layout.
+Re-exports the public surface so callers can import from ``app.auth`` directly
+without knowing which submodule implements which flow.
 """
 
 from app.auth.password import (
@@ -11,6 +11,7 @@ from app.auth.password import (
     validate_token,
     verify_password,
 )
+from app.auth.tailscale import TailscaleUser, user_from_request
 
 __all__ = [
     "_tokens",
@@ -18,4 +19,6 @@ __all__ = [
     "issue_token",
     "validate_token",
     "verify_password",
+    "TailscaleUser",
+    "user_from_request",
 ]

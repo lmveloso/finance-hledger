@@ -1,5 +1,4 @@
-"""
-Password-based authentication with in-memory Bearer tokens.
+"""Password-based authentication with in-memory Bearer tokens.
 
 Flow:
   1. Client POSTs {"password": "..."} to /api/login.
@@ -9,6 +8,9 @@ Flow:
 
 The token store is process-local. A restart logs everyone out. Persistence is a
 planned follow-up (see docs/01-ESTABILIZACAO.md §9.5).
+
+`get_current_user` routes to the right auth backend based on
+``settings.auth_mode`` (password, tailscale, tailscale+password, none).
 """
 
 from __future__ import annotations
@@ -17,8 +19,9 @@ import hmac
 import secrets
 from typing import Optional
 
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, HTTPException, Request
 
+from app.auth.tailscale import user_from_request as _tailscale_user
 from app.config import Settings, get_settings
 
 # In-memory token store: token -> username.
@@ -53,23 +56,57 @@ def validate_token(token: str) -> Optional[str]:
     return _tokens.get(token)
 
 
+def _bearer_user(request: Request) -> Optional[str]:
+    """Resolve the current user from the Authorization header (if any)."""
+    header = request.headers.get("authorization")
+    if not header:
+        return None
+    token = header.removeprefix("Bearer ").strip()
+    return validate_token(token)
+
+
 def get_current_user(
-    authorization: Optional[str] = Header(None),
+    request: Request,
     settings: Settings = Depends(get_settings),
 ) -> Optional[str]:
-    """FastAPI dependency: validate the Bearer token.
+    """FastAPI dependency: resolve the current user per ``auth_mode``.
 
-    Behavior:
-      - When `auth_mode == "none"` (dev), return None without checking anything.
-      - Otherwise require `Authorization: Bearer <token>` and raise 401 if the
-        header is missing or the token is unknown.
+    Modes:
+      - ``none``                → returns ``None`` unconditionally (dev).
+      - ``password``            → requires valid Bearer token.
+      - ``tailscale``           → requires trusted Tailscale headers.
+      - ``tailscale+password``  → tries Tailscale first, falls back to Bearer.
+
+    Raises ``HTTPException(401)`` when no valid identity can be resolved in a
+    mode that requires authentication.
     """
-    if settings.auth_mode == "none":
+    mode = settings.auth_mode
+
+    if mode == "none":
         return None
-    if not authorization:
-        raise HTTPException(401, "Token necessário")
-    token = authorization.removeprefix("Bearer ").strip()
-    user = validate_token(token)
-    if not user:
-        raise HTTPException(401, "Token inválido")
-    return user
+
+    if mode == "password":
+        user = _bearer_user(request)
+        if user is None:
+            if not request.headers.get("authorization"):
+                raise HTTPException(401, "Token necessário")
+            raise HTTPException(401, "Token inválido")
+        return user
+
+    if mode == "tailscale":
+        ts = _tailscale_user(request, settings)
+        if ts is None:
+            raise HTTPException(401, "Tailscale identity required")
+        return ts.username
+
+    if mode == "tailscale+password":
+        ts = _tailscale_user(request, settings)
+        if ts is not None:
+            return ts.username
+        user = _bearer_user(request)
+        if user is None:
+            raise HTTPException(401, "Authentication required")
+        return user
+
+    # Unknown mode — fail closed.
+    raise HTTPException(401, "Unsupported auth mode")
