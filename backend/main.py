@@ -20,6 +20,8 @@ from fastapi.responses import FileResponse
 
 from app.config import get_settings, Settings
 from app.deps import get_current_user, _tokens
+from app.hledger.client import HledgerClient
+from app.hledger.errors import HledgerNotFound, HledgerTimeout, HledgerCallError
 
 logger = logging.getLogger("finance-hledger")
 
@@ -53,47 +55,29 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+# HledgerClient instance -- single subprocess point.
+_hledger_client = HledgerClient(ledger_file=LEDGER_FILE, binary=HLEDGER)
 
 
 def hledger(*args: str, output_format: str = "json",
             expected_type: Optional[type] = None):
     """Executa hledger CLI e retorna resultado parseado.
 
-    Args:
-        *args: Argumentos do hledger.
-        output_format: "json" ou "text".
-        expected_type: Se fornecido (dict ou list), emite warning se o
-                       JSON retornado não for desse tipo.
+    Delegates to HledgerClient. Keeps the same API for backward compat
+    with existing endpoints. Typed exceptions are mapped to HTTPExceptions.
     """
-    cmd = [HLEDGER, "-f", LEDGER_FILE]
-    if output_format == "json":
-        cmd.extend(["-O", "json"])
-    cmd.extend(args)
-
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-    except FileNotFoundError:
+        return _hledger_client.run(
+            *args, output_format=output_format, expected_type=expected_type
+        )
+    except HledgerNotFound:
         raise HTTPException(503, f"hledger não encontrado em '{HLEDGER}'")
-    except subprocess.TimeoutExpired:
+    except HledgerTimeout:
         raise HTTPException(504, "hledger demorou demais")
+    except HledgerCallError as e:
+        raise HTTPException(500, f"hledger: {e}")
 
-    if result.returncode != 0:
-        raise HTTPException(500, f"hledger: {result.stderr.strip()}")
 
-    if output_format == "json":
-        try:
-            parsed = json.loads(result.stdout)
-        except json.JSONDecodeError:
-            logger.warning("hledger retornou não-JSON para args=%s", args)
-            return result.stdout.strip()
-
-        if expected_type is not None and not isinstance(parsed, expected_type):
-            logger.warning(
-                "hledger schema: esperado %s, recebido %s para args=%s",
-                expected_type.__name__, type(parsed).__name__, args,
-            )
-        return parsed
-    return result.stdout.strip()
 
 
 def month_bounds(month: Optional[str] = None) -> tuple[str, str]:
