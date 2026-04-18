@@ -9,6 +9,7 @@ import Spinner from './components/Spinner.jsx';
 import ErrorBox from './components/ErrorBox.jsx';
 import KPI from './components/KPI.jsx';
 import DeltaBadge from './components/DeltaBadge.jsx';
+import TipoChip from './components/TipoChip.jsx';
 
 const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -1428,23 +1429,6 @@ function Contas() {
         </div>
       </div>
     </div>
-  );
-}
-
-function TipoChip({ tipo }) {
-  const map = {
-    credito:       { label: 'Crédito',       bg: color.overlay.credito, fg: color.feedback.positive },
-    debito:        { label: 'Débito',        bg: color.overlay.debito,  fg: color.feedback.negative },
-    transferencia: { label: 'Transferência', bg: color.overlay.transferencia, fg: color.feedback.info },
-    saldo_inicial: { label: 'Saldo inicial', bg: color.overlay.saldoInicial, fg: color.text.muted },
-  };
-  const s = map[tipo] || map.debito;
-  return (
-    <span className="sans" style={{
-      fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase',
-      background: s.bg, color: s.fg, border: `1px solid ${s.fg}33`,
-      borderRadius: 3, padding: '2px 6px', whiteSpace: 'nowrap',
-    }}>{s.label}</span>
   );
 }
 
