@@ -67,6 +67,7 @@ def hledger(*args: str, output_format: str = "json",
 
 
 # ── Routes ──────────────────────────────────────────────────────────────────
+from app.routes.auth import router as auth_router
 from app.routes.health import router as health_router
 from app.routes.summary import router as summary_router
 from app.routes.cashflow import router as cashflow_router
@@ -79,6 +80,7 @@ from app.routes.transactions import router as transactions_router
 from app.routes.tags import router as tags_router
 from app.routes.seasonality import router as seasonality_router
 
+app.include_router(auth_router)
 app.include_router(health_router)
 app.include_router(summary_router)
 app.include_router(cashflow_router)
