@@ -36,6 +36,34 @@ const dict = {
 
   // ── Navigation tabs ────────────────────────────────────────────────────
   'nav.mes': 'Month',
+
+  // ── Plano tab ──────────────────────────────────────────────────────────
+  'plano.header': 'Planning',
+  'plano.toggle.forecast': 'Next months',
+  'plano.toggle.divida': 'Debt decay',
+
+  // Vista 1 — Forecast
+  'plano.forecast.title': 'Forecast · {count} months',
+  'plano.forecast.empty': 'No forecast data — check if the journal has `~ monthly` periodic transactions.',
+  'plano.forecast.footnote': 'Projection comes from `~ monthly` periodic transactions in the journal.',
+  'plano.row.receitas': 'Revenues',
+  'plano.row.despesas': 'Expenses',
+  'plano.row.saldo': 'Balance',
+  'plano.row.saldoAcumulado': 'Accumulated balance',
+
+  // Vista 2 — Debt decay
+  'plano.divida.title': 'Active installments',
+  'plano.divida.empty': 'No active installments.',
+  'plano.divida.totalMonthly': 'Total monthly',
+  'plano.divida.totalRemaining': 'Total remaining',
+  'plano.parcelamento.parcelas': '{paid}/{total} paid',
+  'plano.parcelamento.progressLabel': 'Payment progress',
+  'plano.parcelamento.monthly': 'Monthly',
+  'plano.parcelamento.remaining': 'Remaining',
+  'plano.parcelamento.endDate': 'Ends on',
+
+  // Navigation
+  'nav.plano': 'Plan',
 };
 
 export default dict;

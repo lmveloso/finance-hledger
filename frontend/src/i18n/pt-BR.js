@@ -39,6 +39,34 @@ const dict = {
 
   // ── Navigation tabs ────────────────────────────────────────────────────
   'nav.mes': 'Mês',
+
+  // ── Plano tab ──────────────────────────────────────────────────────────
+  'plano.header': 'Planejamento',
+  'plano.toggle.forecast': 'Próximos meses',
+  'plano.toggle.divida': 'Decaimento de dívida',
+
+  // Vista 1 — Previsão
+  'plano.forecast.title': 'Previsão · {count} meses',
+  'plano.forecast.empty': 'Sem dados de previsão — verifique se o journal tem transações `~ monthly`.',
+  'plano.forecast.footnote': 'Projeção baseada nas transações periódicas `~ monthly` do journal.',
+  'plano.row.receitas': 'Receitas',
+  'plano.row.despesas': 'Despesas',
+  'plano.row.saldo': 'Saldo',
+  'plano.row.saldoAcumulado': 'Saldo acumulado',
+
+  // Vista 2 — Decaimento de dívida
+  'plano.divida.title': 'Parcelamentos ativos',
+  'plano.divida.empty': 'Nenhum parcelamento ativo.',
+  'plano.divida.totalMonthly': 'Total mensal',
+  'plano.divida.totalRemaining': 'Total restante',
+  'plano.parcelamento.parcelas': '{paid}/{total} pagas',
+  'plano.parcelamento.progressLabel': 'Progresso do pagamento',
+  'plano.parcelamento.monthly': 'Mensal',
+  'plano.parcelamento.remaining': 'Restante',
+  'plano.parcelamento.endDate': 'Termina em',
+
+  // Navigation
+  'nav.plano': 'Plano',
 };
 
 export default dict;
