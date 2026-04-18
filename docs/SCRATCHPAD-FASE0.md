@@ -12,27 +12,6 @@ Completar a **Fase 0 — Estabilização** conforme especificado em `docs/01-EST
 Fase 0 é refatoração apenas — zero features novas visíveis ao usuário.
 Pré-requisito para Fase D (Dashboard 2.0) e Fase 1 (Magic Import).
 
-## Workflow (como este esforço é executado)
-
-1. **Hermes (orquestrador)** — prepara branch, escreve prompt, lança Claude Code na VM, monitora via pgrep/git status, verifica resultados, commita.
-2. **Claude Code (worker na VM)** — implementa código, escreve testes, resolve bugs. Roda em `10.0.0.110` via SSH nohup.
-3. **Lucas (diretor)** — define tarefas, desbloqueia infra, aprova PRs.
-
-**Padrão de ciclo para cada PR:**
-1. Criar branch de feature a partir de `main`
-2. Delegar implementação ao Claude Code na VM (prompt em `/tmp/task-prompt.txt`, launcher em `/tmp/run-*.sh`)
-3. Monitorar: `pgrep -la claude` (rodando?), `git status --short` (modificou?), `git log --oneline -3` (commitou?)
-4. Verificar: rodar testes (`pytest tests/ -q`), checar diff
-5. Push e notificar no Telegram
-
-**Detalhes técnicos da VM:**
-- SSH: `lucas@10.0.0.110` (NÃO `debian@`)
-- Node via mise: `export PATH="/home/lucas/.local/share/mise/installs/node/24.14.1/bin:$PATH"`
-- hledger: versão 1.25 na VM (host tem 1.52)
-- Claude Code: `~/go/bin/claude` ou `claude` no PATH
-- Auth: `claude --dangerously-skip-permissions -p "$(cat /tmp/prompt.txt)"`
-- Output bufferizado até exit — usar pgrep/git status para liveness, não tail -f
-
 ## O que já foi feito
 
 ### Dia 0 — Setup (completo antes desta sessão)
