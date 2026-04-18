@@ -10,17 +10,18 @@ import ErrorBox from './components/ErrorBox.jsx';
 import KPI from './components/KPI.jsx';
 import DeltaBadge from './components/DeltaBadge.jsx';
 import TipoChip from './components/TipoChip.jsx';
+import { MonthProvider, useMonth } from './contexts/MonthContext.jsx';
 
 const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const pct = (n) => `${Math.round(n)}%`;
 const categoryColor = (i) => CONFIG.categoryColors[i % CONFIG.categoryColors.length];
 
-// ── Month context ──────────────────────────────────────────────────────
-function getCurrentMonth() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
+// ── Month helpers ──────────────────────────────────────────────────────
+// `MonthProvider` / `useMonth` / month-navigation helpers live in
+// contexts/MonthContext.jsx since PR-F3. The two helpers below stay here
+// because they are used outside the provider (header label, compare month
+// computation) and will migrate with the relevant features in later PRs.
 
 function formatMonthBR(ym) {
   const [y, m] = ym.split('-');
@@ -30,45 +31,9 @@ function formatMonthBR(ym) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-function addMonth(ym, delta) {
-  let [y, m] = ym.split('-').map(Number);
-  m += delta;
-  if (m > 12) { m = 1; y++; }
-  if (m < 1) { m = 12; y--; }
-  return `${y}-${String(m).padStart(2, '0')}`;
-}
-
 function lastYearMonth(ym) {
   const [y, m] = ym.split('-');
   return `${parseInt(y) - 1}-${m}`;
-}
-
-const MonthContext = createContext();
-
-function MonthProvider({ children, refreshKey }) {
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
-  const [compareMode, setCompareMode] = useState(false);
-
-  const goPrev = useCallback(() => setSelectedMonth(m => addMonth(m, -1)), []);
-  const goNext = useCallback(() => setSelectedMonth(m => addMonth(m, 1)), []);
-  const goToday = useCallback(() => setSelectedMonth(getCurrentMonth()), []);
-
-  const isCurrentMonth = selectedMonth === getCurrentMonth();
-
-  return (
-    <MonthContext.Provider value={{
-      selectedMonth, setSelectedMonth,
-      compareMode, setCompareMode,
-      goPrev, goNext, goToday, isCurrentMonth,
-      refreshKey,
-    }}>
-      {children}
-    </MonthContext.Provider>
-  );
-}
-
-function useMonth() {
-  return useContext(MonthContext);
 }
 
 // ── MonthPicker ────────────────────────────────────────────────────────
