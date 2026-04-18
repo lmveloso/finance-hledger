@@ -4,6 +4,7 @@ import { usePullToRefresh } from './hooks/usePullToRefresh.js';
 import { color } from './theme/tokens';
 import { MonthProvider, useMonth } from './contexts/MonthContext.jsx';
 import { NavProvider, useNav } from './contexts/NavContext.jsx';
+import Mes from './features/mes';
 import Resumo from './features/resumo';
 import Fluxo from './features/fluxo';
 import Orcamento from './features/orcamento';
@@ -208,6 +209,7 @@ function AppInner() {
           ))}
         </nav>
 
+        {activeTab === 'mês' && <Mes />}
         {activeTab === 'resumo' && <Resumo />}
         {activeTab === 'fluxo' && <Fluxo />}
         {activeTab === 'orçamento' && <Orcamento />}

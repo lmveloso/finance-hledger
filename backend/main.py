@@ -77,6 +77,7 @@ from app.routes.categories import router as categories_router
 from app.routes.flow import router as flow_router
 from app.routes.health import router as health_router
 from app.routes.networth import router as networth_router
+from app.routes.revenues import router as revenues_router
 from app.routes.principles import router as principles_router
 from app.routes.savings import router as savings_router
 from app.routes.seasonality import router as seasonality_router
@@ -87,6 +88,7 @@ from app.routes.transactions import router as transactions_router
 app.include_router(auth_router)
 app.include_router(health_router)
 app.include_router(summary_router)
+app.include_router(revenues_router)
 app.include_router(cashflow_router)
 app.include_router(networth_router)
 app.include_router(savings_router)
