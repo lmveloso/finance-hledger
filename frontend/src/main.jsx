@@ -24,7 +24,9 @@ function Root() {
 // Wrapping Root in a remounting shell so the entire tree refreshes when the
 // theme mode flips. Necessary because many memoised closures (Recharts
 // configs, tooltip styles, inline style objects) capture token values on
-// first render. Reconsider in PR-U1 once the nav shell replaces the MonthBar.
+// first render. PR-U1 landed the nav shell (Sidebar/TopBar/BottomNav) — the
+// `key={mode}` remount decision still stands because the tab feature code
+// continues to read from the `color` proxy directly.
 function ThemedApp() {
   const { mode } = useTheme();
   return <Root key={mode} />;

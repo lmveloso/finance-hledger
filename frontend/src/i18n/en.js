@@ -35,7 +35,16 @@ const dict = {
   'principle.reserva-de-oportunidade': 'Opportunity Reserve',
 
   // ── Navigation tabs ────────────────────────────────────────────────────
+  'nav.resumo': 'Summary',
   'nav.mes': 'Month',
+  'nav.ano': 'Year',
+  'nav.fluxo': 'Flow',
+  'nav.orcamento': 'Budget',
+  'nav.transacoes': 'Transactions',
+
+  // ── Theme toggle ───────────────────────────────────────────────────────
+  'theme.light': 'Light mode',
+  'theme.dark': 'Dark mode',
 
   // ── Plano tab ──────────────────────────────────────────────────────────
   'plano.header': 'Planning',
