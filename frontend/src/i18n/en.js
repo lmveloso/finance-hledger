@@ -31,10 +31,18 @@ const dict = {
   'mes.principles.header.target': 'Target',
   'mes.principles.header.realized': 'Realized',
   'mes.principles.header.amount': 'Amount',
+  'mes.principles.meta': 'target {pct}',
   'mes.expenses.title': 'Expenses by category',
   'mes.expenses.empty': 'No expenses recorded this month.',
   'mes.topTransactions.title': 'Top 10 transactions',
   'mes.topTransactions.empty': 'No transactions recorded this month.',
+  'mes.creditCards.title': 'Credit card spending',
+  'mes.creditCards.empty': 'No card purchases this month.',
+  'mes.creditCards.transactions': 'Largest purchases',
+  'mes.creditCards.transactionsEmpty': 'No purchases on this card this month.',
+  'mes.creditCards.expand': 'View purchases',
+  'mes.creditCards.collapse': 'Hide',
+  'mes.creditCards.showOnMobile': 'Show cards ({count})',
 
   // ── Principles (identifier → label) ────────────────────────────────────
   'principle.custos-fixos': 'Fixed Costs',

@@ -34,10 +34,18 @@ const dict = {
   'mes.principles.header.target': 'Meta',
   'mes.principles.header.realized': 'Realizado',
   'mes.principles.header.amount': 'R$',
+  'mes.principles.meta': 'meta {pct}',
   'mes.expenses.title': 'Despesas por categoria',
   'mes.expenses.empty': 'Nenhuma despesa registrada neste mês.',
   'mes.topTransactions.title': 'Top 10 transações',
   'mes.topTransactions.empty': 'Nenhuma transação registrada neste mês.',
+  'mes.creditCards.title': 'Despesas por cartão de crédito',
+  'mes.creditCards.empty': 'Nenhum cartão com despesas neste mês.',
+  'mes.creditCards.transactions': 'Maiores compras',
+  'mes.creditCards.transactionsEmpty': 'Nenhuma compra neste cartão no mês.',
+  'mes.creditCards.expand': 'Ver compras',
+  'mes.creditCards.collapse': 'Ocultar',
+  'mes.creditCards.showOnMobile': 'Ver cartões ({count})',
 
   // ── Principles (identifier → label) ────────────────────────────────────
   'principle.custos-fixos': 'Custos Fixos',
