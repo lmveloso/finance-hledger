@@ -252,7 +252,7 @@ function Resumo() {
                     onClick={(_, idx) => openCat(categorias[idx])}>
                     {categorias.map((c, i) => <Cell key={i} fill={c.cor} stroke={color.bg.card} strokeWidth={2} />)}
                   </Pie>
-                  <Tooltip contentStyle={{ background: color.bg.page, border: `1px solid ${color.border.default}`, borderRadius: 2, fontFamily: 'Inter', fontSize: 12 }} formatter={(v) => BRLc(v)} />
+                  <Tooltip contentStyle={{ background: color.bg.page, border: `1px solid ${color.border.default}`, borderRadius: 2, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12 }} formatter={(v) => BRLc(v)} />
                 </PieChart>
               </ResponsiveContainer>
               {categorias.map(c => (

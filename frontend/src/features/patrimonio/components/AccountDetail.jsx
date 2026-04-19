@@ -28,7 +28,7 @@ const navBtnStyle = {
 const inputStyle = {
   background: color.bg.page, border: `1px solid ${color.border.default}`,
   borderRadius: 3, color: color.text.primary,
-  padding: '8px 12px', fontSize: 13, fontFamily: 'Inter, sans-serif', outline: 'none',
+  padding: '8px 12px', fontSize: 13, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", outline: 'none',
 };
 
 function round2(n) { return Math.round(n * 100) / 100; }

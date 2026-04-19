@@ -111,7 +111,7 @@ function Transacoes() {
   };
   const inputStyle = {
     background: color.bg.page, border: `1px solid ${color.border.default}`, borderRadius: 3, color: color.text.primary,
-    padding: '8px 12px', fontSize: 13, fontFamily: 'Inter, sans-serif', outline: 'none',
+    padding: '8px 12px', fontSize: 13, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", outline: 'none',
     width: '100%',
   };
   const selectStyle = { ...inputStyle, cursor: 'pointer' };
@@ -244,7 +244,7 @@ function Transacoes() {
                     <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: color.text.muted, fontSize: 12 }}>{tx.data}</td>
                     <td style={tdStyle}>{tx.descricao}</td>
                     <td style={{ ...tdStyle, color: color.text.muted, fontSize: 12 }}>{tx.categoria}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? color.feedback.positive : tx.valor < 0 ? color.feedback.negative : 'inherit' }}>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? color.feedback.positive : tx.valor < 0 ? color.feedback.negative : 'inherit' }}>
                       {BRLc(tx.valor)}
                     </td>
                   </tr>

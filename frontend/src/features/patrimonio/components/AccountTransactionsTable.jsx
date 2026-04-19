@@ -65,7 +65,7 @@ function AccountTransactionsTable({ transactions, withBalance = false }) {
                 <td
                   style={{
                     ...tdStyle, textAlign: 'right',
-                    fontFamily: "'Fraunces', Georgia, serif",
+                    fontFamily: "'Instrument Serif', Georgia, serif",
                     fontWeight: 600, color: valorColor,
                   }}
                 >
@@ -75,7 +75,7 @@ function AccountTransactionsTable({ transactions, withBalance = false }) {
                   <td
                     style={{
                       ...tdStyle, textAlign: 'right',
-                      fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600,
+                      fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 600,
                       color: tx.runningBalance < 0 ? color.feedback.negative : color.feedback.positive,
                     }}
                   >

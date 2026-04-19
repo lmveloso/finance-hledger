@@ -94,7 +94,7 @@ const headCellStyle = (align) => ({
   borderBottom: `1px solid ${color.border.default}`,
   fontWeight: 500,
   whiteSpace: 'nowrap',
-  fontFamily: 'Inter, sans-serif',
+  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
 });
 
 const rowLabelStyle = {
@@ -109,7 +109,7 @@ const dataCellStyle = {
   textAlign: 'right',
   padding: '6px 8px',
   borderBottom: `1px solid ${color.border.subtle}`,
-  fontFamily: "'Fraunces', Georgia, serif",
+  fontFamily: "'Instrument Serif', Georgia, serif",
   fontSize: 12,
   color: color.text.primary,
   whiteSpace: 'nowrap',

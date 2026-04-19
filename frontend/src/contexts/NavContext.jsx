@@ -17,7 +17,12 @@ import React, { createContext, useContext, useCallback, useState } from 'react';
 
 const NavContext = createContext(null);
 
-const TABS = ["resumo", "mês", "ano", "plano", "fluxo", "orçamento", "previsão", "patrimônio", "transações"];
+// Fase U hides `plano` and `previsão` from the primary nav (see
+// docs/04-PRD-ui-ux.md §4.1). The route handlers in App.jsx are preserved so
+// the tabs can be re-enabled without code surgery. `ALL_TABS` is exported for
+// any route-legality logic that still needs to recognise the hidden tabs.
+const TABS = ['resumo', 'mês', 'ano', 'fluxo', 'orçamento', 'patrimônio', 'transações'];
+const ALL_TABS = ['resumo', 'mês', 'ano', 'plano', 'fluxo', 'orçamento', 'previsão', 'patrimônio', 'transações'];
 
 export function NavProvider({ children, initialTab = 'resumo' }) {
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -34,6 +39,7 @@ export function NavProvider({ children, initialTab = 'resumo' }) {
       navCategory, setNavCategory,
       goToTransactions,
       tabs: TABS,
+      allTabs: ALL_TABS,
     }}>
       {children}
     </NavContext.Provider>

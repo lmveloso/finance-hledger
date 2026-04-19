@@ -92,10 +92,10 @@ function Previsao() {
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke={color.border.default} />
-            <XAxis dataKey="label" tick={{ fill: color.text.muted, fontSize: 12, fontFamily: 'Inter, sans-serif' }} axisLine={{ stroke: color.border.default }} tickLine={false} />
+            <XAxis dataKey="label" tick={{ fill: color.text.muted, fontSize: 12, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }} axisLine={{ stroke: color.border.default }} tickLine={false} />
             <YAxis tick={{ fill: color.text.muted, fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => BRL(v)} width={72} />
             <Tooltip
-              contentStyle={{ background: color.bg.page, border: `1px solid ${color.border.default}`, borderRadius: 2, fontFamily: 'Inter', fontSize: 12 }}
+              contentStyle={{ background: color.bg.page, border: `1px solid ${color.border.default}`, borderRadius: 2, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12 }}
               formatter={(value, name) => [BRL(value), name]}
               labelFormatter={(label, payload) => {
                 const item = payload?.[0]?.payload;
@@ -145,10 +145,13 @@ function Previsao() {
                             textAlign: 'right',
                             padding: '6px 8px',
                             borderBottom: `1px solid ${color.border.subtle}`,
-                            fontFamily: "'Fraunces', Georgia, serif",
+                            fontFamily: "'Instrument Serif', Georgia, serif",
                             fontSize: 12,
                             color: color.text.primary,
-                            // Heat-map fill: data-driven alpha over color.accent.warm (#d4a574 = rgb(212,165,116))
+                            // Heat-map fill: data-driven alpha over the warm-brown legacy accent (rgb 212,165,116).
+                            // Previsão is hidden from nav in Fase U (see docs/04-PRD-ui-ux.md §4.1); this fill will
+                            // be replaced when the tab is redesigned or retired. Left as literal rgba so the rest
+                            // of the app can migrate to indigo-violet without touching this code path.
                             background: val > 0 ? `rgba(212, 165, 116, ${opacity * 0.4})` : 'transparent',
                             whiteSpace: 'nowrap',
                           }}
