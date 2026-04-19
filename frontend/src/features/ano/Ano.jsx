@@ -3,7 +3,7 @@ import { color } from '../../theme/tokens';
 import YearSelector from './components/YearSelector.jsx';
 import ViewToggle from './components/ViewToggle.jsx';
 import PrincipioMesView from './views/PrincipioMesView.jsx';
-import CategoriaMesView from './views/CategoriaMesView.jsx';
+import HeatmapView from './views/HeatmapView.jsx';
 
 // Ano tab (PRD §6). Year + view-mode selectors on top, active view below.
 // Vista 3 (Grupo × Mês) and the heatmap toggle are deferred; stubbed as
@@ -42,7 +42,7 @@ function Ano() {
       </div>
 
       {view === 'principio' && <PrincipioMesView year={year} />}
-      {view === 'categoria' && <CategoriaMesView year={year} />}
+      {view === 'categoria' && <HeatmapView year={year} />}
     </div>
   );
 }
