@@ -49,7 +49,7 @@ function EvolutionChart({ months = [] }) {
           <CartesianGrid strokeDasharray="3 3" stroke={color.border.default} />
           <XAxis
             dataKey="label"
-            tick={{ fill: color.text.muted, fontSize: 12, fontFamily: 'Inter, sans-serif' }}
+            tick={{ fill: color.text.muted, fontSize: 12, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
             axisLine={{ stroke: color.border.default }}
             tickLine={false}
           />
@@ -65,7 +65,7 @@ function EvolutionChart({ months = [] }) {
               background: color.bg.page,
               border: `1px solid ${color.border.default}`,
               borderRadius: 2,
-              fontFamily: 'Inter',
+              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
               fontSize: 12,
             }}
             formatter={(value, name) => [BRL(value), name]}

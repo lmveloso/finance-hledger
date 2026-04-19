@@ -34,6 +34,45 @@ function ForecastTable({ months }) {
 
   const saldoColor = (v) => (v >= 0 ? color.feedback.positive : color.feedback.negative);
 
+  const headCellStyle = (align) => ({
+    textAlign: align,
+    padding: '8px 10px',
+    color: color.text.muted,
+    borderBottom: `1px solid ${color.border.default}`,
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+  });
+
+  const rowLabelStyle = {
+    padding: '8px 10px',
+    borderBottom: `1px solid ${color.border.subtle}`,
+    color: color.text.secondary,
+    whiteSpace: 'nowrap',
+    textAlign: 'left',
+  };
+
+  const dataCellStyle = {
+    textAlign: 'right',
+    padding: '6px 8px',
+    borderBottom: `1px solid ${color.border.subtle}`,
+    fontFamily: "'Instrument Serif', Georgia, serif",
+    fontSize: 12,
+    color: color.text.primary,
+    whiteSpace: 'nowrap',
+  };
+
+  const totalsCellStyle = {
+    borderTop: `1px solid ${color.border.default}`,
+    background: color.bg.hover,
+    fontWeight: 600,
+  };
+
+  const cumulativeCellStyle = {
+    background: color.overlay.accentWarmSoft,
+    fontWeight: 600,
+  };
+
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -104,43 +143,5 @@ function ForecastTable({ months }) {
   );
 }
 
-const headCellStyle = (align) => ({
-  textAlign: align,
-  padding: '8px 10px',
-  color: color.text.muted,
-  borderBottom: `1px solid ${color.border.default}`,
-  fontWeight: 500,
-  whiteSpace: 'nowrap',
-  fontFamily: 'Inter, sans-serif',
-});
-
-const rowLabelStyle = {
-  padding: '8px 10px',
-  borderBottom: `1px solid ${color.border.subtle}`,
-  color: color.text.secondary,
-  whiteSpace: 'nowrap',
-  textAlign: 'left',
-};
-
-const dataCellStyle = {
-  textAlign: 'right',
-  padding: '6px 8px',
-  borderBottom: `1px solid ${color.border.subtle}`,
-  fontFamily: "'Fraunces', Georgia, serif",
-  fontSize: 12,
-  color: color.text.primary,
-  whiteSpace: 'nowrap',
-};
-
-const totalsCellStyle = {
-  borderTop: `1px solid ${color.border.default}`,
-  background: color.bg.hover,
-  fontWeight: 600,
-};
-
-const cumulativeCellStyle = {
-  background: color.overlay.accentWarmSoft,
-  fontWeight: 600,
-};
-
 export default ForecastTable;
+

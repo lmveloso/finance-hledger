@@ -3,63 +3,63 @@ import { color } from './theme/tokens';
 
 const API = import.meta.env.VITE_API_URL || '';
 
-const styles = {
-  wrapper: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: color.bg.pageAlt,
-    fontFamily: 'system-ui, -apple-system, sans-serif',
-  },
-  card: {
-    background: color.bg.card,
-    border: `1px solid ${color.border.default}`,
-    borderRadius: 12,
-    padding: '2rem',
-    width: 320,
-    textAlign: 'center',
-  },
-  title: {
-    color: color.text.primaryAlt,
-    fontSize: '1.4rem',
-    fontWeight: 600,
-    marginBottom: '1.5rem',
-  },
-  input: {
-    width: '100%',
-    padding: '0.6rem 0.8rem',
-    border: `1px solid ${color.border.default}`,
-    borderRadius: 8,
-    background: color.bg.pageAlt,
-    color: color.text.primaryAlt,
-    fontSize: '1rem',
-    outline: 'none',
-    boxSizing: 'border-box',
-  },
-  button: {
-    width: '100%',
-    marginTop: '1rem',
-    padding: '0.6rem',
-    border: 'none',
-    borderRadius: 8,
-    background: color.accent.warm,
-    color: color.bg.pageAlt,
-    fontSize: '1rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  error: {
-    color: color.feedback.errorText,
-    fontSize: '0.85rem',
-    marginTop: '0.75rem',
-  },
-};
-
 export default function Login({ onLogin }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const styles = {
+    wrapper: {
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: color.bg.pageAlt,
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+    },
+    card: {
+      background: color.bg.card,
+      border: `1px solid ${color.border.default}`,
+      borderRadius: 12,
+      padding: '2rem',
+      width: 320,
+      textAlign: 'center',
+    },
+    title: {
+      color: color.text.primaryAlt,
+      fontSize: '1.4rem',
+      fontWeight: 600,
+      marginBottom: '1.5rem',
+    },
+    input: {
+      width: '100%',
+      padding: '0.6rem 0.8rem',
+      border: `1px solid ${color.border.default}`,
+      borderRadius: 8,
+      background: color.bg.pageAlt,
+      color: color.text.primaryAlt,
+      fontSize: '1rem',
+      outline: 'none',
+      boxSizing: 'border-box',
+    },
+    button: {
+      width: '100%',
+      marginTop: '1rem',
+      padding: '0.6rem',
+      border: 'none',
+      borderRadius: 8,
+      background: color.accent.warm,
+      color: color.bg.pageAlt,
+      fontSize: '1rem',
+      fontWeight: 600,
+      cursor: 'pointer',
+    },
+    error: {
+      color: color.feedback.errorText,
+      fontSize: '0.85rem',
+      marginTop: '0.75rem',
+    },
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();

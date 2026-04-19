@@ -16,6 +16,10 @@ export const CONFIG = {
     { cat: 'Lazer', limite: 1200 },
     { cat: 'Saúde', limite: 1500 },
   ],
-  // Paleta fixa pras categorias (cicla se houver mais categorias que cores)
-  categoryColors: color.chart.category,
+  // Paleta fixa pras categorias (cicla se houver mais categorias que cores).
+  // Getter so the token Proxy is re-read on each access — otherwise the
+  // palette freezes to whichever mode was active at module import.
+  get categoryColors() {
+    return color.chart.category;
+  },
 };

@@ -1,83 +1,261 @@
 // frontend/src/theme/tokens.js
 //
-// Dark editorial palette — centralizes every color literal used across the app.
-// Fase 0 rule: zero visual change. Every hex below is a value that already
-// exists in App.jsx, Login.jsx, or config.js. Variants (*Alt) preserve
-// near-duplicates that shipped historically; collapse them only via a
-// follow-up ADR after confirming visual parity.
+// Dual-mode indigo-violet design tokens. Replaces the prior warm-brown
+// editorial palette as part of Fase U (see docs/04-PRD-ui-ux.md §4.2).
 //
-// Consumption pattern: inline styles.
-//   style={{ color: tokens.color.text.primary, background: tokens.color.bg.card }}
+// ── Consumption pattern ────────────────────────────────────────────────
+// Most call-sites read the legacy `color` export unchanged:
 //
-// See docs/01-ESTABILIZACAO.md §4.3 (inline + tokens strategy).
+//   import { color } from '../theme/tokens';
+//   style={{ background: color.bg.card, color: color.text.primary }}
+//
+// `color` is a Proxy whose property lookups resolve against the currently
+// active mode (`dark` or `light`). Mode changes are driven by
+// `contexts/ThemeContext.jsx`, which calls `_setActiveMode(mode)` below.
+//
+// For components that need to re-render on mode change (Recharts configs,
+// memoised closures, etc.) use the `useTheme()` hook from ThemeContext —
+// or rely on the `key={mode}` remount applied in `main.jsx`.
+//
+// ── Legacy-key compatibility ───────────────────────────────────────────
+// A number of keys from the warm-brown token tree (e.g. `color.bg.pageAlt`,
+// `color.overlay.credito`, `color.feedback.errorBg`) are not present in the
+// new tree. The Proxy below resolves these as aliases to the closest
+// semantic match so that ~48 existing call-sites keep working unchanged.
+// See the `_legacy` map at the bottom of this file for the full mapping.
+//
+// New code should prefer the canonical names:
+//   bg.page  border.default  text.primary  accent.primary  feedback.positive
+//   chart.colors[]  bg.cardAlt
+//
+// ── Values ──────────────────────────────────────────────────────────────
+// Mirrors docs/design/fase-u/project/src/theme.js exactly.
 
-export const color = {
+const _dark = {
   bg: {
-    page:     '#1a1815',  // App root, tooltip bg
-    pageAlt:  '#1a1816',  // Login wrapper + input bg (1-digit variant, preserved)
-    card:     '#252220',
-    hover:    '#2a2724',
-    opening:  '#242220',  // "saldo inicial" row background
+    page:    '#0d0f1a',
+    sidebar: '#080a14',
+    card:    '#12152a',
+    cardAlt: '#181c32',
+    hover:   '#1e2240',
+    input:   '#181c32',
   },
-
   border: {
-    default: '#3a3632',
-    subtle:  '#2a2724',
+    default: '#252848',
+    subtle:  '#1a1d38',
+    focus:   '#6366f1',
   },
-
   text: {
-    primary:     '#e8e2d5',
-    primaryAlt:  '#e8e0d4',  // Login-only variant, preserved
-    secondary:   '#c4bcab',
-    muted:       '#8a8275',
-    disabled:    '#6a6258',
-    faint:       '#4a4642',
-    faintAlt:    '#4a4640',  // Contas PL breakdown label, preserved
+    primary:   '#e0e6ff',
+    secondary: '#8b94c4',
+    muted:     '#555c88',
+    disabled:  '#2e3360',
   },
-
   accent: {
-    warm:      '#d4a574',  // primary accent (KPIs, highlights, selected state)
-    secondary: '#c97b5c',  // warm secondary / also used as negative feedback
+    primary:        '#6366f1',
+    secondary:      '#8b5cf6',
+    primaryMuted:   'rgba(99,102,241,0.14)',
+    secondaryMuted: 'rgba(139,92,246,0.14)',
   },
-
   feedback: {
-    positive:    '#8b9d7a',  // income, positive delta, reduced debt
-    negative:    '#c97b5c',  // expense, negative delta (alias of accent.secondary)
-    info:        '#6b8ca3',  // transfers, reference line, saldo series
-    errorText:   '#e05252',
-    errorBg:     '#3a2020',
-    errorBorder: '#5a3030',
-    errorRule:   '#4a2a2a',  // separator inside error boxes
+    positive:      '#34d399',
+    positiveMuted: 'rgba(52,211,153,0.12)',
+    negative:      '#f87171',
+    negativeMuted: 'rgba(248,113,113,0.12)',
+    warning:       '#fbbf24',
+    warningMuted:  'rgba(251,191,36,0.12)',
+    info:          '#60a5fa',
+    infoMuted:     'rgba(96,165,250,0.12)',
   },
-
   chart: {
-    // Recharts category palette — cycles when #categories > length.
-    // Previously lived in config.js as CONFIG.categoryColors.
-    category: [
-      '#d4a574',
-      '#c97b5c',
-      '#8b9d7a',
-      '#6b8ca3',
-      '#b8956a',
-      '#9c7b9c',
-      '#7a7a7a',
-    ],
+    colors: ['#6366f1', '#a78bfa', '#34d399', '#fbbf24', '#f87171', '#60a5fa', '#e879f9'],
   },
+  isDark: true,
+};
 
+const _light = {
+  bg: {
+    page:    '#f0f1ff',
+    sidebar: '#ffffff',
+    card:    '#ffffff',
+    cardAlt: '#f4f5ff',
+    hover:   '#eaebff',
+    input:   '#f4f5ff',
+  },
+  border: {
+    default: '#dde0f5',
+    subtle:  '#ebebfb',
+    focus:   '#6366f1',
+  },
+  text: {
+    primary:   '#18193a',
+    secondary: '#4a5280',
+    muted:     '#7880aa',
+    disabled:  '#b8bcd8',
+  },
+  accent: {
+    primary:        '#6366f1',
+    secondary:      '#8b5cf6',
+    primaryMuted:   'rgba(99,102,241,0.08)',
+    secondaryMuted: 'rgba(139,92,246,0.08)',
+  },
+  feedback: {
+    positive:      '#059669',
+    positiveMuted: 'rgba(5,150,105,0.08)',
+    negative:      '#dc2626',
+    negativeMuted: 'rgba(220,38,38,0.08)',
+    warning:       '#d97706',
+    warningMuted:  'rgba(217,119,6,0.08)',
+    info:          '#2563eb',
+    infoMuted:     'rgba(37,99,235,0.08)',
+  },
+  chart: {
+    colors: ['#6366f1', '#8b5cf6', '#059669', '#d97706', '#dc2626', '#2563eb', '#db2777'],
+  },
+  isDark: false,
+};
+
+const _modes = { dark: _dark, light: _light };
+
+let _activeMode = 'dark';
+
+export function _setActiveMode(mode) {
+  if (mode !== 'dark' && mode !== 'light') {
+    throw new Error(`_setActiveMode: invalid mode "${mode}"`);
+  }
+  _activeMode = mode;
+}
+
+export function _getActiveMode() {
+  return _activeMode;
+}
+
+// Legacy-key shims. Each entry resolves lazily against the currently active
+// mode so toggling propagates automatically. Keys not listed here fall
+// through to the live mode tree.
+const _legacy = {
+  bg: {
+    pageAlt: () => _modes[_activeMode].bg.cardAlt,
+    opening: () => _modes[_activeMode].bg.cardAlt,
+  },
+  text: {
+    primaryAlt: () => _modes[_activeMode].text.primary,
+    faint:      () => _modes[_activeMode].text.disabled,
+    faintAlt:   () => _modes[_activeMode].text.disabled,
+  },
+  accent: {
+    warm: () => _modes[_activeMode].accent.primary,
+    // accent.secondary is already present in the new tree — no shim needed.
+  },
+  feedback: {
+    errorText:   () => _modes[_activeMode].feedback.negative,
+    errorBg:     () => _modes[_activeMode].feedback.negativeMuted,
+    errorBorder: () => _modes[_activeMode].feedback.negative,
+    errorRule:   () => _modes[_activeMode].border.subtle,
+  },
+  chart: {
+    category: () => _modes[_activeMode].chart.colors,
+  },
   overlay: {
-    // Alpha-blended surfaces. Kept as literals (not computed from base colors)
-    // so that Fase 0 is a pure byte-preserving refactor.
-    credito:        'rgba(139,157,122,0.15)',  // positive.15
-    debito:         'rgba(201,123,92,0.15)',   // negative.15
-    transferencia:  'rgba(107,140,163,0.15)',  // info.15
-    saldoInicial:   'rgba(138,130,117,0.18)',  // muted.18
-    accentWarmSoft: 'rgba(212,165,116,0.04)',  // KPI emphasis background
-    pageScrim:      'rgba(26,24,21,0.4)',      // subtle panel overlay
-    // Heat-map cell fill is computed with a dynamic alpha — see
-    // features/previsao/Previsao.jsx. Not tokenized because the alpha is data-driven.
+    credito:        () => _modes[_activeMode].feedback.positiveMuted,
+    debito:         () => _modes[_activeMode].feedback.negativeMuted,
+    transferencia:  () => _modes[_activeMode].feedback.infoMuted,
+    saldoInicial:   () => _modes[_activeMode].bg.cardAlt,
+    accentWarmSoft: () => _modes[_activeMode].accent.primaryMuted,
+    pageScrim:      () => (_activeMode === 'dark' ? 'rgba(13,15,26,0.4)' : 'rgba(240,241,255,0.4)'),
   },
 };
 
-export const tokens = { color };
+function _makeGroupProxy(groupName) {
+  return new Proxy({}, {
+    get(_t, key) {
+      const active = _modes[_activeMode];
+      const group = active[groupName];
+      if (group && Object.prototype.hasOwnProperty.call(group, key)) {
+        return group[key];
+      }
+      const legacyGroup = _legacy[groupName];
+      if (legacyGroup && Object.prototype.hasOwnProperty.call(legacyGroup, key)) {
+        return legacyGroup[key]();
+      }
+      return undefined;
+    },
+    has(_t, key) {
+      const active = _modes[_activeMode];
+      const group = active[groupName];
+      if (group && Object.prototype.hasOwnProperty.call(group, key)) return true;
+      const legacyGroup = _legacy[groupName];
+      if (legacyGroup && Object.prototype.hasOwnProperty.call(legacyGroup, key)) return true;
+      return false;
+    },
+    ownKeys(_t) {
+      const active = _modes[_activeMode];
+      const group = active[groupName] || {};
+      const legacyGroup = _legacy[groupName] || {};
+      return Array.from(new Set([...Object.keys(group), ...Object.keys(legacyGroup)]));
+    },
+    getOwnPropertyDescriptor() {
+      return { enumerable: true, configurable: true };
+    },
+  });
+}
+
+// The top-level `color` proxy exposes one group proxy per semantic group.
+// `isDark` is also surfaced directly so existing code can branch on mode.
+const _colorGroups = {
+  bg:       _makeGroupProxy('bg'),
+  border:   _makeGroupProxy('border'),
+  text:     _makeGroupProxy('text'),
+  accent:   _makeGroupProxy('accent'),
+  feedback: _makeGroupProxy('feedback'),
+  chart:    _makeGroupProxy('chart'),
+  overlay:  _makeGroupProxy('overlay'),
+};
+
+export const color = new Proxy({}, {
+  get(_t, key) {
+    if (key === 'isDark') return _modes[_activeMode].isDark;
+    if (Object.prototype.hasOwnProperty.call(_colorGroups, key)) {
+      return _colorGroups[key];
+    }
+    return undefined;
+  },
+  has(_t, key) {
+    return key === 'isDark' || Object.prototype.hasOwnProperty.call(_colorGroups, key);
+  },
+  ownKeys() {
+    return [...Object.keys(_colorGroups), 'isDark'];
+  },
+  getOwnPropertyDescriptor() {
+    return { enumerable: true, configurable: true };
+  },
+});
+
+// Explicit snapshot access for consumers that need a frozen copy of one mode
+// (e.g. for SSR-style comparisons or test assertions). Not used by app code.
+export function getModeTokens(mode) {
+  if (mode !== 'dark' && mode !== 'light') {
+    throw new Error(`getModeTokens: invalid mode "${mode}"`);
+  }
+  return _modes[mode];
+}
+
+export const fonts = {
+  jakarta: {
+    body:    "'Plus Jakarta Sans', system-ui, sans-serif",
+    display: "'Instrument Serif', Georgia, serif",
+    label:   'Jakarta',
+  },
+};
+
+export const radius = {
+  rounded: { xs: 6, sm: 10, md: 16, lg: 22 },
+};
+
+export const padding = {
+  rounded: { card: 24, inner: 20 },
+};
+
+export const tokens = { color, fonts, radius, padding };
 
 export default tokens;

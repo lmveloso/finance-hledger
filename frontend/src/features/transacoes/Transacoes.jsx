@@ -12,16 +12,15 @@ import { useNav } from '../../contexts/NavContext.jsx';
 // i18n/currency decoupling noted in docs §6.2.
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-// Local button style — mirrors the navBtnStyle used by MonthPicker in
-// App.jsx. Will be unified into a shared Button component later.
-const navBtnStyle = {
-  background: color.bg.card, border: `1px solid ${color.border.default}`, borderRadius: 3,
-  color: color.accent.warm, cursor: 'pointer', padding: '4px 6px',
-  display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s',
-};
-
 // ── Transações ──────────────────────────────────────────────────────────
 function Transacoes() {
+  // Declared inside the component so token lookups re-evaluate on dark/light toggle.
+  const navBtnStyle = {
+    background: color.bg.card, border: `1px solid ${color.border.default}`, borderRadius: 3,
+    color: color.accent.warm, cursor: 'pointer', padding: '4px 6px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s',
+  };
+
   const { selectedMonth, refreshKey } = useMonth();
   const { navCategory, setNavCategory } = useNav();
   const [search, setSearch] = useState('');
@@ -111,7 +110,7 @@ function Transacoes() {
   };
   const inputStyle = {
     background: color.bg.page, border: `1px solid ${color.border.default}`, borderRadius: 3, color: color.text.primary,
-    padding: '8px 12px', fontSize: 13, fontFamily: 'Inter, sans-serif', outline: 'none',
+    padding: '8px 12px', fontSize: 13, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", outline: 'none',
     width: '100%',
   };
   const selectStyle = { ...inputStyle, cursor: 'pointer' };
@@ -244,7 +243,7 @@ function Transacoes() {
                     <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: color.text.muted, fontSize: 12 }}>{tx.data}</td>
                     <td style={tdStyle}>{tx.descricao}</td>
                     <td style={{ ...tdStyle, color: color.text.muted, fontSize: 12 }}>{tx.categoria}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? color.feedback.positive : tx.valor < 0 ? color.feedback.negative : 'inherit' }}>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? color.feedback.positive : tx.valor < 0 ? color.feedback.negative : 'inherit' }}>
                       {BRLc(tx.valor)}
                     </td>
                   </tr>

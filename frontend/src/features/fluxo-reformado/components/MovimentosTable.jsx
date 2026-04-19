@@ -94,7 +94,7 @@ const th = (align) => ({
   color: color.text.muted,
   borderBottom: `1px solid ${color.border.default}`,
   fontWeight: 500,
-  fontFamily: 'Inter, sans-serif',
+  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
   whiteSpace: 'nowrap',
 });
 
@@ -103,7 +103,7 @@ const td = (align) => ({
   padding: '10px',
   borderBottom: `1px solid ${color.border.subtle}`,
   color: color.text.secondary,
-  fontFamily: align === 'right' ? "'Fraunces', Georgia, serif" : 'Inter, sans-serif',
+  fontFamily: align === 'right' ? "'Instrument Serif', Georgia, serif" : "'Plus Jakarta Sans', system-ui, sans-serif",
   whiteSpace: 'nowrap',
 });
 

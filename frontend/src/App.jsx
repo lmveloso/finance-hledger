@@ -31,6 +31,18 @@ function formatMonthBR(ym) {
 // ── MonthPicker ────────────────────────────────────────────────────────
 function MonthPicker() {
   const { selectedMonth, compareMode, setCompareMode, goPrev, goNext, goToday, isCurrentMonth } = useMonth();
+  const navBtnStyle = {
+    background: color.bg.card,
+    border: `1px solid ${color.border.default}`,
+    borderRadius: 3,
+    color: color.accent.warm,
+    cursor: 'pointer',
+    padding: '4px 6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background 0.12s',
+  };
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -86,19 +98,6 @@ function MonthPicker() {
   );
 }
 
-const navBtnStyle = {
-  background: color.bg.card,
-  border: `1px solid ${color.border.default}`,
-  borderRadius: 3,
-  color: color.accent.warm,
-  cursor: 'pointer',
-  padding: '4px 6px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  transition: 'background 0.12s',
-};
-
 // ── Pull-to-refresh indicator ──────────────────────────────────────────
 function PullIndicator({ pullState, pullDistance }) {
   if (pullState === 'idle') return null;
@@ -124,7 +123,7 @@ function PullIndicator({ pullState, pullDistance }) {
       background: `linear-gradient(to bottom, ${color.bg.card} 0%, transparent 100%)`,
       color: pullState === 'ready' ? color.accent.warm : color.text.muted,
       fontSize: 13,
-      fontFamily: 'Inter, system-ui, sans-serif',
+      fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
       transform: `translateY(${pullState === 'refreshing' ? 0 : pullDistance - 40}px)`,
       opacity: pullState === 'refreshing' ? 1 : Math.min(pullDistance / 60, 1),
       transition: pullState === 'refreshing' ? 'transform 0.2s ease' : 'none',
@@ -172,15 +171,14 @@ function AppInner() {
   const { selectedMonth } = useMonth();
   const { activeTab, setActiveTab, tabs } = useNav();
   return (
-    <div style={{ minHeight: '100vh', background: color.bg.page, color: color.text.primary, fontFamily: 'Georgia, serif' }}>
+    <div style={{ minHeight: '100vh', background: color.bg.page, color: color.text.primary, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap');
         @keyframes spin { to { transform: rotate(360deg); } }
         * { box-sizing: border-box; margin: 0; }
-        .serif { font-family: 'Fraunces', Georgia, serif; }
-        .sans { font-family: 'Inter', system-ui, sans-serif; }
+        .serif { font-family: 'Instrument Serif', Georgia, serif; }
+        .sans { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
         .card { background: ${color.bg.card}; border: 1px solid ${color.border.default}; border-radius: 4px; padding: 24px; }
-        .tab { padding: 10px 16px; cursor: pointer; border: none; background: transparent; color: ${color.text.muted}; font-family: 'Inter', sans-serif; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid transparent; transition: all 0.15s; }
+        .tab { padding: 10px 16px; cursor: pointer; border: none; background: transparent; color: ${color.text.muted}; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid transparent; transition: all 0.15s; }
         .tab:hover { color: ${color.text.secondary}; }
         .tab.active { color: ${color.accent.warm}; border-bottom-color: ${color.accent.warm}; }
         .grid { display: grid; gap: 20px; }

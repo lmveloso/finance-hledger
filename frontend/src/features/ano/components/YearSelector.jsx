@@ -32,7 +32,7 @@ function YearSelector({ year, onChange, span = 3 }) {
           border: `1px solid ${color.border.default}`,
           borderRadius: 3,
           padding: '6px 10px',
-          fontFamily: 'Inter, system-ui, sans-serif',
+          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
           fontSize: 13,
           cursor: 'pointer',
         }}
