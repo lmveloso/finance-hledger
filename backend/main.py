@@ -11,6 +11,7 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
@@ -108,3 +109,21 @@ if FRONTEND_DIST.exists():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
 
     # PWA files served explicitly before the catch-all so they don't return index.html
+    for _pwa_file in ("sw.js", "manifest.json", "icon-192.png", "icon-512.png", "favicon.ico"):
+        _path = FRONTEND_DIST / _pwa_file
+        if _path.exists():
+            app.add_api_route(
+                f"/{_pwa_file}",
+                (lambda p=_path: FileResponse(p)),
+                methods=["GET"],
+                include_in_schema=False,
+            )
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def spa(full_path: str):
+        if full_path.startswith("api/"):
+            raise HTTPException(404)
+        index = FRONTEND_DIST / "index.html"
+        if index.exists():
+            return FileResponse(index)
+        raise HTTPException(404, "Frontend não foi buildado. Rode `npm run build` em /frontend.")
