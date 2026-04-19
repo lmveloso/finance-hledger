@@ -8,6 +8,17 @@
 // dictionary maps them to human-readable labels.
 
 const dict = {
+  // ── Resumo tab ─────────────────────────────────────────────────────────
+  'resumo.title': 'Resumo',
+  'resumo.kpi.expenses': 'Despesas',
+  'resumo.kpi.balance': 'Saldo',
+  'resumo.categories.title': 'Despesas por categoria',
+  'resumo.principles.title': 'Metas por princípio',
+  'resumo.topExpenses.title': 'Maiores gastos',
+  'resumo.topExpenses.seeAll': 'Ver todas ({count})',
+  'resumo.drilldown.back': 'Voltar',
+  'resumo.drilldown.empty': 'Sem subcategorias registradas neste mês.',
+
   // ── Mes tab ────────────────────────────────────────────────────────────
   'mes.title': 'Mês',
   'mes.revenues.title': 'Receitas',
@@ -36,6 +47,8 @@ const dict = {
   'principle.liberdade-financeira': 'Liberdade Financeira',
   'principle.aumentar-renda': 'Aumentar Renda',
   'principle.reserva-de-oportunidade': 'Reserva de Oportunidade',
+  // Backend canonical id (models.PrincipleId uses `reserva-oportunidade`).
+  'principle.reserva-oportunidade': 'Reserva de Oportunidade',
 
   // ── Navigation tabs ────────────────────────────────────────────────────
   'nav.resumo': 'Resumo',

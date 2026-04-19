@@ -15,7 +15,11 @@ const BRL = (n) =>
 // colored left border for emphasis, optional delta badge (rendered by the
 // caller and forwarded verbatim), placeholder '···' while loading.
 // Behavior preserved from the previous inline definition in App.jsx (formerly Dashboard.jsx).
-function KPI({ label, valor, icon, cor, destaque, loading, delta }) {
+//
+// `sparkline` is an optional ReactNode slot rendered below the big number.
+// Added in PR-U2 (Resumo redesign) to support inline SVG sparklines; additive
+// and defaulted to null so existing call-sites are unaffected.
+function KPI({ label, valor, icon, cor, destaque, loading, delta, sparkline }) {
   return (
     <div
       className="card"
@@ -56,6 +60,7 @@ function KPI({ label, valor, icon, cor, destaque, loading, delta }) {
         {loading ? '···' : BRL(valor)}
         {delta}
       </div>
+      {sparkline && <div style={{ marginTop: 14 }}>{sparkline}</div>}
     </div>
   );
 }
