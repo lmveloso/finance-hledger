@@ -95,6 +95,27 @@ const dict = {
   // Navigation
   'nav.plano': 'Plan',
 
+  // ── Fluxo tab ──────────────────────────────────────────────────────────
+  'fluxo.header': 'Flow',
+  'fluxo.conta_singular': 'account',
+  'fluxo.conta_plural': 'accounts',
+  'fluxo.sem_movimento': 'No movement this month.',
+  'fluxo.receitas': 'Revenue',
+  'fluxo.saldo': 'Balance',
+  'fluxo.outros': 'Others',
+  'fluxo.waterfall.title': 'Monthly flow · revenue → balance',
+  'fluxo.waterfall.footnote.prefix': 'Revenue of',
+  'fluxo.waterfall.footnote.middle': 'minus expenses leaves a balance of',
+  'fluxo.waterfall.footnote.suffix': '.',
+  'fluxo.movimentos.title': 'Movements per account',
+  'fluxo.contas.title': 'Accounts',
+  'fluxo.contas.tipo_ativo': 'Asset',
+  'fluxo.contas.tipo_passivo': 'Liability',
+  'fluxo.contas.entradas': 'Inflow',
+  'fluxo.contas.saidas': 'Outflow',
+  'fluxo.contas.saldo_final': 'Closing balance',
+  'fluxo.contas.delta': 'Monthly change',
+
   // ── Patrimonio tab ─────────────────────────────────────────────────────
   'patrimonio.header': 'Net Worth',
   'patrimonio.hero.title': 'Net Worth',
