@@ -31,6 +31,18 @@ function formatMonthBR(ym) {
 // ── MonthPicker ────────────────────────────────────────────────────────
 function MonthPicker() {
   const { selectedMonth, compareMode, setCompareMode, goPrev, goNext, goToday, isCurrentMonth } = useMonth();
+  const navBtnStyle = {
+    background: color.bg.card,
+    border: `1px solid ${color.border.default}`,
+    borderRadius: 3,
+    color: color.accent.warm,
+    cursor: 'pointer',
+    padding: '4px 6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background 0.12s',
+  };
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -85,19 +97,6 @@ function MonthPicker() {
     </div>
   );
 }
-
-const navBtnStyle = {
-  background: color.bg.card,
-  border: `1px solid ${color.border.default}`,
-  borderRadius: 3,
-  color: color.accent.warm,
-  cursor: 'pointer',
-  padding: '4px 6px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  transition: 'background 0.12s',
-};
 
 // ── Pull-to-refresh indicator ──────────────────────────────────────────
 function PullIndicator({ pullState, pullDistance }) {

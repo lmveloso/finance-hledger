@@ -12,16 +12,15 @@ import { useNav } from '../../contexts/NavContext.jsx';
 // i18n/currency decoupling noted in docs §6.2.
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-// Local button style — mirrors the navBtnStyle used by MonthPicker in
-// App.jsx. Will be unified into a shared Button component later.
-const navBtnStyle = {
-  background: color.bg.card, border: `1px solid ${color.border.default}`, borderRadius: 3,
-  color: color.accent.warm, cursor: 'pointer', padding: '4px 6px',
-  display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s',
-};
-
 // ── Transações ──────────────────────────────────────────────────────────
 function Transacoes() {
+  // Declared inside the component so token lookups re-evaluate on dark/light toggle.
+  const navBtnStyle = {
+    background: color.bg.card, border: `1px solid ${color.border.default}`, borderRadius: 3,
+    color: color.accent.warm, cursor: 'pointer', padding: '4px 6px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s',
+  };
+
   const { selectedMonth, refreshKey } = useMonth();
   const { navCategory, setNavCategory } = useNav();
   const [search, setSearch] = useState('');

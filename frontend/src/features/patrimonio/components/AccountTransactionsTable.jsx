@@ -6,16 +6,6 @@ import { t } from '../../../i18n';
 // Local formatter — same pattern used across features (see docs §6.2).
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-const thStyle = {
-  textAlign: 'left', padding: '10px 8px', fontSize: 11, letterSpacing: '0.08em',
-  textTransform: 'uppercase', color: color.text.muted,
-  borderBottom: `1px solid ${color.border.default}`,
-};
-const tdStyle = {
-  padding: '12px 8px', fontSize: 13, color: color.text.secondary,
-  borderBottom: `1px solid ${color.border.default}`,
-};
-
 // AccountTransactionsTable — shared transaction list used by AccountDetail.
 // When `withBalance` is true, a running balance column is rendered; the
 // `transactions` array must already carry `runningBalance` in that case.
@@ -24,6 +14,16 @@ const tdStyle = {
 //   transactions: [{ data, descricao, categoria, tipo_movimento, valor, runningBalance? }]
 //   withBalance:  boolean — add "Saldo" column (statement view)
 function AccountTransactionsTable({ transactions, withBalance = false }) {
+  const thStyle = {
+    textAlign: 'left', padding: '10px 8px', fontSize: 11, letterSpacing: '0.08em',
+    textTransform: 'uppercase', color: color.text.muted,
+    borderBottom: `1px solid ${color.border.default}`,
+  };
+  const tdStyle = {
+    padding: '12px 8px', fontSize: 13, color: color.text.secondary,
+    borderBottom: `1px solid ${color.border.default}`,
+  };
+
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>

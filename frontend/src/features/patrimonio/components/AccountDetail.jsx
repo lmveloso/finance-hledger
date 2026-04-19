@@ -10,33 +10,32 @@ import { t } from '../../../i18n';
 // Local formatters — same pattern used across features (see docs §6.2).
 const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-// Duplicated from App.jsx — local copy keeps the feature self-contained;
-// a shared components/MonthPicker extraction (PR-F*) will consolidate this.
-const navBtnStyle = {
-  background: color.bg.card,
-  border: `1px solid ${color.border.default}`,
-  borderRadius: 3,
-  color: color.accent.warm,
-  cursor: 'pointer',
-  padding: '4px 6px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  transition: 'background 0.12s',
-};
-
-const inputStyle = {
-  background: color.bg.page, border: `1px solid ${color.border.default}`,
-  borderRadius: 3, color: color.text.primary,
-  padding: '8px 12px', fontSize: 13, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", outline: 'none',
-};
-
 function round2(n) { return Math.round(n * 100) / 100; }
 
 function AccountDetail({
   account, onBack, rangeStart, setRangeStart, rangeEnd, setRangeEnd,
   showStatement, setShowStatement, refreshKey,
 }) {
+  // Declared inside the component so token lookups re-evaluate on dark/light toggle.
+  const navBtnStyle = {
+    background: color.bg.card,
+    border: `1px solid ${color.border.default}`,
+    borderRadius: 3,
+    color: color.accent.warm,
+    cursor: 'pointer',
+    padding: '4px 6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background 0.12s',
+  };
+
+  const inputStyle = {
+    background: color.bg.page, border: `1px solid ${color.border.default}`,
+    borderRadius: 3, color: color.text.primary,
+    padding: '8px 12px', fontSize: 13, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", outline: 'none',
+  };
+
   // Recent transactions (last 20)
   const { data: txData, loading: txLoading, error: txError } = useApi(
     `/api/transactions?account=${encodeURIComponent(account.caminho)}&limit=20&order=desc`,

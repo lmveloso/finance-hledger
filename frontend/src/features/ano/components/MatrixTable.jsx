@@ -29,6 +29,41 @@ const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', {
 //   showPct:   boolean — if true, cell is "R$ value \n pct%"
 //   emptyText: string for rows with no cells (unused currently — kept for reuse)
 function MatrixTable({ months, rows, totals, showPct = false }) {
+  const headCellStyle = (align) => ({
+    textAlign: align,
+    padding: '8px 10px',
+    color: color.text.muted,
+    borderBottom: `1px solid ${color.border.default}`,
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+  });
+
+  const rowLabelStyle = {
+    padding: '8px 10px',
+    borderBottom: `1px solid ${color.border.subtle}`,
+    color: color.text.secondary,
+    whiteSpace: 'nowrap',
+    textAlign: 'left',
+  };
+
+  const dataCellStyle = {
+    textAlign: 'right',
+    padding: '6px 8px',
+    borderBottom: `1px solid ${color.border.subtle}`,
+    fontFamily: "'Instrument Serif', Georgia, serif",
+    fontSize: 12,
+    color: color.text.primary,
+    whiteSpace: 'nowrap',
+  };
+
+  const totalsCellStyle = {
+    borderTop: `1px solid ${color.border.default}`,
+    background: color.bg.hover,
+    color: color.accent.warm,
+    fontWeight: 600,
+  };
+
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -86,41 +121,6 @@ function MatrixTable({ months, rows, totals, showPct = false }) {
     </div>
   );
 }
-
-const headCellStyle = (align) => ({
-  textAlign: align,
-  padding: '8px 10px',
-  color: color.text.muted,
-  borderBottom: `1px solid ${color.border.default}`,
-  fontWeight: 500,
-  whiteSpace: 'nowrap',
-  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-});
-
-const rowLabelStyle = {
-  padding: '8px 10px',
-  borderBottom: `1px solid ${color.border.subtle}`,
-  color: color.text.secondary,
-  whiteSpace: 'nowrap',
-  textAlign: 'left',
-};
-
-const dataCellStyle = {
-  textAlign: 'right',
-  padding: '6px 8px',
-  borderBottom: `1px solid ${color.border.subtle}`,
-  fontFamily: "'Instrument Serif', Georgia, serif",
-  fontSize: 12,
-  color: color.text.primary,
-  whiteSpace: 'nowrap',
-};
-
-const totalsCellStyle = {
-  borderTop: `1px solid ${color.border.default}`,
-  background: color.bg.hover,
-  color: color.accent.warm,
-  fontWeight: 600,
-};
 
 export default MatrixTable;
 export { monthLabel };
