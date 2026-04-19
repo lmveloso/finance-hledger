@@ -5,6 +5,17 @@
 // dictionaries. Missing keys fall back to the key itself.
 
 const dict = {
+  // ── Resumo tab ─────────────────────────────────────────────────────────
+  'resumo.title': 'Summary',
+  'resumo.kpi.expenses': 'Expenses',
+  'resumo.kpi.balance': 'Balance',
+  'resumo.categories.title': 'Expenses by category',
+  'resumo.principles.title': 'Targets by principle',
+  'resumo.topExpenses.title': 'Top expenses',
+  'resumo.topExpenses.seeAll': 'See all ({count})',
+  'resumo.drilldown.back': 'Back',
+  'resumo.drilldown.empty': 'No subcategories recorded this month.',
+
   // ── Mes tab ────────────────────────────────────────────────────────────
   'mes.title': 'Month',
   'mes.revenues.title': 'Revenues',
@@ -33,6 +44,8 @@ const dict = {
   'principle.liberdade-financeira': 'Financial Freedom',
   'principle.aumentar-renda': 'Raise Income',
   'principle.reserva-de-oportunidade': 'Opportunity Reserve',
+  // Backend canonical id (models.PrincipleId uses `reserva-oportunidade`).
+  'principle.reserva-oportunidade': 'Opportunity Reserve',
 
   // ── Navigation tabs ────────────────────────────────────────────────────
   'nav.resumo': 'Summary',
