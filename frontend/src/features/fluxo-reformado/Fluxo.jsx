@@ -3,24 +3,27 @@ import { color } from '../../theme/tokens';
 import Spinner from '../../components/Spinner.jsx';
 import ErrorBox from '../../components/ErrorBox.jsx';
 import { useMonth } from '../../contexts/MonthContext.jsx';
-import { useFlow } from './hooks/useFlow.js';
+import { t } from '../../i18n/index.js';
+import { useFlowWithCategories } from './hooks/useFlowWithCategories.js';
 import FlowKpiCards from './components/FlowKpiCards.jsx';
-import GrafoView from './views/GrafoView.jsx';
+import WaterfallView from './views/WaterfallView.jsx';
+import AccountCards from './components/AccountCards.jsx';
 import MovimentosTable from './components/MovimentosTable.jsx';
 
-// Fluxo — reformed tab (PR-D6).
-// Replaces the previous 12-month bar+sankey implementation with a
-// single-month view centered on per-account deltas. The data model maps
-// to /api/flow?month=YYYY-MM.
+// Fluxo — reformed tab (PR-U5).
+// Stack top-to-bottom: KPI row → waterfall (receita → categorias → saldo) →
+// per-account cards → per-account movimentos table. The node-graph view from
+// PR-D6 is retired in this PR; transferências are still returned by the API
+// but no longer surfaced visually here (deferred to per-account detail flows).
 function Fluxo() {
   const { selectedMonth } = useMonth();
-  const { data, loading, error } = useFlow(selectedMonth);
+  const { flow, categories, loading, error } =
+    useFlowWithCategories(selectedMonth);
 
   if (loading) return <Spinner />;
   if (error) return <ErrorBox msg={error} />;
 
-  const contas = data?.contas || [];
-  const transferencias = data?.transferencias || [];
+  const contas = flow?.contas || [];
 
   return (
     <div className="grid" style={{ gap: 20 }}>
@@ -42,22 +45,21 @@ function Fluxo() {
             textTransform: 'uppercase',
           }}
         >
-          Fluxo · {contas.length} {contas.length === 1 ? 'conta' : 'contas'}
+          {t('fluxo.header')} · {contas.length}{' '}
+          {contas.length === 1
+            ? t('fluxo.conta_singular')
+            : t('fluxo.conta_plural')}
         </div>
       </div>
 
-      <FlowKpiCards data={data} />
+      <FlowKpiCards data={flow} />
 
-      {contas.length === 0 ? (
-        <div
-          className="card sans"
-          style={{ color: color.text.muted, fontSize: 13 }}
-        >
-          Sem movimento neste mês.
-        </div>
-      ) : (
+      <WaterfallView flow={flow} categories={categories} />
+
+      {contas.length > 0 && (
         <>
-          <GrafoView contas={contas} transferencias={transferencias} />
+          <AccountCards contas={contas} />
+
           <div className="card" style={{ padding: 18 }}>
             <div
               className="sans"
@@ -69,7 +71,7 @@ function Fluxo() {
                 marginBottom: 12,
               }}
             >
-              Movimentos por conta
+              {t('fluxo.movimentos.title')}
             </div>
             <MovimentosTable contas={contas} />
           </div>

@@ -98,6 +98,27 @@ const dict = {
   // Navigation
   'nav.plano': 'Plano',
 
+  // ── Fluxo tab ──────────────────────────────────────────────────────────
+  'fluxo.header': 'Fluxo',
+  'fluxo.conta_singular': 'conta',
+  'fluxo.conta_plural': 'contas',
+  'fluxo.sem_movimento': 'Sem movimento neste mês.',
+  'fluxo.receitas': 'Receitas',
+  'fluxo.saldo': 'Saldo',
+  'fluxo.outros': 'Outros',
+  'fluxo.waterfall.title': 'Fluxo mensal · receita → saldo',
+  'fluxo.waterfall.footnote.prefix': 'Receitas de',
+  'fluxo.waterfall.footnote.middle': 'menos despesas resultam em saldo de',
+  'fluxo.waterfall.footnote.suffix': '.',
+  'fluxo.movimentos.title': 'Movimentos por conta',
+  'fluxo.contas.title': 'Contas',
+  'fluxo.contas.tipo_ativo': 'Ativo',
+  'fluxo.contas.tipo_passivo': 'Passivo',
+  'fluxo.contas.entradas': 'Entradas',
+  'fluxo.contas.saidas': 'Saídas',
+  'fluxo.contas.saldo_final': 'Saldo final',
+  'fluxo.contas.delta': 'Variação no mês',
+
   // ── Patrimonio tab ─────────────────────────────────────────────────────
   'patrimonio.header': 'Patrimônio',
   'patrimonio.hero.title': 'Patrimônio Líquido',
