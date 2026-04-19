@@ -8,7 +8,16 @@
 - [PRD Dashboard 2.0](./02-PRD-dashboard-v2.md) — Fase D (prerequisite; completed)
 - [PRD Magic Import](./03-PRD-magic-import.md) — Fase 1 (follows Fase U)
 
-**Design source:** handoff bundle from Claude Design (April 2026). Chat transcript and HTML/JSX prototypes archived in the design bundle; canonical reference is the `Finance Dashboard.html` prototype and per-tab JSX components (`src/tab-*.jsx`, `src/components.jsx`, `src/theme.js`).
+**Design source:** handoff bundle from Claude Design (April 2026), archived in this repo at [`docs/design/fase-u/`](./design/fase-u/). Canonical references:
+- [`docs/design/fase-u/project/Finance Dashboard.html`](./design/fase-u/project/Finance%20Dashboard.html) — single-file prototype (run locally to preview).
+- [`docs/design/fase-u/project/src/theme.js`](./design/fase-u/project/src/theme.js) — source of truth for tokens (palette, fonts, radii).
+- [`docs/design/fase-u/project/src/components.jsx`](./design/fase-u/project/src/components.jsx) — shared components (Card, KPI, Sparkline, etc.).
+- [`docs/design/fase-u/project/src/tab-*.jsx`](./design/fase-u/project/src/) — per-tab implementations (resumo, mes, ano, fluxo, orcamento, patrimonio).
+- [`docs/design/fase-u/project/src/App.jsx`](./design/fase-u/project/src/App.jsx) — nav shell (sidebar + mobile bottom bar).
+- [`docs/design/fase-u/chats/chat1.md`](./design/fase-u/chats/chat1.md) — full design conversation, including iterations (heatmap color fix, Orçamento responsive grid, credit-card section, Receitas KPI removal).
+- [`docs/design/fase-u/project/src/mock.js`](./design/fase-u/project/src/mock.js) — shape of data the prototype expected (useful as a cross-check against `/api/*` payloads).
+
+When implementing a PR, read the corresponding tab file in `docs/design/fase-u/project/src/` alongside the section here. The prototype is the pixel-level reference; this PRD is the scope/ordering contract.
 
 ---
 

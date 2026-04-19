@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Finanças Pessoais</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600&family=Space+Grotesk:wght@400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body,#root{height:100%;overflow:hidden}::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{border-radius:3px}</style>
+</head>
+<body><div id="root"></div>
+
+<!-- ── Data ── -->
+<script>
+window.BRL=(n,d=0)=>(n??0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:d});
+window.PCT=n=>`${Math.round(n??0)}%`;
+window.MOCK={
+  summary:{receitas:12840,despesas:9320,saldo:3520},
+  sparklines:{receitas:[10200,11500,9800,12100,11800,12840],despesas:[8800,9200,8400,9800,9100,9320],saldo:[1400,2300,1400,2300,2700,3520]},
+  categories:[{nome:'Moradia',valor:3262},{nome:'Alimentação',valor:1864},{nome:'Transporte',valor:1119},{nome:'Saúde',valor:746},{nome:'Lazer',valor:652},{nome:'Educação',valor:559},{nome:'Outros',valor:1118}],
+  topExpenses:[{descricao:'Aluguel',valor:2800,categoria:'Moradia',data:'05 abr'},{descricao:'Supermercado Extra',valor:843,categoria:'Alimentação',data:'12 abr'},{descricao:'IPTU parcela 4/10',valor:462,categoria:'Moradia',data:'07 abr'},{descricao:'Plano de Saúde',valor:420,categoria:'Saúde',data:'01 abr'},{descricao:'Combustível',valor:380,categoria:'Transporte',data:'18 abr'}],
+  receitas:[{nome:'Salário',valor:11000,conta:'Nubank'},{nome:'Freelance',valor:1500,conta:'Nubank'},{nome:'Rendimento CDB',valor:340,conta:'Bradesco'}],
+  principles:[{id:'custos-fixos',label:'Custos Fixos',target:50,realized:44,amount:5640},{id:'conforto',label:'Conforto',target:10,realized:12,amount:1537},{id:'metas',label:'Metas',target:10,realized:15,amount:1926},{id:'prazeres',label:'Prazeres',target:5,realized:7,amount:897},{id:'liberdade',label:'Liberdade Financeira',target:20,realized:18,amount:2311},{id:'renda',label:'Aumentar Renda',target:3,realized:2,amount:257},{id:'reserva',label:'Reserva de Oportunidade',target:2,realized:2,amount:257}],
+  budget:[{nome:'Moradia',orcado:3200,realizado:3262},{nome:'Alimentação',orcado:2000,realizado:1864},{nome:'Transporte',orcado:1000,realizado:1119},{nome:'Saúde',orcado:800,realizado:746},{nome:'Lazer',orcado:700,realizado:652},{nome:'Educação',orcado:600,realizado:559},{nome:'Outros',orcado:1000,realizado:1118}],
+  networth:Array.from({length:24},(_,i)=>{const d=new Date(2023,4+i,1);const a=150000+i*3200+Math.sin(i*.7)*4000;const p=45000-i*700+Math.sin(i*1.1)*1500;return{label:d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}),ativos:Math.round(a),passivos:Math.round(Math.abs(p)),liquido:Math.round(a-Math.abs(p))}}),
+  accounts:[{nome:'Nubank CC',tipo:'ativo',saldo:10400},{nome:'Bradesco PJ',tipo:'ativo',saldo:16120},{nome:'Tesouro Direto',tipo:'ativo',saldo:82000},{nome:'CDB Nubank',tipo:'ativo',saldo:43200},{nome:'Nubank Cartão',tipo:'passivo',saldo:-1800},{nome:'Financiamento Auto',tipo:'passivo',saldo:-18400}],
+  creditCards:[
+    {nome:'Nubank Roxinho',digitos:'4242',total:2840,categorias:[{nome:'Alimentação',valor:920},{nome:'Lazer',valor:652},{nome:'Saúde',valor:800},{nome:'Outros',valor:468}],transacoes:[{descricao:'Supermercado Extra',valor:843,data:'12 abr'},{descricao:'iFood',valor:320,data:'10 abr'},{descricao:'Cinema',valor:180,data:'08 abr'},{descricao:'Farmácia',valor:156,data:'06 abr'}]},
+    {nome:'Bradesco Visa',digitos:'8811',total:1640,categorias:[{nome:'Moradia',valor:462},{nome:'Transporte',valor:380},{nome:'Saúde',valor:420},{nome:'Outros',valor:378}],transacoes:[{descricao:'IPTU parcela 4/10',valor:462,data:'07 abr'},{descricao:'Combustível',valor:380,data:'18 abr'},{descricao:'Plano de Saúde',valor:420,data:'01 abr'}]},
+  ],
+  flow:{economia:3520,caixaLiq:2060,contas:[{nome:'Nubank',tipo:'ativo',entradas:12840,saidas:9780,delta:3060,saldo:10400},{nome:'Bradesco',tipo:'ativo',entradas:2440,saidas:1320,delta:1120,saldo:16120},{nome:'Nubank CC',tipo:'passivo',entradas:1800,saidas:2400,delta:-600,saldo:-1800}],waterfall:[{label:'Receitas',valor:12840,tipo:'income'},{label:'Moradia',valor:-3262,tipo:'expense'},{label:'Alimentação',valor:-1864,tipo:'expense'},{label:'Transporte',valor:-1119,tipo:'expense'},{label:'Saúde',valor:-746,tipo:'expense'},{label:'Lazer',valor:-652,tipo:'expense'},{label:'Educação',valor:-559,tipo:'expense'},{label:'Outros',valor:-1118,tipo:'expense'},{label:'Saldo',valor:3520,tipo:'result'}]},
+  yearMatrix:{months:['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],categories:['Moradia','Alimentação','Transporte','Saúde','Lazer','Educação','Outros'],data:[[3200,3200,3200,3262,0,0,0,0,0,0,0,0],[1700,1820,1950,1864,0,0,0,0,0,0,0,0],[900,1050,980,1119,0,0,0,0,0,0,0,0],[400,800,600,746,0,0,0,0,0,0,0,0],[500,450,700,652,0,0,0,0,0,0,0,0],[600,600,600,559,0,0,0,0,0,0,0,0],[900,750,1100,1118,0,0,0,0,0,0,0,0]]},
+};
+window.THEME={
+  dark:{bg:{page:'#0d0f1a',sidebar:'#080a14',card:'#12152a',cardAlt:'#181c32',hover:'#1e2240'},border:{default:'#252848',subtle:'#1a1d38'},text:{primary:'#e0e6ff',secondary:'#8b94c4',muted:'#555c88',disabled:'#2e3360'},accent:{primary:'#6366f1',secondary:'#8b5cf6',primaryMuted:'rgba(99,102,241,.14)'},feedback:{positive:'#34d399',positiveMuted:'rgba(52,211,153,.12)',negative:'#f87171',negativeMuted:'rgba(248,113,113,.12)',warning:'#fbbf24',warningMuted:'rgba(251,191,36,.12)'},chart:{colors:['#6366f1','#a78bfa','#34d399','#fbbf24','#f87171','#60a5fa','#e879f9']},isDark:true},
+  light:{bg:{page:'#f0f1ff',sidebar:'#ffffff',card:'#ffffff',cardAlt:'#f4f5ff',hover:'#eaebff'},border:{default:'#dde0f5',subtle:'#ebebfb'},text:{primary:'#18193a',secondary:'#4a5280',muted:'#7880aa',disabled:'#b8bcd8'},accent:{primary:'#6366f1',secondary:'#8b5cf6',primaryMuted:'rgba(99,102,241,.08)'},feedback:{positive:'#059669',positiveMuted:'rgba(5,150,105,.08)',negative:'#dc2626',negativeMuted:'rgba(220,38,38,.08)',warning:'#d97706',warningMuted:'rgba(217,119,6,.08)'},chart:{colors:['#6366f1','#8b5cf6','#059669','#d97706','#dc2626','#2563eb','#db2777']},isDark:false},
+  fonts:{jakarta:{body:"'Plus Jakarta Sans',system-ui,sans-serif",display:"'Instrument Serif',Georgia,serif"},classic:{body:"'Inter',system-ui,sans-serif",display:"'Playfair Display',Georgia,serif"},grotesk:{body:"'Space Grotesk',system-ui,sans-serif",display:"'DM Serif Display',Georgia,serif"}},
+  radius:{rounded:{xs:6,sm:10,md:16,lg:22},sharp:{xs:2,sm:3,md:4,lg:6},compact:{xs:4,sm:6,md:10,lg:14}},
+  padding:{rounded:{card:24,inner:20},sharp:{card:24,inner:20},compact:{card:16,inner:14}},
+};
+</script>
+
+<!-- ── Shared Components ── -->
+<script type="text/babel">
+const {createContext,useContext,useState,useEffect}=React;
+const ThemeCtx=createContext(null);
+const useTheme=()=>useContext(ThemeCtx);
+function ThemeProvider({theme,variation,fontPair,children}){
+  const t=window.THEME[theme],r=window.THEME.radius[variation],p=window.THEME.padding[variation],f=window.THEME.fonts[fontPair];
+  return <ThemeCtx.Provider value={{theme,t,r,p,f,variation,isDark:t.isDark}}>{children}</ThemeCtx.Provider>;
+}
+function Sparkline({data,color,height=38}){
+  if(!data||data.length<2)return null;
+  const max=Math.max(...data),min=Math.min(...data),range=max-min||1,W=100,H=height;
+  const pts=data.map((v,i)=>[(i/(data.length-1))*W,H-((v-min)/range)*(H-6)-3]);
+  const line=pts.map(([x,y],i)=>`${i===0?'M':'L'}${x},${y}`).join(' ');
+  const area=`${line} L${W},${H} L0,${H} Z`;
+  const uid=`sg${color.replace(/[^a-z0-9]/gi,'')}`;
+  return <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height,display:'block'}} preserveAspectRatio="none">
+    <defs><linearGradient id={uid} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.28"/><stop offset="100%" stopColor={color} stopOpacity="0"/></linearGradient></defs>
+    <path d={area} fill={`url(#${uid})`}/><path d={line} stroke={color} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>;
+}
+function KpiCard({label,value,color,spark,emphasized,note}){
+  const {t,r,p,f,variation}=useTheme();
+  return <div style={{background:emphasized&&variation==='rounded'?`linear-gradient(145deg,${color}18 0%,${t.bg.card} 65%)`:t.bg.card,border:emphasized?`1px solid ${color}50`:`1px solid ${t.border.default}`,borderRadius:r.md,padding:p.card,position:'relative',overflow:'hidden'}}>
+    {emphasized&&<div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${color},${color}00)`}}/>}
+    <div style={{fontFamily:f.body,fontSize:10,color:t.text.muted,textTransform:'uppercase',letterSpacing:'0.14em',marginBottom:10}}>{label}</div>
+    <div style={{fontFamily:f.display,fontSize:emphasized?34:26,color:emphasized?color:t.text.primary,lineHeight:1,letterSpacing:'-0.02em'}}>{window.BRL(value)}</div>
+    {note&&<div style={{fontFamily:f.body,fontSize:11,color:t.text.muted,marginTop:5}}>{note}</div>}
+    {spark&&<div style={{marginTop:12}}><Sparkline data={spark} color={emphasized?color:t.text.disabled} height={36}/></div>}
+  </div>;
+}
+function Card({children,title,action,style:sx}){
+  const {t,r,p,f}=useTheme();
+  return <div style={{background:t.bg.card,border:`1px solid ${t.border.default}`,borderRadius:r.md,padding:p.card,...sx}}>
+    {title&&<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
+      <span style={{fontFamily:f.body,fontSize:10,color:t.text.muted,textTransform:'uppercase',letterSpacing:'0.14em'}}>{title}</span>{action}
+    </div>}
+    {children}
+  </div>;
+}
+const NAV_ITEMS=[{id:'resumo',label:'Resumo'},{id:'mes',label:'Mês'},{id:'ano',label:'Ano'},{id:'fluxo',label:'Fluxo'},{id:'orcamento',label:'Orçamento'},{id:'patrimonio',label:'Patrimônio'}];
+function Sidebar({active,onNav,onThemeToggle}){
+  const {t,r,f,isDark}=useTheme();
+  return <aside style={{width:208,minWidth:208,height:'100vh',background:t.bg.sidebar,borderRight:`1px solid ${t.border.default}`,display:'flex',flexDirection:'column',flexShrink:0}}>
+    <div style={{padding:'26px 20px 22px',borderBottom:`1px solid ${t.border.subtle}`}}>
+      <div style={{fontFamily:f.display,fontSize:20,color:t.text.primary,lineHeight:1.15}}>Finanças</div>
+      <div style={{fontFamily:f.display,fontStyle:'italic',fontSize:20,color:t.accent.primary,lineHeight:1.15}}>Pessoais</div>
+      <div style={{fontFamily:f.body,fontSize:10,color:t.text.disabled,letterSpacing:'0.18em',textTransform:'uppercase',marginTop:8}}>hledger · família</div>
+    </div>
+    <nav style={{flex:1,padding:'14px 10px',overflowY:'auto'}}>
+      {NAV_ITEMS.map(item=>{const a=active===item.id;return <button key={item.id} onClick={()=>onNav(item.id)} style={{width:'100%',display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:r.sm,border:'none',marginBottom:2,transition:'all 0.12s',background:a?t.accent.primaryMuted:'transparent',color:a?t.accent.primary:t.text.secondary,fontFamily:f.body,fontSize:13,fontWeight:a?600:400,textAlign:'left'}}
+        onMouseEnter={e=>{if(!a){e.currentTarget.style.background=t.bg.hover;e.currentTarget.style.color=t.text.primary;}}}
+        onMouseLeave={e=>{if(!a){e.currentTarget.style.background='transparent';e.currentTarget.style.color=t.text.secondary;}}}>
+        <div style={{width:3,height:16,background:a?t.accent.primary:'transparent',borderRadius:2,flexShrink:0}}/>{item.label}
+      </button>;})}
+    </nav>
+    <div style={{padding:'14px 10px',borderTop:`1px solid ${t.border.subtle}`}}>
+      <button onClick={onThemeToggle} style={{width:'100%',padding:'8px 12px',borderRadius:r.sm,border:`1px solid ${t.border.default}`,background:'transparent',color:t.text.muted,fontFamily:f.body,fontSize:12,display:'flex',alignItems:'center',gap:8}}>
+        {isDark?'☀ Modo claro':'◑ Modo escuro'}
+      </button>
+    </div>
+  </aside>;
+}
+const MONTH_LABELS=['Jan 2025','Fev 2025','Mar 2025','Abr 2025'];
+const TAB_LABELS={resumo:'Resumo',mes:'Mês',ano:'Ano',fluxo:'Fluxo',orcamento:'Orçamento',patrimonio:'Patrimônio'};
+function TopBar({active,monthIdx,onMonthChange}){
+  const {t,r,f}=useTheme();
+  const bs={width:28,height:28,borderRadius:r.xs,border:`1px solid ${t.border.default}`,background:'transparent',color:t.text.secondary,fontSize:16,display:'flex',alignItems:'center',justifyContent:'center'};
+  return <header style={{height:56,borderBottom:`1px solid ${t.border.default}`,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 24px',background:t.bg.card,flexShrink:0}}>
+    <span style={{fontFamily:f.body,fontSize:14,fontWeight:600,color:t.text.primary}}>{TAB_LABELS[active]}</span>
+    <div style={{display:'flex',alignItems:'center',gap:6}}>
+      <button onClick={()=>onMonthChange(Math.max(0,monthIdx-1))} style={bs}>‹</button>
+      <span style={{fontFamily:f.body,fontSize:13,color:t.text.primary,minWidth:76,textAlign:'center'}}>{MONTH_LABELS[monthIdx]||'Abr 2025'}</span>
+      <button onClick={()=>onMonthChange(Math.min(MONTH_LABELS.length-1,monthIdx+1))} style={bs}>›</button>
+    </div>
+  </header>;
+}
+const MOBILE_TABS=[{id:'resumo',label:'Resumo'},{id:'mes',label:'Mês'},{id:'ano',label:'Ano'},{id:'orcamento',label:'Budget'},{id:'patrimonio',label:'Net Worth'}];
+function BottomNav({active,onNav}){
+  const {t,f}=useTheme();
+  return <nav style={{position:'fixed',bottom:0,left:0,right:0,height:58,background:t.bg.sidebar,borderTop:`1px solid ${t.border.default}`,display:'flex',zIndex:200}}>
+    {MOBILE_TABS.map(item=>{const a=active===item.id;return <button key={item.id} onClick={()=>onNav(item.id)} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3,border:'none',background:'transparent',color:a?t.accent.primary:t.text.muted,fontFamily:f.body,fontSize:9.5,fontWeight:a?600:400}}>
+      <div style={{width:18,height:2,borderRadius:1,background:a?t.accent.primary:'transparent',marginBottom:2}}/>{item.label}
+    </button>;})}
+  </nav>;
+}
+function TweaksPanel({open,theme,variation,fontPair,onTheme,onVariation,onFont}){
+  const {t,r,f}=useTheme();
+  if(!open)return null;
+  function Chip({label,active,onClick}){return <button onClick={onClick} style={{padding:'5px 11px',borderRadius:r.xs,border:`1px solid ${active?t.accent.primary:t.border.default}`,background:active?t.accent.primaryMuted:'transparent',color:active?t.accent.primary:t.text.secondary,fontFamily:f.body,fontSize:12}}>{label}</button>;}
+  const sl={fontFamily:f.body,fontSize:10,color:t.text.muted,textTransform:'uppercase',letterSpacing:'0.12em',marginBottom:8,marginTop:14,display:'block'};
+  return <div style={{position:'fixed',bottom:24,right:24,background:t.bg.card,border:`1px solid ${t.border.default}`,borderRadius:r.md,padding:20,width:260,zIndex:1000,boxShadow:`0 28px 64px ${t.isDark?'rgba(0,0,0,.7)':'rgba(10,12,60,.18)'}`}}>
+    <div style={{fontFamily:f.display,fontSize:17,color:t.text.primary,marginBottom:4}}>Tweaks</div>
+    <span style={{...sl,marginTop:10}}>Tema</span>
+    <div style={{display:'flex',gap:6}}><Chip label="Escuro" active={theme==='dark'} onClick={()=>onTheme('dark')}/><Chip label="Claro" active={theme==='light'} onClick={()=>onTheme('light')}/></div>
+    <span style={sl}>Variação</span>
+    <div style={{display:'flex',gap:6}}><Chip label="Rounded" active={variation==='rounded'} onClick={()=>onVariation('rounded')}/><Chip label="Sharp" active={variation==='sharp'} onClick={()=>onVariation('sharp')}/><Chip label="Compact" active={variation==='compact'} onClick={()=>onVariation('compact')}/></div>
+    <span style={sl}>Tipografia</span>
+    <div style={{display:'flex',gap:6}}><Chip label="Jakarta" active={fontPair==='jakarta'} onClick={()=>onFont('jakarta')}/><Chip label="Classic" active={fontPair==='classic'} onClick={()=>onFont('classic')}/><Chip label="Grotesk" active={fontPair==='grotesk'} onClick={()=>onFont('grotesk')}/></div>
+  </div>;
+}
+Object.assign(window,{ThemeCtx,useTheme,ThemeProvider,Sparkline,KpiCard,Card,Sidebar,TopBar,BottomNav,TweaksPanel});
+</script>
+
+<!-- ── Tabs ── -->
+<script type="text/babel">
+const {useState:useS}=React;
+const {useTheme,KpiCard,Card,Sparkline}=window;
+
+/* ── Resumo ── */
+function TabResumo(){
+  const {t,r,p,f}=window.useTheme();const d=window.MOCK;
+  const total=d.categories.reduce((s,c)=>s+c.valor,0);const C=t.chart.colors;
+  return <div style={{display:'grid',gap:16}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14}}>
+      <KpiCard label="Receitas"  value={d.summary.receitas} color={t.feedback.positive} spark={d.sparklines.receitas} note="↑ 8% vs mês anterior"/>
+      <KpiCard label="Despesas"  value={d.summary.despesas} color={t.feedback.negative} spark={d.sparklines.despesas} note="↑ 2% vs mês anterior"/>
+      <KpiCard label="Saldo"     value={d.summary.saldo}    color={t.accent.primary}    spark={d.sparklines.saldo}    emphasized note="Melhor em 4 meses"/>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1.4fr 1fr',gap:14}}>
+      <Card title="Despesas por categoria">
+        {d.categories.map((cat,i)=>{const pct=(cat.valor/total)*100;const col=C[i%C.length];return <div key={cat.nome} style={{marginBottom:18}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:6}}>
+            <div style={{display:'flex',alignItems:'center',gap:8}}><div style={{width:8,height:8,borderRadius:2,background:col,flexShrink:0}}/><span style={{fontFamily:f.body,fontSize:13,color:t.text.secondary}}>{cat.nome}</span></div>
+            <div style={{display:'flex',alignItems:'baseline',gap:8}}><span style={{fontFamily:f.body,fontSize:11,color:t.text.muted}}>{window.PCT(pct)}</span><span style={{fontFamily:f.display,fontSize:14,color:t.text.primary}}>{window.BRL(cat.valor)}</span></div>
+          </div>
+          <div style={{height:5,background:t.border.default,borderRadius:999,overflow:'hidden'}}><div style={{height:'100%',width:`${pct}%`,background:col,borderRadius:999,transition:'width .7s ease'}}/></div>
+        </div>;})}
+        <div style={{marginTop:4,height:8,borderRadius:999,display:'flex',overflow:'hidden',gap:1}}>
+          {d.categories.map((c,i)=><div key={c.nome} style={{flex:c.valor,background:C[i%C.length],opacity:.85}} title={c.nome}/>)}
+        </div>
+      </Card>
+      <Card title="Maiores gastos">
+        {d.topExpenses.map((tx,i)=><div key={i} style={{padding:'13px 0',borderBottom:i<d.topExpenses.length-1?`1px solid ${t.border.subtle}`:'none'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8}}><span style={{fontFamily:f.body,fontSize:13,color:t.text.primary,lineHeight:1.3,flex:1}}>{tx.descricao}</span><span style={{fontFamily:f.display,fontSize:15,color:t.text.primary,whiteSpace:'nowrap'}}>{window.BRL(tx.valor)}</span></div>
+          <div style={{fontFamily:f.body,fontSize:10,color:t.text.muted,marginTop:3}}>{tx.categoria} · {tx.data}</div>
+        </div>)}
+      </Card>
+    </div>
+  </div>;
+}
+
+/* ── Mês ── */
+function PrincipleBar({label,target,realized,amount,color}){
+  const {t,r,f}=window.useTheme();
+  const ratio=target>0?Math.min(realized/target,1.3):0;
+  const over=realized>target;
+  return <div style={{display:'grid',gridTemplateColumns:'1fr 48px 48px 90px 120px',gap:10,alignItems:'center',padding:'10px 0',borderBottom:`1px solid ${t.border.subtle}`}}>
+    <span style={{fontFamily:f.body,fontSize:13,color:t.text.secondary}}>{label}</span>
+    <span style={{fontFamily:f.body,fontSize:12,color:t.text.disabled,textAlign:'right'}}>{window.PCT(target)}</span>
+    <span style={{fontFamily:f.body,fontSize:12,color:over?t.text.primary:t.text.secondary,textAlign:'right',fontWeight:over?600:400}}>{window.PCT(realized)}</span>
+    <div style={{height:5,background:t.border.default,borderRadius:999,overflow:'hidden'}}>
+      <div style={{height:'100%',width:`${Math.min(ratio*100,100)}%`,background:color,borderRadius:999,opacity:.75,transition:'width .6s ease'}}/>
+    </div>
+    <span style={{fontFamily:f.display,fontSize:13,color:t.text.muted,textAlign:'right'}}>{window.BRL(amount)}</span>
+  </div>;
+}
+function TabMes(){
+  const {t,r,p,f}=window.useTheme();const d=window.MOCK;
+  const [exp,setExp]=useS(false);
+  const total=d.categories.reduce((s,c)=>s+c.valor,0);const C=t.chart.colors;
+  const savRate=Math.round((d.summary.saldo/d.summary.receitas)*100);
+  return <div style={{display:'grid',gap:16}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14}}>
+      <KpiCard label="Receitas"  value={d.summary.receitas} color={t.feedback.positive}/>
+      <KpiCard label="Despesas"  value={d.summary.despesas} color={t.feedback.negative}/>
+      <KpiCard label="Resultado" value={d.summary.saldo}    color={t.accent.primary} emphasized note={`Taxa de poupança ${savRate}%`}/>
+    </div>
+    <Card title="Receitas" action={<button onClick={()=>setExp(e=>!e)} style={{fontFamily:f.body,fontSize:11,color:t.accent.primary,background:'none',border:'none'}}>{exp?'Ocultar':'Detalhes'}</button>}>
+      <div style={{display:'flex',gap:20,flexWrap:'wrap'}}>
+        {d.receitas.map((rx,i)=><div key={i}><div style={{fontFamily:f.body,fontSize:11,color:t.text.muted,marginBottom:2}}>{rx.nome}</div><div style={{fontFamily:f.display,fontSize:22,color:t.feedback.positive}}>{window.BRL(rx.valor)}</div>{exp&&<div style={{fontFamily:f.body,fontSize:10,color:t.text.disabled,marginTop:2}}>{rx.conta}</div>}</div>)}
+      </div>
+    </Card>
+    <Card title="Princípios · meta vs realizado">
+      <div style={{display:'grid',gridTemplateColumns:'1fr 48px 48px 90px 120px',gap:10,paddingBottom:8,marginBottom:4,borderBottom:`1px solid ${t.border.default}`}}>
+        {['Princípio','Meta','Real.','','Valor'].map((h,i)=><span key={i} style={{fontFamily:f.body,fontSize:10,color:t.text.disabled,textTransform:'uppercase',letterSpacing:'0.1em',textAlign:i>=1?'right':'left'}}>{h}</span>)}
+      </div>
+      {d.principles.map((pr,i)=><PrincipleBar key={pr.id} label={pr.label} target={pr.target} realized={pr.realized} amount={pr.amount} color={t.chart.colors[i%t.chart.colors.length]}/>)}
+    </Card>
+    <Card title="Despesas por categoria">
+      {d.categories.map((cat,i)=>{const pct=(cat.valor/total)*100;const col=C[i%C.length];return <div key={cat.nome} style={{display:'grid',gridTemplateColumns:'130px 1fr 80px',gap:12,alignItems:'center',marginBottom:12}}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}><div style={{width:8,height:8,borderRadius:2,background:col,flexShrink:0}}/><span style={{fontFamily:f.body,fontSize:13,color:t.text.secondary}}>{cat.nome}</span></div>
+        <div style={{height:6,background:t.border.default,borderRadius:999,overflow:'hidden'}}><div style={{height:'100%',width:`${pct}%`,background:col,borderRadius:999}}/></div>
+        <div style={{display:'flex',justifyContent:'space-between'}}><span style={{fontFamily:f.body,fontSize:11,color:t.text.muted}}>{window.PCT(pct)}</span><span style={{fontFamily:f.display,fontSize:13,color:t.text.primary}}>{window.BRL(cat.valor)}</span></div>
+      </div>;})}
+    </Card>
+    <Card title="Despesas por cartão de crédito" action={<span style={{fontFamily:f.body,fontSize:11,color:t.text.muted}}>clique para detalhar</span>}>
+      <div style={{display:'grid',gap:10}}>
+        {window.MOCK.creditCards.map((cc,i)=><CartaoCard key={i} cartao={cc}/>)}
+      </div>
+      <div style={{marginTop:14,paddingTop:12,borderTop:`1px solid ${t.border.subtle}`,display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
+        <span style={{fontFamily:f.body,fontSize:12,color:t.text.muted}}>Total em cartões</span>
+        <span style={{fontFamily:f.display,fontSize:18,color:t.text.primary}}>{window.BRL(window.MOCK.creditCards.reduce((s,c)=>s+c.total,0))}</span>
+      </div>
+    </Card>
+  </div>;
+}
+
+/* ── Credit card section (used in Mês) ── */
+function CartaoCard({cartao}){
+  const {t,r,p,f}=window.useTheme();const [open,setOpen]=useS(false);
+  const C=t.chart.colors;const total=cartao.total;
+  return <div style={{background:t.bg.cardAlt,border:`1px solid ${t.border.default}`,borderRadius:r.md,overflow:'hidden'}}>
+    {/* Header row */}
+    <button onClick={()=>setOpen(o=>!o)} style={{width:'100%',display:'grid',gridTemplateColumns:'auto 1fr auto auto',gap:12,alignItems:'center',padding:`${p.inner}px`,background:'transparent',border:'none',textAlign:'left',cursor:'pointer'}}>
+      {/* Card icon */}
+      <div style={{width:36,height:24,borderRadius:4,background:`linear-gradient(135deg,${t.accent.primary},${t.accent.secondary})`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <span style={{fontFamily:f.body,fontSize:9,color:'#fff',letterSpacing:'0.05em'}}>••{cartao.digitos}</span>
+      </div>
+      <span style={{fontFamily:f.body,fontSize:13,color:t.text.primary,fontWeight:500}}>{cartao.nome}</span>
+      <span style={{fontFamily:f.display,fontSize:18,color:t.text.primary}}>{window.BRL(total)}</span>
+      <span style={{fontFamily:f.body,fontSize:12,color:t.text.muted,marginLeft:4}}>{open?'▴':'▾'}</span>
+    </button>
+    {/* Mini stacked bar */}
+    <div style={{height:4,display:'flex',overflow:'hidden',margin:`0 ${p.inner}px 14px`}}>
+      {cartao.categorias.map((c,i)=><div key={i} style={{flex:c.valor,background:C[i%C.length],opacity:.8}} title={`${c.nome}: ${window.BRL(c.valor)}`}/>)}
+    </div>
+    {/* Category mini bars */}
+    <div style={{padding:`0 ${p.inner}px`,marginBottom:14,display:'grid',gridTemplateColumns:'1fr 1fr',gap:'6px 16px'}}>
+      {cartao.categorias.map((c,i)=><div key={i} style={{display:'flex',alignItems:'center',gap:6}}>
+        <div style={{width:6,height:6,borderRadius:1,background:C[i%C.length],flexShrink:0}}/>
+        <span style={{fontFamily:f.body,fontSize:11,color:t.text.muted,flex:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.nome}</span>
+        <span style={{fontFamily:f.body,fontSize:11,color:t.text.secondary}}>{window.BRL(c.valor)}</span>
+      </div>)}
+    </div>
+    {/* Expanded transactions */}
+    {open&&<div style={{borderTop:`1px solid ${t.border.subtle}`,padding:`12px ${p.inner}px`}}>
+      {cartao.transacoes.map((tx,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',padding:'8px 0',borderBottom:i<cartao.transacoes.length-1?`1px solid ${t.border.subtle}`:'none'}}>
+        <span style={{fontFamily:f.body,fontSize:12,color:t.text.secondary}}>{tx.descricao}</span>
+        <div style={{display:'flex',gap:10,alignItems:'baseline',flexShrink:0,marginLeft:12}}>
+          <span style={{fontFamily:f.body,fontSize:10,color:t.text.disabled}}>{tx.data}</span>
+          <span style={{fontFamily:f.display,fontSize:13,color:t.text.primary}}>{window.BRL(tx.valor)}</span>
+        </div>
+      </div>)}
+    </div>}
+  </div>;
+}
+function TabAno(){
+  const {t,r,p,f,isDark}=window.useTheme();const [year,setYear]=useS(2025);const [hov,setHov]=useS(null);const mx=window.MOCK.yearMatrix;
+  const catMax=mx.data.map(row=>Math.max(...row,1));
+  const mTotals=mx.months.map((_,mi)=>mx.data.reduce((s,row)=>s+row[mi],0));const maxT=Math.max(...mTotals,1);
+  function cellBg(val,ci){
+    if(!val)return t.bg.cardAlt;
+    const intensity=val/catMax[ci];
+    if(isDark){
+      // Lighter violet (#a78bfa) reads far better on dark surfaces:
+      // low → faint tint, high → vivid but not muddy
+      return `rgba(167,139,250,${0.06+intensity*0.72})`;
+    }
+    return `rgba(79,82,221,${0.08+intensity*.82})`;
+  }
+  function cellTx(val,ci){
+    if(!val)return t.text.disabled;
+    const intensity=val/catMax[ci];
+    if(isDark) return intensity>.45?'#ede9fe':t.text.muted;
+    return intensity>.45?'#ffffff':t.text.secondary;
+  }
+  return <div style={{display:'grid',gap:16}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+      <span style={{fontFamily:f.body,fontSize:10,color:t.text.muted,textTransform:'uppercase',letterSpacing:'0.14em'}}>Ano · {year}</span>
+      <div style={{display:'flex',gap:4}}>{[2023,2024,2025].map(y=><button key={y} onClick={()=>setYear(y)} style={{padding:'5px 10px',borderRadius:r.xs,border:`1px solid ${y===year?t.accent.primary:t.border.default}`,background:y===year?t.accent.primaryMuted:'transparent',color:y===year?t.accent.primary:t.text.muted,fontFamily:f.body,fontSize:12}}>{y}</button>)}</div>
+    </div>
+    <Card style={{overflowX:'auto',padding:p.card}}>
+      <div style={{minWidth:620}}>
+        <div style={{display:'grid',gridTemplateColumns:'110px repeat(12,1fr)',gap:3,marginBottom:4}}>
+          <div/>{mx.months.map(m=><div key={m} style={{fontFamily:f.body,fontSize:10,color:t.text.muted,textAlign:'center',textTransform:'uppercase',letterSpacing:'0.08em'}}>{m}</div>)}
+        </div>
+        {mx.categories.map((cat,ci)=><div key={cat} style={{display:'grid',gridTemplateColumns:'110px repeat(12,1fr)',gap:3,marginBottom:3}}>
+          <div style={{fontFamily:f.body,fontSize:12,color:t.text.secondary,display:'flex',alignItems:'center',paddingRight:8}}>{cat}</div>
+          {mx.data[ci].map((val,mi)=>{const isH=hov&&hov[0]===ci&&hov[1]===mi;return <div key={mi} onMouseEnter={()=>setHov([ci,mi])} onMouseLeave={()=>setHov(null)} title={val>0?`${cat} · ${mx.months[mi]}: ${window.BRL(val)}`:'—'} style={{height:36,borderRadius:r.xs,background:cellBg(val,ci),border:isH?`1px solid ${t.accent.primary}`:`1px solid ${t.border.subtle}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:val>0?'pointer':'default'}}>
+            {val>0&&<span style={{fontFamily:f.body,fontSize:9.5,color:cellTx(val,ci),fontWeight:500}}>{(val/1000).toFixed(1)}k</span>}
+          </div>;})}
+        </div>)}
+        <div style={{display:'grid',gridTemplateColumns:'110px repeat(12,1fr)',gap:3,marginTop:8}}>
+          <div style={{fontFamily:f.body,fontSize:10,color:t.text.muted,display:'flex',alignItems:'center',textTransform:'uppercase',letterSpacing:'0.08em'}}>Total</div>
+          {mTotals.map((tot,mi)=><div key={mi} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
+            <div style={{width:'100%',height:24,display:'flex',alignItems:'flex-end',justifyContent:'center'}}><div style={{width:'70%',height:tot>0?`${(tot/maxT)*100}%`:'2px',background:t.accent.primary,opacity:.6,borderRadius:`${r.xs}px ${r.xs}px 0 0`,minHeight:2}}/></div>
+            {tot>0&&<span style={{fontFamily:f.body,fontSize:9,color:t.text.muted}}>{(tot/1000).toFixed(1)}k</span>}
+          </div>)}
+        </div>
+      </div>
+    </Card>
+    <div style={{display:'flex',alignItems:'center',gap:8}}>
+      <span style={{fontFamily:f.body,fontSize:10,color:t.text.disabled}}>Intensidade por categoria:</span>
+      {[.15,.35,.55,.75,1].map(v=><div key={v} style={{width:20,height:12,borderRadius:r.xs,background:isDark?`rgba(167,139,250,${0.06+v*.72})`:`rgba(79,82,221,${0.08+v*.82})`}}/>)}
+      <span style={{fontFamily:f.body,fontSize:10,color:t.text.disabled}}>máx da categoria</span>
+    </div>
+  </div>;
+}
+
+/* ── Fluxo ── */
+function TabFluxo(){
+  const {t,r,p,f}=window.useTheme();const d=window.MOCK.flow;
+  const maxV=d.waterfall[0]?.valor||1;let running=0;
+  const bars=d.waterfall.map(item=>{
+    const isR=item.tipo==='result',bw=Math.abs(item.valor)/maxV*100;
+    const ofs=isR||item.tipo==='income'?0:((running+item.valor)/maxV*100);
+    const bc=item.tipo==='income'?t.feedback.positive:item.tipo==='result'?t.accent.primary:t.feedback.negative;
+    const s=running;if(!isR)running+=item.valor;
+    return{...item,bw,ofs:Math.max(ofs,0),bc};
+  });
+  return <div style={{display:'grid',gap:16}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14}}>
+      <KpiCard label="Economia contábil" value={d.economia}  color={t.accent.primary} emphasized/>
+      <KpiCard label="Sobrou em caixa"   value={d.caixaLiq} color={t.feedback.positive}/>
+      <KpiCard label="Total despesas"    value={window.MOCK.summary.despesas} color={t.feedback.negative}/>
+    </div>
+    <Card title="Fluxo mensal · receita → saldo">
+      <div style={{display:'flex',flexDirection:'column',gap:6,paddingTop:4}}>
+        {bars.map((bar,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'110px 1fr 90px',gap:10,alignItems:'center'}}>
+          <span style={{fontFamily:f.body,fontSize:12,color:t.text.secondary,textAlign:'right'}}>{bar.label}</span>
+          <div style={{position:'relative',height:24,background:t.bg.cardAlt,borderRadius:r.xs,overflow:'hidden'}}>
+            <div style={{position:'absolute',left:bar.tipo==='income'||bar.tipo==='result'?0:`${bar.ofs}%`,top:0,height:'100%',width:`${bar.bw}%`,background:bar.bc,opacity:bar.tipo==='result'?1:.8,borderRadius:r.xs,transition:'width .7s ease'}}/>
+          </div>
+          <span style={{fontFamily:f.display,fontSize:13,color:bar.bc,textAlign:'right'}}>{bar.valor<0?`−${window.BRL(Math.abs(bar.valor))}`:window.BRL(bar.valor)}</span>
+        </div>)}
+      </div>
+      <div style={{marginTop:16,paddingTop:14,borderTop:`1px solid ${t.border.subtle}`,fontFamily:f.body,fontSize:11,color:t.text.muted,lineHeight:1.6}}>
+        Receitas <strong style={{color:t.feedback.positive}}>{window.BRL(d.waterfall[0]?.valor)}</strong> menos despesas resultam em saldo de <strong style={{color:t.accent.primary}}>{window.BRL(d.economia)}</strong>.
+      </div>
+    </Card>
+    <div>
+      <div style={{fontFamily:f.body,fontSize:10,color:t.text.muted,textTransform:'uppercase',letterSpacing:'0.14em',marginBottom:12}}>Contas</div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12}}>
+        {d.contas.map((conta,i)=><div key={i} style={{background:t.bg.card,border:`1px solid ${t.border.default}`,borderRadius:r.md,padding:p.card}}>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:14}}>
+            <div><div style={{fontFamily:f.body,fontSize:12,color:t.text.secondary}}>{conta.nome}</div><div style={{fontFamily:f.body,fontSize:10,color:t.text.disabled,textTransform:'uppercase',letterSpacing:'0.1em',marginTop:2}}>{conta.tipo}</div></div>
+            <div style={{fontFamily:f.display,fontSize:20,color:conta.delta>=0?t.feedback.positive:t.feedback.negative}}>{conta.delta>=0?'+':''}{window.BRL(conta.delta)}</div>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+            <div><div style={{fontFamily:f.body,fontSize:9,color:t.text.disabled,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:3}}>Entradas</div><div style={{fontFamily:f.body,fontSize:13,color:t.feedback.positive}}>{window.BRL(conta.entradas)}</div></div>
+            <div><div style={{fontFamily:f.body,fontSize:9,color:t.text.disabled,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:3}}>Saídas</div><div style={{fontFamily:f.body,fontSize:13,color:t.feedback.negative}}>{window.BRL(conta.saidas)}</div></div>
+          </div>
+          <div style={{marginTop:12,paddingTop:10,borderTop:`1px solid ${t.border.subtle}`,fontFamily:f.body,fontSize:11,color:t.text.muted}}>Saldo final <strong style={{color:t.text.primary}}>{window.BRL(conta.saldo)}</strong></div>
+        </div>)}
+      </div>
+    </div>
+  </div>;
+}
+
+/* ── Orçamento ── */
+function TabOrcamento(){
+  const {t,r,p,f}=window.useTheme();const d=window.MOCK.budget;const C=t.chart.colors;
+  const totO=d.reduce((s,c)=>s+c.orcado,0),totR=d.reduce((s,c)=>s+c.realizado,0),totPct=(totR/totO)*100;
+  return <div style={{display:'grid',gap:16}}>
+    <style>{`
+      .orca-hdr{display:grid;grid-template-columns:140px 1fr 100px 70px 44px;gap:10px;padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid ${t.border.subtle}}
+      .orca-row{display:grid;grid-template-columns:140px 1fr 100px 70px 44px;gap:10px;align-items:center;margin-bottom:12px}
+      @media(max-width:768px){
+        .orca-hdr{display:none}
+        .orca-row{
+          grid-template-columns:1fr auto;
+          grid-template-rows:auto auto auto;
+          grid-template-areas:"name realized" "bar bar" "budgeted pct";
+          column-gap:8px;row-gap:6px;
+          margin-bottom:16px;padding-bottom:14px;
+          border-bottom:1px solid ${t.border.subtle}
+        }
+        .orca-col-name{grid-area:name}
+        .orca-col-bar{grid-area:bar}
+        .orca-col-realized{grid-area:realized;align-self:center}
+        .orca-col-budgeted{grid-area:budgeted}
+        .orca-col-pct{grid-area:pct;text-align:right}
+      }
+    `}</style>
+    <div style={{background:t.bg.card,border:`1px solid ${t.border.default}`,borderRadius:r.md,padding:p.card}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',flexWrap:'wrap',gap:16,marginBottom:20}}>
+        <div>
+          <div style={{fontFamily:f.body,fontSize:10,color:t.text.muted,textTransform:'uppercase',letterSpacing:'0.14em',marginBottom:8}}>Total · orçamento vs realizado</div>
+          <div style={{display:'flex',alignItems:'baseline',gap:12}}>
+            <span style={{fontFamily:f.display,fontSize:36,color:t.text.primary,letterSpacing:'-0.02em'}}>{window.BRL(totR)}</span>
+            <span style={{fontFamily:f.body,fontSize:14,color:t.text.muted}}>de {window.BRL(totO)}</span>
+          </div>
+        </div>
+        <div style={{position:'relative',width:72,height:72}}>
+          <svg viewBox="0 0 72 72" style={{transform:'rotate(-90deg)',width:72,height:72}}>
+            <circle cx="36" cy="36" r="28" fill="none" stroke={t.border.default} strokeWidth="8"/>
+            <circle cx="36" cy="36" r="28" fill="none" stroke={t.accent.primary} strokeWidth="8" strokeDasharray={`${Math.min(totPct,100)/100*175.9} 175.9`} strokeLinecap="round"/>
+          </svg>
+          <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:f.body,fontSize:13,fontWeight:600,color:t.accent.primary}}>{window.PCT(totPct)}</div>
+        </div>
+      </div>
+      <div style={{height:8,background:t.border.default,borderRadius:999,overflow:'hidden'}}><div style={{height:'100%',width:`${Math.min(totPct,100)}%`,background:t.accent.primary,borderRadius:999,transition:'width .7s ease'}}/></div>
+    </div>
+    <Card title="Por categoria">
+      <div className="orca-hdr">
+        {['Categoria','','Realizado','Orçado','%'].map((h,i)=><span key={i} style={{fontFamily:f.body,fontSize:10,color:t.text.disabled,textTransform:'uppercase',letterSpacing:'0.1em',textAlign:i>=2?'right':'left'}}>{h}</span>)}
+      </div>
+      {d.map((cat,i)=>{
+        const pct=(cat.realizado/cat.orcado)*100,ov=cat.realizado>cat.orcado,col=C[i%C.length];
+        const bar=<div style={{height:6,background:t.border.default,borderRadius:999,overflow:'hidden',width:'100%'}}><div style={{height:'100%',width:`${Math.min(pct,100)}%`,background:col,borderRadius:999,opacity:.85,transition:'width .6s ease'}}/></div>;
+        return <div key={cat.nome} className="orca-row">
+          <div className="orca-col-name" style={{display:'flex',alignItems:'center',gap:8}}>
+            <div style={{width:8,height:8,borderRadius:2,background:col,flexShrink:0}}/>
+            <span style={{fontFamily:f.body,fontSize:13,color:t.text.secondary}}>{cat.nome}</span>
+          </div>
+          <div className="orca-col-bar">{bar}</div>
+          <span className="orca-col-realized" style={{fontFamily:f.display,fontSize:13,color:t.text.primary,textAlign:'right'}}>{window.BRL(cat.realizado)}</span>
+          <span className="orca-col-budgeted" style={{fontFamily:f.body,fontSize:12,color:t.text.disabled,textAlign:'left'}}>{window.BRL(cat.orcado)}</span>
+          <span className="orca-col-pct" style={{fontFamily:f.body,fontSize:12,color:ov?t.feedback.negative:t.text.muted,textAlign:'right',fontWeight:ov?600:400}}>{window.PCT(pct)}</span>
+        </div>;
+      })}
+    </Card>
+  </div>;
+}
+
+/* ── Patrimônio ── */
+function SvgAreaChart({data,keys,colors,height=220}){
+  const {t,r,f}=window.useTheme();
+  const W=600,H=height-30,PAD={l:40,r:8,t:8,b:22};
+  const cW=W-PAD.l-PAD.r,cH=H-PAD.t-PAD.b;
+  const allVals=data.flatMap(d=>keys.map(k=>d[k]||0));
+  const yMax=Math.max(...allVals)*1.08,yMin=0;
+  const xStep=cW/(data.length-1);
+  const toX=i=>PAD.l+i*xStep;
+  const toY=v=>PAD.t+cH-(((v-yMin)/(yMax-yMin))*cH);
+  const labelInterval=Math.ceil(data.length/6);
+  return <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height}} preserveAspectRatio="none">
+    <defs>
+      {keys.map((k,ki)=><linearGradient key={k} id={`ac${ki}`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor={colors[ki]} stopOpacity={ki===keys.length-1?.3:.15}/>
+        <stop offset="100%" stopColor={colors[ki]} stopOpacity="0"/>
+      </linearGradient>)}
+    </defs>
+    {/* Y gridlines */}
+    {[0,.25,.5,.75,1].map(f=>{
+      const y=PAD.t+cH*(1-f);
+      return <g key={f}>
+        <line x1={PAD.l} x2={W-PAD.r} y1={y} y2={y} stroke={t.border.subtle} strokeWidth="1"/>
+        <text x={PAD.l-4} y={y+4} textAnchor="end" fontSize="9" fill={t.text.disabled} fontFamily="system-ui">{`${Math.round((yMin+(yMax-yMin)*f)/1000)}k`}</text>
+      </g>;
+    })}
+    {/* Area fills */}
+    {keys.map((k,ki)=>{
+      const pts=data.map((d,i)=>[toX(i),toY(d[k]||0)]);
+      const area=`M${pts[0][0]},${pts[0][1]} ${pts.slice(1).map(([x,y])=>`L${x},${y}`).join(' ')} L${pts[pts.length-1][0]},${PAD.t+cH} L${pts[0][0]},${PAD.t+cH} Z`;
+      return <path key={k} d={area} fill={`url(#ac${ki})`}/>;
+    })}
+    {/* Lines */}
+    {keys.map((k,ki)=>{
+      const pts=data.map((d,i)=>[toX(i),toY(d[k]||0)]);
+      const line=`M${pts[0][0]},${pts[0][1]} ${pts.slice(1).map(([x,y])=>`L${x},${y}`).join(' ')}`;
+      return <path key={k} d={line} stroke={colors[ki]} strokeWidth={ki===keys.length-1?2:1.2} fill="none" strokeOpacity={ki===keys.length-1?1:.6} strokeDasharray={k==='passivos'?'4 2':''}/>;
+    })}
+    {/* X labels */}
+    {data.map((d,i)=>i%labelInterval===0&&<text key={i} x={toX(i)} y={H-2} textAnchor="middle" fontSize="9" fill={t.text.disabled} fontFamily="system-ui">{d.label}</text>)}
+  </svg>;
+}
+
+function TabPatrimonio(){
+  const {t,r,p,f}=window.useTheme();const d=window.MOCK;const nw=d.networth;
+  const latest=nw[nw.length-1],prev=nw[nw.length-2],delta=latest.liquido-prev.liquido;
+  const ativos=d.accounts.filter(a=>a.tipo==='ativo'),passivos=d.accounts.filter(a=>a.tipo==='passivo');
+  const totA=ativos.reduce((s,a)=>s+a.saldo,0),totP=Math.abs(passivos.reduce((s,a)=>s+a.saldo,0));
+  const chartColors=[t.feedback.positive,t.feedback.negative,t.accent.primary];
+  return <div style={{display:'grid',gap:16}}>
+    <div style={{background:`linear-gradient(135deg,${t.accent.primary}18 0%,${t.bg.card} 60%)`,border:`1px solid ${t.accent.primary}44`,borderRadius:r.md,padding:p.card,position:'relative',overflow:'hidden'}}>
+      <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${t.accent.primary},${t.accent.secondary})`}}/>
+      <div style={{fontFamily:f.body,fontSize:10,color:t.text.muted,textTransform:'uppercase',letterSpacing:'0.14em',marginBottom:10}}>Patrimônio líquido</div>
+      <div style={{fontFamily:f.display,fontSize:52,color:t.accent.primary,letterSpacing:'-0.03em',lineHeight:1}}>{window.BRL(latest.liquido)}</div>
+      <div style={{fontFamily:f.body,fontSize:13,color:delta>=0?t.feedback.positive:t.feedback.negative,marginTop:10}}>{delta>=0?'↑':'↓'} {window.BRL(Math.abs(delta))} vs mês anterior</div>
+      <div style={{display:'flex',gap:32,marginTop:20}}>
+        <div><div style={{fontFamily:f.body,fontSize:10,color:t.text.muted,marginBottom:4,textTransform:'uppercase',letterSpacing:'0.1em'}}>Ativos</div><div style={{fontFamily:f.display,fontSize:24,color:t.feedback.positive}}>{window.BRL(totA)}</div></div>
+        <div><div style={{fontFamily:f.body,fontSize:10,color:t.text.muted,marginBottom:4,textTransform:'uppercase',letterSpacing:'0.1em'}}>Passivos</div><div style={{fontFamily:f.display,fontSize:24,color:t.feedback.negative}}>{window.BRL(totP)}</div></div>
+      </div>
+    </div>
+    <Card title="Evolução patrimonial · 24 meses">
+      <SvgAreaChart data={nw} keys={['ativos','passivos','liquido']} colors={chartColors} height={220}/>
+      <div style={{display:'flex',gap:20,marginTop:10,flexWrap:'wrap'}}>
+        {[{c:t.accent.primary,l:'Patrimônio líquido'},{c:t.feedback.positive,l:'Ativos'},{c:t.feedback.negative,l:'Passivos',d:true}].map(({c,l,d})=><div key={l} style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:20,height:2,background:c,opacity:d?.5:1,borderTop:d?`2px dashed ${c}`:'none'}}/><span style={{fontFamily:f.body,fontSize:11,color:t.text.muted}}>{l}</span></div>)}
+      </div>
+    </Card>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+      <Card title="Ativos">
+        {ativos.map((a,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'11px 0',borderBottom:i<ativos.length-1?`1px solid ${t.border.subtle}`:'none'}}><span style={{fontFamily:f.body,fontSize:13,color:t.text.secondary}}>{a.nome}</span><span style={{fontFamily:f.display,fontSize:14,color:t.feedback.positive}}>{window.BRL(a.saldo)}</span></div>)}
+        <div style={{marginTop:14,paddingTop:12,borderTop:`1px solid ${t.border.default}`,display:'flex',justifyContent:'space-between'}}><span style={{fontFamily:f.body,fontSize:12,color:t.text.muted}}>Total ativos</span><span style={{fontFamily:f.display,fontSize:16,color:t.feedback.positive}}>{window.BRL(totA)}</span></div>
+      </Card>
+      <Card title="Passivos">
+        {passivos.map((a,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'11px 0',borderBottom:i<passivos.length-1?`1px solid ${t.border.subtle}`:'none'}}><span style={{fontFamily:f.body,fontSize:13,color:t.text.secondary}}>{a.nome}</span><span style={{fontFamily:f.display,fontSize:14,color:t.feedback.negative}}>{window.BRL(Math.abs(a.saldo))}</span></div>)}
+        <div style={{marginTop:14,paddingTop:12,borderTop:`1px solid ${t.border.default}`,display:'flex',justifyContent:'space-between'}}><span style={{fontFamily:f.body,fontSize:12,color:t.text.muted}}>Total passivos</span><span style={{fontFamily:f.display,fontSize:16,color:t.feedback.negative}}>{window.BRL(totP)}</span></div>
+      </Card>
+    </div>
+  </div>;
+}
+
+Object.assign(window,{TabResumo,TabMes,TabAno,TabFluxo,TabOrcamento,TabPatrimonio});
+</script>
+
+<!-- ── App ── -->
+<script type="text/babel">
+const {useState:useAS,useEffect:useAE}=React;
+const {ThemeProvider,Sidebar,TopBar,BottomNav,TweaksPanel,TabResumo,TabMes,TabAno,TabFluxo,TabOrcamento,TabPatrimonio}=window;
+const TWEAK_DEFAULTS=/*EDITMODE-BEGIN*/{
+  "theme": "light",
+  "variation": "sharp",
+  "fontPair": "grotesk"
+}/*EDITMODE-END*/;
+function App(){
+  const saved=()=>{try{return JSON.parse(localStorage.getItem('fp-tw')||'{}');}catch{return{};}};
+  const [theme,setTheme]=useAS(saved().theme||TWEAK_DEFAULTS.theme);
+  const [variation,setVariation]=useAS(saved().variation||TWEAK_DEFAULTS.variation);
+  const [fontPair,setFontPair]=useAS(saved().fontPair||TWEAK_DEFAULTS.fontPair);
+  const [activeTab,setActiveTab]=useAS(localStorage.getItem('fp-tab')||'resumo');
+  const [monthIdx,setMonthIdx]=useAS(3);
+  const [tweaksOpen,setTweaksOpen]=useAS(false);
+  useAE(()=>{localStorage.setItem('fp-tw',JSON.stringify({theme,variation,fontPair}));},[theme,variation,fontPair]);
+  useAE(()=>{localStorage.setItem('fp-tab',activeTab);},[activeTab]);
+  useAE(()=>{
+    const h=e=>{if(e.data?.type==='__activate_edit_mode')setTweaksOpen(true);if(e.data?.type==='__deactivate_edit_mode')setTweaksOpen(false);};
+    window.addEventListener('message',h);
+    window.parent.postMessage({type:'__edit_mode_available'},'*');
+    return()=>window.removeEventListener('message',h);
+  },[]);
+  const send=(k,v)=>window.parent.postMessage({type:'__edit_mode_set_keys',edits:{[k]:v}},'*');
+  const T=window.THEME[theme];
+  const tabs={resumo:<TabResumo/>,mes:<TabMes/>,ano:<TabAno/>,fluxo:<TabFluxo/>,orcamento:<TabOrcamento/>,patrimonio:<TabPatrimonio/>};
+  return <ThemeProvider theme={theme} variation={variation} fontPair={fontPair}>
+    <style>{`body{background:${T.bg.page}}button{cursor:pointer}::-webkit-scrollbar-thumb{background:${T.border.default}}`}</style>
+    <div style={{display:'flex',height:'100vh',overflow:'hidden'}}>
+      <div id="sb" style={{display:'none'}}><Sidebar active={activeTab} onNav={setActiveTab} onThemeToggle={()=>{const v=theme==='dark'?'light':'dark';setTheme(v);send('theme',v);}}/></div>
+      <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0,overflow:'hidden'}}>
+        <TopBar active={activeTab} monthIdx={monthIdx} onMonthChange={setMonthIdx}/>
+        <main style={{flex:1,overflowY:'auto',padding:'20px 24px 80px',background:T.bg.page}}>{tabs[activeTab]||null}</main>
+      </div>
+    </div>
+    <TweaksPanel open={tweaksOpen} theme={theme} variation={variation} fontPair={fontPair}
+      onTheme={v=>{setTheme(v);send('theme',v);}} onVariation={v=>{setVariation(v);send('variation',v);}} onFont={v=>{setFontPair(v);send('fontPair',v);}}/>
+    <BottomNav active={activeTab} onNav={setActiveTab}/>
+    <style>{`@media(min-width:769px){#sb{display:block!important}main{padding-bottom:24px!important}}@media(max-width:768px){main{padding:16px 16px 72px}}`}</style>
+  </ThemeProvider>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
