@@ -8,8 +8,9 @@
 //   3. Principios     — targets by principle (7 rows)
 //   4. Despesas       — expense categories (level 2)
 //   5. Top 10         — biggest transactions
+//   6. Cartões        — credit card spending (PR-U3)
 //
-// No tabs within the page. Drill-downs (if added later) must be inline
+// No tabs within the page. Drill-downs (credit card rows, etc.) are inline
 // expansions per the frontend-dev rules (no modals).
 
 import React from 'react';
@@ -18,6 +19,7 @@ import KpiSection from './sections/KpiSection.jsx';
 import PrincipiosSection from './sections/PrincipiosSection.jsx';
 import DespesasSection from './sections/DespesasSection.jsx';
 import TopTransacoesSection from './sections/TopTransacoesSection.jsx';
+import CreditCardSection from './sections/CreditCardSection.jsx';
 
 function Mes() {
   return (
@@ -27,6 +29,7 @@ function Mes() {
       <PrincipiosSection />
       <DespesasSection />
       <TopTransacoesSection />
+      <CreditCardSection />
     </div>
   );
 }
