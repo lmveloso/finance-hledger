@@ -1,9 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { ChevronRight, ChevronLeft, CalendarDays, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { usePullToRefresh } from './hooks/usePullToRefresh.js';
+import { useMediaQuery } from './hooks/useMediaQuery.js';
 import { color } from './theme/tokens';
-import { MonthProvider, useMonth } from './contexts/MonthContext.jsx';
+import { MonthProvider } from './contexts/MonthContext.jsx';
 import { NavProvider, useNav } from './contexts/NavContext.jsx';
+import { useTheme } from './contexts/ThemeContext.jsx';
+import { Sidebar, MobileTopBar, BottomNav } from './components/nav';
 import Mes from './features/mes';
 import Resumo from './features/resumo';
 import Ano from './features/ano';
@@ -14,91 +17,10 @@ import Previsao from './features/previsao';
 import Patrimonio from './features/patrimonio';
 import Transacoes from './features/transacoes';
 
-// ── Month helpers ──────────────────────────────────────────────────────
-// `MonthProvider` / `useMonth` / month-navigation helpers live in
-// contexts/MonthContext.jsx since PR-F3. `formatMonthBR` stays here because
-// it is used by the header label (MonthPicker) and will migrate with the
-// MonthPicker component in a later PR.
-
-function formatMonthBR(ym) {
-  const [y, m] = ym.split('-');
-  const d = new Date(parseInt(y), parseInt(m) - 1, 1);
-  // Capitalize first letter
-  const str = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-// ── MonthPicker ────────────────────────────────────────────────────────
-function MonthPicker() {
-  const { selectedMonth, compareMode, setCompareMode, goPrev, goNext, goToday, isCurrentMonth } = useMonth();
-  const navBtnStyle = {
-    background: color.bg.card,
-    border: `1px solid ${color.border.default}`,
-    borderRadius: 3,
-    color: color.accent.warm,
-    cursor: 'pointer',
-    padding: '4px 6px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'background 0.12s',
-  };
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <button
-          onClick={goPrev}
-          className="sans"
-          style={navBtnStyle}
-          title="Mês anterior"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        <span className="serif" style={{ fontSize: 18, fontWeight: 600, minWidth: 160, textAlign: 'center', color: color.text.primary }}>
-          {formatMonthBR(selectedMonth)}
-        </span>
-        <button
-          onClick={goNext}
-          className="sans"
-          style={navBtnStyle}
-          title="Próximo mês"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
-      {!isCurrentMonth && (
-        <button
-          onClick={goToday}
-          className="sans"
-          style={{
-            ...navBtnStyle,
-            fontSize: 11,
-            padding: '4px 10px',
-            letterSpacing: '0.05em',
-            textTransform: 'uppercase',
-          }}
-          title="Voltar ao mês atual"
-        >
-          <CalendarDays size={12} style={{ marginRight: 4 }} /> Hoje
-        </button>
-      )}
-      <label className="sans" style={{
-        display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
-        fontSize: 12, color: color.text.muted, marginLeft: 8,
-      }}>
-        <input
-          type="checkbox"
-          checked={compareMode}
-          onChange={(e) => setCompareMode(e.target.checked)}
-          style={{ accentColor: color.accent.warm }}
-        />
-        vs ano anterior
-      </label>
-    </div>
-  );
-}
-
 // ── Pull-to-refresh indicator ──────────────────────────────────────────
+// Remains above every nav surface (z-index 1000 > BottomNav 200). Uses
+// the `color` proxy intentionally — it captures token values on render
+// but the whole tree remounts when the theme flips (see main.jsx).
 function PullIndicator({ pullState, pullDistance }) {
   if (pullState === 'idle') return null;
 
@@ -144,6 +66,7 @@ function PullIndicator({ pullState, pullDistance }) {
 
 // ── Main ────────────────────────────────────────────────────────────────
 // `NavProvider` / `useNav` moved to contexts/NavContext.jsx in PR-F3.
+// The nav shell (Sidebar / BottomNav / MobileTopBar) landed in PR-U1.
 export default function App() {
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -167,62 +90,91 @@ export default function App() {
   );
 }
 
-function AppInner() {
-  const { selectedMonth } = useMonth();
-  const { activeTab, setActiveTab, tabs } = useNav();
+function TabRoutes() {
+  const { activeTab } = useNav();
+  // NOTE: Portuguese-with-diacritics tab IDs are load-bearing — NavContext
+  // defines them verbatim and renaming is out of scope for PR-U1.
   return (
-    <div style={{ minHeight: '100vh', background: color.bg.page, color: color.text.primary, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        * { box-sizing: border-box; margin: 0; }
-        .serif { font-family: 'Instrument Serif', Georgia, serif; }
-        .sans { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-        .card { background: ${color.bg.card}; border: 1px solid ${color.border.default}; border-radius: 4px; padding: 24px; }
-        .tab { padding: 10px 16px; cursor: pointer; border: none; background: transparent; color: ${color.text.muted}; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid transparent; transition: all 0.15s; }
-        .tab:hover { color: ${color.text.secondary}; }
-        .tab.active { color: ${color.accent.warm}; border-bottom-color: ${color.accent.warm}; }
-        .grid { display: grid; gap: 20px; }
-        .crow { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid ${color.border.default}; cursor: pointer; transition: background 0.12s; }
-        .crow:hover { background: ${color.bg.hover}; margin: 0 -24px; padding: 14px 24px; }
-        .crow:last-child { border-bottom: none; }
-        @media (min-width: 900px) { .g3 { grid-template-columns: 2fr 1fr; } }
-      `}</style>
+    <>
+      {activeTab === 'resumo' && <Resumo />}
+      {activeTab === 'mês' && <Mes />}
+      {activeTab === 'ano' && <Ano />}
+      {activeTab === 'plano' && <Plano />}
+      {activeTab === 'fluxo' && <Fluxo />}
+      {activeTab === 'orçamento' && <Orcamento />}
+      {activeTab === 'previsão' && <Previsao />}
+      {activeTab === 'patrimônio' && <Patrimonio />}
+      {activeTab === 'transações' && <Transacoes />}
+    </>
+  );
+}
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 20px' }}>
-        <header style={{ marginBottom: 36, borderBottom: `1px solid ${color.border.default}`, paddingBottom: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-            <div>
-              <div className="sans" style={{ fontSize: 11, letterSpacing: '0.2em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 8 }}>
-                {formatMonthBR(selectedMonth)} · Visão familiar
-              </div>
-              <h1 className="serif" style={{ fontSize: 'clamp(34px, 6vw, 58px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1 }}>
-                Finanças <em style={{ fontWeight: 400, color: color.accent.warm }}>Pessoais</em>
-              </h1>
-            </div>
-            <MonthPicker />
+function AppInner() {
+  const { tokens } = useTheme();
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+
+  // Global styles. Card / tab / grid helpers preserved from pre-PR-U1 so
+  // the feature tabs keep rendering unchanged while the nav shell lands.
+  const globalStyles = `
+    @keyframes spin { to { transform: rotate(360deg); } }
+    * { box-sizing: border-box; margin: 0; }
+    body { background: ${tokens.bg.page}; }
+    .serif { font-family: 'Instrument Serif', Georgia, serif; }
+    .sans { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    .card { background: ${tokens.bg.card}; border: 1px solid ${tokens.border.default}; border-radius: 4px; padding: 24px; }
+    .tab { padding: 10px 16px; cursor: pointer; border: none; background: transparent; color: ${tokens.text.muted}; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid transparent; transition: all 0.15s; }
+    .tab:hover { color: ${tokens.text.secondary}; }
+    .tab.active { color: ${tokens.accent.primary}; border-bottom-color: ${tokens.accent.primary}; }
+    .grid { display: grid; gap: 20px; }
+    .crow { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid ${tokens.border.default}; cursor: pointer; transition: background 0.12s; }
+    .crow:hover { background: ${tokens.bg.hover}; margin: 0 -24px; padding: 14px 24px; }
+    .crow:last-child { border-bottom: none; }
+    @media (min-width: 900px) { .g3 { grid-template-columns: 2fr 1fr; } }
+  `;
+
+  const pageBase = {
+    minHeight: '100vh',
+    background: tokens.bg.page,
+    color: tokens.text.primary,
+    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+  };
+
+  if (isDesktop) {
+    return (
+      <div style={{ ...pageBase, display: 'flex', alignItems: 'stretch' }}>
+        <style>{globalStyles}</style>
+        <Sidebar />
+        <main
+          style={{
+            flex: 1,
+            minWidth: 0,
+            padding: '28px 32px',
+            overflowX: 'hidden',
+          }}
+        >
+          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            <TabRoutes />
           </div>
-        </header>
-
-        <nav style={{ display: 'flex', gap: 2, marginBottom: 24, borderBottom: `1px solid ${color.border.default}`, overflowX: 'auto' }}>
-          {tabs.map(t => (
-            <button key={t} className={`tab ${activeTab === t ? 'active' : ''}`} onClick={() => setActiveTab(t)}>{t}</button>
-          ))}
-        </nav>
-
-        {activeTab === 'resumo' && <Resumo />}
-        {activeTab === 'mês' && <Mes />}
-        {activeTab === 'ano' && <Ano />}
-        {activeTab === 'plano' && <Plano />}
-        {activeTab === 'fluxo' && <Fluxo />}
-        {activeTab === 'orçamento' && <Orcamento />}
-        {activeTab === 'previsão' && <Previsao />}
-        {activeTab === 'patrimônio' && <Patrimonio />}
-        {activeTab === 'transações' && <Transacoes />}
-
-        <footer className="sans" style={{ marginTop: 48, paddingTop: 20, borderTop: `1px solid ${color.border.default}`, fontSize: 11, color: color.text.disabled, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-          hledger · via Tailscale
-        </footer>
+        </main>
       </div>
+    );
+  }
+
+  return (
+    <div style={{ ...pageBase, display: 'flex', flexDirection: 'column' }}>
+      <style>{globalStyles}</style>
+      <MobileTopBar />
+      <main
+        style={{
+          flex: 1,
+          minWidth: 0,
+          padding: '16px 16px 0',
+          paddingBottom: 'calc(58px + env(safe-area-inset-bottom, 0px) + 16px)',
+        }}
+      >
+        <TabRoutes />
+      </main>
+      <BottomNav />
     </div>
   );
 }
