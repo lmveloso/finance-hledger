@@ -211,8 +211,8 @@ function AppInner() {
           ))}
         </nav>
 
-        {activeTab === 'mês' && <Mes />}
         {activeTab === 'resumo' && <Resumo />}
+        {activeTab === 'mês' && <Mes />}
         {activeTab === 'ano' && <Ano />}
         {activeTab === 'plano' && <Plano />}
         {activeTab === 'fluxo' && <Fluxo />}
