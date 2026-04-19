@@ -1,21 +1,20 @@
 // Section 3 — Targets by principle.
 //
-// Expected backend contract (PR-D1, to land in /api/principles/summary):
+// Backend contract (/api/principles/summary, PR-D1):
 //   { month, principles: [{ id, target_pct, realized_pct, realized_amount }] }
 //
-// Until PR-D1 is merged, useApi returns an HTTP error. We render a friendly
-// "endpoint unavailable" placeholder rather than an ErrorBox so the rest of
-// the page remains usable.
+// Layout (PR-U3 restyle): one row per principle. Top line = label + meta/real/amount.
+// Bottom line = 6px track with a fill capped at 100% (ratio = realized/target) and a
+// small target marker at the 100% position. Over-budget (realized > target) bolds the
+// realized % and tints it with feedback.negative — the bar hue stays on the palette.
 //
-// Table layout (PRD §5.3): 7 rows × 4 cols — Principle | Target% | Realized%
-// | Amount — plus an inline progress bar computed from realized/target.
+// No header row — the inline layout carries all information.
 
 import React from 'react';
 import { color } from '../../../theme/tokens';
 import Spinner from '../../../components/Spinner.jsx';
 import { usePrincipios } from '../hooks/usePrincipios.js';
 import { t } from '../../../i18n/index.js';
-import ProgressBar from '../components/ProgressBar.jsx';
 
 const BRL = (n) =>
   (n ?? 0).toLocaleString('pt-BR', {
@@ -36,66 +35,111 @@ const PRINCIPLE_ORDER = [
   'reserva-de-oportunidade',
 ];
 
-function Header({ children, width, align = 'left' }) {
-  return (
-    <div
-      className="sans"
-      style={{
-        fontSize: 10,
-        letterSpacing: '0.1em',
-        color: color.text.muted,
-        textTransform: 'uppercase',
-        width,
-        textAlign: align,
-      }}
-    >
-      {children}
-    </div>
-  );
+// Apply alpha to a 6-char hex color. Returns the input unchanged if it doesn't
+// match the `#RRGGBB` shape (rgba() tokens etc. pass through).
+function withAlpha(hex, a) {
+  if (typeof hex !== 'string') return hex;
+  const m = hex.match(/^#([0-9a-f]{6})$/i);
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
 }
 
-function PrincipleRow({ id, target, realized, amount, isLast }) {
-  const ratio =
-    Number.isFinite(target) && target > 0 && Number.isFinite(realized)
-      ? (realized / target) * 100
-      : 0;
+function PrincipleBar({ id, target, realized, amount, paletteColor, isLast }) {
+  const hasTarget = Number.isFinite(target) && target > 0;
+  const hasRealized = Number.isFinite(realized);
+  const ratio = hasTarget && hasRealized ? realized / target : 0;
+  const over = hasTarget && hasRealized && realized > target;
+  const barColor = withAlpha(paletteColor, 0.75);
+
   return (
     <div
       style={{
-        padding: '12px 0',
-        borderBottom: isLast ? 'none' : `1px solid ${color.border.default}`,
-        display: 'grid',
-        gridTemplateColumns: '2fr 1fr 1fr 1.2fr',
-        gap: 12,
-        alignItems: 'center',
+        paddingBottom: 14,
+        marginBottom: 14,
+        borderBottom: isLast ? 'none' : `1px solid ${color.border.subtle}`,
       }}
     >
-      <span
-        className="sans"
-        style={{ fontSize: 14, color: color.text.secondary }}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+          marginBottom: 7,
+          gap: 12,
+        }}
       >
-        {t(`principle.${id}`)}
-      </span>
-      <span
-        className="sans"
-        style={{ fontSize: 13, color: color.text.muted, textAlign: 'right' }}
-      >
-        {Number.isFinite(target) ? `${Math.round(target)}%` : '—'}
-      </span>
-      <span
-        className="sans"
-        style={{ fontSize: 13, color: color.text.primary, textAlign: 'right' }}
-      >
-        {Number.isFinite(realized) ? `${Math.round(realized)}%` : '—'}
-      </span>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <span
-          className="serif"
-          style={{ fontSize: 14, color: color.text.primary, textAlign: 'right' }}
+          className="sans"
+          style={{ fontSize: 13, color: color.text.secondary, minWidth: 0 }}
         >
-          {amount ? BRL(amount) : '—'}
+          {t(`principle.${id}`)}
         </span>
-        <ProgressBar pct={ratio} />
+        <div
+          style={{
+            display: 'flex',
+            gap: 14,
+            alignItems: 'baseline',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <span
+            className="sans"
+            style={{ fontSize: 11, color: color.text.muted }}
+          >
+            {hasTarget
+              ? t('mes.principles.meta', { pct: `${Math.round(target)}%` })
+              : '—'}
+          </span>
+          <span
+            className="sans"
+            style={{
+              fontSize: 13,
+              color: over ? color.feedback.negative : color.text.primary,
+              fontWeight: over ? 700 : 600,
+            }}
+          >
+            {hasRealized ? `${Math.round(realized)}%` : '—'}
+          </span>
+          <span
+            className="serif"
+            style={{ fontSize: 13, color: color.text.muted }}
+          >
+            {amount ? BRL(amount) : '—'}
+          </span>
+        </div>
+      </div>
+      <div
+        style={{
+          position: 'relative',
+          height: 6,
+          background: color.border.default,
+          borderRadius: 999,
+        }}
+      >
+        <div
+          style={{
+            height: '100%',
+            width: `${Math.min(Math.max(ratio, 0) * 100, 100)}%`,
+            background: barColor,
+            borderRadius: 999,
+            transition: 'width 0.2s ease',
+          }}
+        />
+        {hasTarget && (
+          <div
+            style={{
+              position: 'absolute',
+              top: -3,
+              left: '100%',
+              transform: 'translateX(-1px)',
+              width: 2,
+              height: 12,
+              background: color.text.disabled,
+              borderRadius: 1,
+            }}
+          />
+        )}
       </div>
     </div>
   );
@@ -106,6 +150,7 @@ function PrincipiosSection() {
 
   const principles = data?.principles || [];
   const byId = Object.fromEntries(principles.map((p) => [p.id, p]));
+  const palette = color.chart.colors;
 
   return (
     <div className="card">
@@ -132,35 +177,20 @@ function PrincipiosSection() {
           {t('mes.principles.unavailable')}
         </div>
       ) : (
-        <>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '2fr 1fr 1fr 1.2fr',
-              gap: 12,
-              paddingBottom: 8,
-              borderBottom: `1px solid ${color.border.default}`,
-            }}
-          >
-            <Header>{t('mes.principles.header.principle')}</Header>
-            <Header align="right">{t('mes.principles.header.target')}</Header>
-            <Header align="right">{t('mes.principles.header.realized')}</Header>
-            <Header align="right">{t('mes.principles.header.amount')}</Header>
-          </div>
-          {PRINCIPLE_ORDER.map((id, i) => {
-            const p = byId[id] || {};
-            return (
-              <PrincipleRow
-                key={id}
-                id={id}
-                target={p.target_pct}
-                realized={p.realized_pct}
-                amount={p.realized_amount}
-                isLast={i === PRINCIPLE_ORDER.length - 1}
-              />
-            );
-          })}
-        </>
+        PRINCIPLE_ORDER.map((id, i) => {
+          const p = byId[id] || {};
+          return (
+            <PrincipleBar
+              key={id}
+              id={id}
+              target={p.target_pct}
+              realized={p.realized_pct}
+              amount={p.realized_amount}
+              paletteColor={palette[i % palette.length]}
+              isLast={i === PRINCIPLE_ORDER.length - 1}
+            />
+          );
+        })
       )}
     </div>
   );
