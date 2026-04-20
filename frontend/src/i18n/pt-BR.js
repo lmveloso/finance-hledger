@@ -119,6 +119,17 @@ const dict = {
   'fluxo.contas.saldo_final': 'Saldo final',
   'fluxo.contas.delta': 'Variação no mês',
 
+  // ── Orçamento tab ──────────────────────────────────────────────────────
+  'orcamento.total.title': 'Total · orçamento vs realizado',
+  'orcamento.total.of': 'de {amount}',
+  'orcamento.total.aboveBudget': '{amount} acima do orçamento total',
+  'orcamento.categories.title': 'Por categoria',
+  'orcamento.empty':
+    'Nenhuma categoria com orçamento definido. Adicione transações periódicas (~ monthly) no seu .journal.',
+  'orcamento.over.chip': '+{amount}',
+  'orcamento.surplus.chip': '{amount} restante',
+  'orcamento.category.separator': 'de',
+
   // ── Patrimonio tab ─────────────────────────────────────────────────────
   'patrimonio.header': 'Patrimônio',
   'patrimonio.hero.title': 'Patrimônio Líquido',
