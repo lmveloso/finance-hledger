@@ -132,9 +132,8 @@ const dict = {
 
   // ── Patrimonio tab ─────────────────────────────────────────────────────
   'patrimonio.header': 'Patrimônio',
-  'patrimonio.hero.title': 'Patrimônio Líquido',
-  'patrimonio.hero.vs12months': 'vs 12 meses atrás',
-  'patrimonio.hero.sparkEmpty': 'Histórico insuficiente',
+  'patrimonio.hero.net': 'Patrimônio líquido',
+  'patrimonio.hero.vsPrevMonth': 'vs mês anterior',
   'patrimonio.evolution.title': 'Evolução histórica',
   'patrimonio.evolution.empty': 'Sem dados de patrimônio para o período selecionado.',
   'patrimonio.assets': 'Ativos',
@@ -142,6 +141,8 @@ const dict = {
   'patrimonio.net': 'Patrimônio líquido',
   'patrimonio.empty.assets': 'Nenhuma conta de ativo encontrada.',
   'patrimonio.empty.liabilities': 'Nenhuma conta de passivo encontrada.',
+  'patrimonio.total.assets': 'Total ativos',
+  'patrimonio.total.liabilities': 'Total passivos',
 
   // Settings panel
   'patrimonio.period.label': 'Período',

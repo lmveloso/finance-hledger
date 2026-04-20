@@ -129,9 +129,8 @@ const dict = {
 
   // ── Patrimonio tab ─────────────────────────────────────────────────────
   'patrimonio.header': 'Net Worth',
-  'patrimonio.hero.title': 'Net Worth',
-  'patrimonio.hero.vs12months': 'vs 12 months ago',
-  'patrimonio.hero.sparkEmpty': 'Not enough history',
+  'patrimonio.hero.net': 'Net worth',
+  'patrimonio.hero.vsPrevMonth': 'vs. previous month',
   'patrimonio.evolution.title': 'Historical evolution',
   'patrimonio.evolution.empty': 'No net worth data for the selected period.',
   'patrimonio.assets': 'Assets',
@@ -139,6 +138,8 @@ const dict = {
   'patrimonio.net': 'Net worth',
   'patrimonio.empty.assets': 'No asset accounts found.',
   'patrimonio.empty.liabilities': 'No liability accounts found.',
+  'patrimonio.total.assets': 'Total assets',
+  'patrimonio.total.liabilities': 'Total liabilities',
 
   // Settings panel
   'patrimonio.period.label': 'Period',

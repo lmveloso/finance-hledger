@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useApi } from '../../../api.js';
-import { color } from '../../../theme/tokens';
+import { color, radius } from '../../../theme/tokens';
 import Spinner from '../../../components/Spinner.jsx';
 import ErrorBox from '../../../components/ErrorBox.jsx';
 import AccountTransactionsTable from './AccountTransactionsTable.jsx';
@@ -20,8 +20,8 @@ function AccountDetail({
   const navBtnStyle = {
     background: color.bg.card,
     border: `1px solid ${color.border.default}`,
-    borderRadius: 3,
-    color: color.accent.warm,
+    borderRadius: radius.rounded.xs,
+    color: color.accent.primary,
     cursor: 'pointer',
     padding: '4px 6px',
     display: 'flex',
@@ -32,7 +32,7 @@ function AccountDetail({
 
   const inputStyle = {
     background: color.bg.page, border: `1px solid ${color.border.default}`,
-    borderRadius: 3, color: color.text.primary,
+    borderRadius: radius.rounded.xs, color: color.text.primary,
     padding: '8px 12px', fontSize: 13, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", outline: 'none',
   };
 
@@ -70,7 +70,7 @@ function AccountDetail({
         onClick={onBack}
         className="sans"
         style={{
-          background: 'none', border: 'none', color: color.accent.warm, cursor: 'pointer',
+          background: 'none', border: 'none', color: color.accent.primary, cursor: 'pointer',
           fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, padding: 0, marginBottom: 20,
         }}
       >
