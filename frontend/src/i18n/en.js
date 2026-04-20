@@ -116,6 +116,17 @@ const dict = {
   'fluxo.contas.saldo_final': 'Closing balance',
   'fluxo.contas.delta': 'Monthly change',
 
+  // ── Orçamento tab ──────────────────────────────────────────────────────
+  'orcamento.total.title': 'Total · budget vs actual',
+  'orcamento.total.of': 'of {amount}',
+  'orcamento.total.aboveBudget': '{amount} above total budget',
+  'orcamento.categories.title': 'By category',
+  'orcamento.empty':
+    'No category has a budget defined. Add periodic transactions (~ monthly) to your .journal.',
+  'orcamento.over.chip': '+{amount}',
+  'orcamento.surplus.chip': '{amount} remaining',
+  'orcamento.category.separator': 'of',
+
   // ── Patrimonio tab ─────────────────────────────────────────────────────
   'patrimonio.header': 'Net Worth',
   'patrimonio.hero.title': 'Net Worth',
