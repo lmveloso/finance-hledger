@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useApi } from '../../api.js';
-import { color } from '../../theme/tokens';
+import { color, fonts } from '../../theme/tokens';
 import Spinner from '../../components/Spinner.jsx';
 import ErrorBox from '../../components/ErrorBox.jsx';
 import { useMonth } from '../../contexts/MonthContext.jsx';
@@ -17,7 +17,7 @@ function Transacoes() {
   // Declared inside the component so token lookups re-evaluate on dark/light toggle.
   const navBtnStyle = {
     background: color.bg.card, border: `1px solid ${color.border.default}`, borderRadius: 3,
-    color: color.accent.warm, cursor: 'pointer', padding: '4px 6px',
+    color: color.accent.primary, cursor: 'pointer', padding: '4px 6px',
     display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s',
   };
 
@@ -110,14 +110,14 @@ function Transacoes() {
   };
   const inputStyle = {
     background: color.bg.page, border: `1px solid ${color.border.default}`, borderRadius: 3, color: color.text.primary,
-    padding: '8px 12px', fontSize: 13, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", outline: 'none',
+    padding: '8px 12px', fontSize: 13, fontFamily: fonts.jakarta.body, outline: 'none',
     width: '100%',
   };
   const selectStyle = { ...inputStyle, cursor: 'pointer' };
 
   const SortIcon = ({ field }) => {
-    if (sortBy !== field) return <span style={{ color: color.text.faint, marginLeft: 4 }}>&#8693;</span>;
-    return <span style={{ color: color.accent.warm, marginLeft: 4 }}>{sortOrder === 'asc' ? '↑' : '↓'}</span>;
+    if (sortBy !== field) return <span style={{ color: color.text.disabled, marginLeft: 4 }}>&#8693;</span>;
+    return <span style={{ color: color.accent.primary, marginLeft: 4 }}>{sortOrder === 'asc' ? '↑' : '↓'}</span>;
   };
 
   return (
@@ -184,14 +184,14 @@ function Transacoes() {
                 <button key={t.tag} onClick={() => toggleTag(t.tag)} className="sans"
                   style={{
                     background: isActive ? color.border.default : color.bg.card,
-                    border: `1px solid ${isActive ? color.accent.warm : color.border.default}`,
-                    borderRadius: 12, color: isActive ? color.accent.warm : color.text.secondary,
+                    border: `1px solid ${isActive ? color.accent.primary : color.border.default}`,
+                    borderRadius: 12, color: isActive ? color.accent.primary : color.text.secondary,
                     padding: '4px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.12s',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}>
                   {t.tag}
                   <span style={{
-                    background: isActive ? color.accent.warm : color.border.default,
+                    background: isActive ? color.accent.primary : color.border.default,
                     color: isActive ? color.bg.page : color.text.muted,
                     borderRadius: 8, padding: '0 6px', fontSize: 10, fontWeight: 600,
                   }}>
@@ -243,7 +243,7 @@ function Transacoes() {
                     <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: color.text.muted, fontSize: 12 }}>{tx.data}</td>
                     <td style={tdStyle}>{tx.descricao}</td>
                     <td style={{ ...tdStyle, color: color.text.muted, fontSize: 12 }}>{tx.categoria}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 600, color: tx.valor > 0 ? color.feedback.positive : tx.valor < 0 ? color.feedback.negative : 'inherit' }}>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: fonts.jakarta.display, fontWeight: 600, color: tx.valor > 0 ? color.feedback.positive : tx.valor < 0 ? color.feedback.negative : 'inherit' }}>
                       {BRLc(tx.valor)}
                     </td>
                   </tr>
