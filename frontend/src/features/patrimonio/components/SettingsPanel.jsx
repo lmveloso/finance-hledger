@@ -1,5 +1,5 @@
 import React from 'react';
-import { color } from '../../../theme/tokens';
+import { color, radius } from '../../../theme/tokens';
 import { t } from '../../../i18n';
 
 // Per-tab settings row (PR-D7). Inline, non-modal — follows the §5 pattern
@@ -47,7 +47,7 @@ function SettingsPanel({ period, onPeriodChange, hideZero, onHideZeroChange }) {
             gap: 2,
             background: color.bg.card,
             border: `1px solid ${color.border.default}`,
-            borderRadius: 3,
+            borderRadius: radius.rounded.xs,
             padding: 2,
           }}
         >
@@ -62,9 +62,9 @@ function SettingsPanel({ period, onPeriodChange, hideZero, onHideZeroChange }) {
                 className="sans"
                 style={{
                   background: active ? color.bg.hover : 'transparent',
-                  color: active ? color.accent.warm : color.text.muted,
+                  color: active ? color.accent.primary : color.text.muted,
                   border: 'none',
-                  borderRadius: 2,
+                  borderRadius: radius.rounded.xs,
                   cursor: 'pointer',
                   padding: '4px 10px',
                   fontSize: 11,
@@ -91,7 +91,7 @@ function SettingsPanel({ period, onPeriodChange, hideZero, onHideZeroChange }) {
           type="checkbox"
           checked={hideZero}
           onChange={(e) => onHideZeroChange(e.target.checked)}
-          style={{ accentColor: color.accent.warm }}
+          style={{ accentColor: color.accent.primary }}
         />
         {t('patrimonio.hideZero')}
       </label>

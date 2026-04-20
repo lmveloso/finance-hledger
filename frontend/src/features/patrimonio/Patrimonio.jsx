@@ -8,15 +8,16 @@ import { useNetworth } from './hooks/useNetworth.js';
 import HeroSection from './components/HeroSection.jsx';
 import EvolutionChart from './components/EvolutionChart.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
-import AccountCard from './components/AccountCard.jsx';
+import AccountListCard from './components/AccountListCard.jsx';
 import AccountDetail from './components/AccountDetail.jsx';
 import { t } from '../../i18n';
 
-// Patrimonio tab (PR-D7) — formerly "Contas". Adds the hero overview and
-// historical evolution chart on top of the existing account list + drill-down.
+// Patrimonio tab (rewritten in PR-U7). Hero + native-SVG evolution chart +
+// compact ativos/passivos breakdown cards; inline drill-down into a single
+// account via AccountDetail.
 //
 // Data sources:
-//   - /api/accounts    → ativos / passivos list (kept as-is from Contas)
+//   - /api/accounts    → ativos / passivos list (source of truth for split)
 //   - /api/networth?N  → monthly assets / liabilities / net history
 //
 // Chart period is user-controlled via SettingsPanel (inline, no modal).
@@ -117,44 +118,39 @@ function Patrimonio() {
         <EvolutionChart months={visibleMonths} />
       </div>
 
-      <div className="grid g3">
-        <div className="card">
-          <div
-            className="sans"
-            style={{
-              fontSize: 11, letterSpacing: '0.15em', color: color.text.muted,
-              textTransform: 'uppercase', marginBottom: 16,
-            }}
-          >
-            {t('patrimonio.assets')}
-          </div>
-          {ativos.length === 0 ? (
-            <div className="sans" style={{ fontSize: 13, color: color.text.muted }}>
-              {t('patrimonio.empty.assets')}
-            </div>
-          ) : ativos.map(c => (
-            <AccountCard key={c.caminho} conta={c} onSelect={setSelectedAccount} />
-          ))}
-        </div>
-
-        <div className="card">
-          <div
-            className="sans"
-            style={{
-              fontSize: 11, letterSpacing: '0.15em', color: color.text.muted,
-              textTransform: 'uppercase', marginBottom: 16,
-            }}
-          >
-            {t('patrimonio.liabilities')}
-          </div>
-          {passivos.length === 0 ? (
-            <div className="sans" style={{ fontSize: 13, color: color.text.muted }}>
-              {t('patrimonio.empty.liabilities')}
-            </div>
-          ) : passivos.map(c => (
-            <AccountCard key={c.caminho} conta={c} onSelect={setSelectedAccount} />
-          ))}
-        </div>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr',
+          gap: 14,
+        }}
+        className="patrimonio-accounts-grid"
+      >
+        <style>{`
+          @media (min-width: 900px) {
+            .patrimonio-accounts-grid {
+              grid-template-columns: 1fr 1fr !important;
+            }
+          }
+        `}</style>
+        <AccountListCard
+          title={t('patrimonio.assets')}
+          totalLabel={t('patrimonio.total.assets')}
+          accounts={ativos}
+          total={totalAtivos}
+          emptyText={t('patrimonio.empty.assets')}
+          valueColor={color.feedback.positive}
+          onSelect={setSelectedAccount}
+        />
+        <AccountListCard
+          title={t('patrimonio.liabilities')}
+          totalLabel={t('patrimonio.total.liabilities')}
+          accounts={passivos}
+          total={passivosOwed}
+          emptyText={t('patrimonio.empty.liabilities')}
+          valueColor={color.feedback.negative}
+          onSelect={setSelectedAccount}
+        />
       </div>
     </div>
   );
