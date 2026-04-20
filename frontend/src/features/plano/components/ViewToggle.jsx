@@ -34,7 +34,7 @@ function ViewToggle({ value, onChange }) {
             className="sans"
             style={{
               background: active ? color.bg.hover : 'transparent',
-              color: active ? color.accent.warm : color.text.muted,
+              color: active ? color.accent.primary : color.text.muted,
               border: 'none',
               borderRadius: 2,
               cursor: 'pointer',

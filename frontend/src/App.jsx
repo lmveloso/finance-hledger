@@ -2,7 +2,8 @@ import React, { useState, useCallback } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { usePullToRefresh } from './hooks/usePullToRefresh.js';
 import { useMediaQuery } from './hooks/useMediaQuery.js';
-import { color } from './theme/tokens';
+import { color, fonts } from './theme/tokens';
+import { t } from './i18n';
 import { MonthProvider } from './contexts/MonthContext.jsx';
 import { NavProvider, useNav } from './contexts/NavContext.jsx';
 import { useTheme } from './contexts/ThemeContext.jsx';
@@ -25,9 +26,9 @@ function PullIndicator({ pullState, pullDistance }) {
   if (pullState === 'idle') return null;
 
   const labels = {
-    pulling: 'Puxe para atualizar...',
-    ready: 'Solte para atualizar...',
-    refreshing: 'Atualizando...',
+    pulling: t('pull.pulling'),
+    ready: t('pull.ready'),
+    refreshing: t('pull.refreshing'),
   };
 
   return (
@@ -43,9 +44,9 @@ function PullIndicator({ pullState, pullDistance }) {
       gap: 8,
       padding: '10px 0',
       background: `linear-gradient(to bottom, ${color.bg.card} 0%, transparent 100%)`,
-      color: pullState === 'ready' ? color.accent.warm : color.text.muted,
+      color: pullState === 'ready' ? color.accent.primary : color.text.muted,
       fontSize: 13,
-      fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+      fontFamily: fonts.jakarta.body,
       transform: `translateY(${pullState === 'refreshing' ? 0 : pullDistance - 40}px)`,
       opacity: pullState === 'refreshing' ? 1 : Math.min(pullDistance / 60, 1),
       transition: pullState === 'refreshing' ? 'transform 0.2s ease' : 'none',

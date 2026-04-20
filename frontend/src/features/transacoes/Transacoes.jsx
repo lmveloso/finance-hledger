@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useApi } from '../../api.js';
 import { color, fonts } from '../../theme/tokens';
+import { t } from '../../i18n';
 import Spinner from '../../components/Spinner.jsx';
 import ErrorBox from '../../components/ErrorBox.jsx';
 import { useMonth } from '../../contexts/MonthContext.jsx';
@@ -95,7 +96,7 @@ function Transacoes() {
   const toggleTag = (tagName) => {
     setSelectedTags(prev =>
       prev.includes(tagName)
-        ? prev.filter(t => t !== tagName)
+        ? prev.filter(x => x !== tagName)
         : [...prev, tagName]
     );
   };
@@ -123,7 +124,7 @@ function Transacoes() {
   return (
     <div className="card">
       <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 20 }}>
-        Transações
+        {t('transacoes.title')}
       </div>
 
       {/* Filters */}
@@ -131,7 +132,7 @@ function Transacoes() {
         <div style={{ flex: '1 1 220px' }}>
           <input
             type="text"
-            placeholder="Buscar por descrição..."
+            placeholder={t('transacoes.search.placeholder')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={inputStyle}
@@ -139,7 +140,7 @@ function Transacoes() {
         </div>
         <div style={{ flex: '0 1 180px' }}>
           <select value={category} onChange={e => { setCategory(e.target.value); setPage(0); }} style={selectStyle}>
-            <option value="">Todas categorias</option>
+            <option value="">{t('transacoes.filter.allCategories')}</option>
             {categories.map(c => <option key={c.segmento_raw} value={c.segmento_raw}>{c.nome}</option>)}
           </select>
         </div>
@@ -151,9 +152,9 @@ function Transacoes() {
               ...navBtnStyle, fontSize: 11, padding: '6px 10px',
               background: rangeMode === 'range' ? color.bg.hover : color.bg.card,
             }}
-            title={rangeMode === 'month' ? 'Alternar para range de datas' : 'Voltar para mês único'}
+            title={rangeMode === 'month' ? t('transacoes.range.toggleTitle.toRange') : t('transacoes.range.toggleTitle.toMonth')}
           >
-            {rangeMode === 'month' ? 'Mês' : 'Range'}
+            {rangeMode === 'month' ? t('transacoes.range.month') : t('transacoes.range.date')}
           </button>
         </div>
       </div>
@@ -164,7 +165,7 @@ function Transacoes() {
           <div style={{ flex: '0 1 150px' }}>
             <input type="date" value={rangeStart} onChange={e => { setRangeStart(e.target.value); setPage(0); }} style={inputStyle} />
           </div>
-          <div className="sans" style={{ color: color.text.muted, fontSize: 13, display: 'flex', alignItems: 'center' }}>até</div>
+          <div className="sans" style={{ color: color.text.muted, fontSize: 13, display: 'flex', alignItems: 'center' }}>{t('transacoes.range.until')}</div>
           <div style={{ flex: '0 1 150px' }}>
             <input type="date" value={rangeEnd} onChange={e => { setRangeEnd(e.target.value); setPage(0); }} style={inputStyle} />
           </div>
@@ -175,13 +176,13 @@ function Transacoes() {
       {allTags.length > 0 && (
         <div style={{ marginBottom: 20 }}>
           <div className="sans" style={{ fontSize: 11, color: color.text.muted, marginBottom: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-            Tags
+            {t('transacoes.tags.label')}
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {allTags.map(t => {
-              const isActive = selectedTags.includes(t.tag);
+            {allTags.map(tag => {
+              const isActive = selectedTags.includes(tag.tag);
               return (
-                <button key={t.tag} onClick={() => toggleTag(t.tag)} className="sans"
+                <button key={tag.tag} onClick={() => toggleTag(tag.tag)} className="sans"
                   style={{
                     background: isActive ? color.border.default : color.bg.card,
                     border: `1px solid ${isActive ? color.accent.primary : color.border.default}`,
@@ -189,13 +190,13 @@ function Transacoes() {
                     padding: '4px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.12s',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}>
-                  {t.tag}
+                  {tag.tag}
                   <span style={{
                     background: isActive ? color.accent.primary : color.border.default,
                     color: isActive ? color.bg.page : color.text.muted,
                     borderRadius: 8, padding: '0 6px', fontSize: 10, fontWeight: 600,
                   }}>
-                    {t.count}
+                    {tag.count}
                   </span>
                 </button>
               );
@@ -206,7 +207,7 @@ function Transacoes() {
                   background: 'none', border: 'none', color: color.feedback.negative,
                   fontSize: 12, cursor: 'pointer', padding: '4px 8px',
                 }}>
-                Limpar filtros
+                {t('transacoes.tags.clear')}
               </button>
             )}
           </div>
@@ -217,7 +218,7 @@ function Transacoes() {
 
       {loading ? <Spinner /> : txs.length === 0 ? (
         <div className="sans" style={{ color: color.text.muted, fontSize: 13, padding: '20px 0' }}>
-          Nenhuma transação encontrada para os filtros selecionados.
+          {t('transacoes.empty')}
         </div>
       ) : (
         <>
@@ -226,12 +227,12 @@ function Transacoes() {
               <thead>
                 <tr>
                   <th style={thStyle} onClick={() => toggleSort('date')}>
-                    Data <SortIcon field="date" />
+                    {t('transacoes.table.date')} <SortIcon field="date" />
                   </th>
-                  <th style={thStyle}>Descrição</th>
-                  <th style={thStyle}>Categoria</th>
+                  <th style={thStyle}>{t('transacoes.table.description')}</th>
+                  <th style={thStyle}>{t('transacoes.table.category')}</th>
                   <th style={{ ...thStyle, textAlign: 'right' }} onClick={() => toggleSort('amount')}>
-                    <SortIcon field="amount" /> Valor
+                    <SortIcon field="amount" /> {t('transacoes.table.amount')}
                   </th>
                 </tr>
               </thead>
@@ -255,7 +256,9 @@ function Transacoes() {
           {/* Pagination */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: `1px solid ${color.border.default}` }}>
             <span className="sans" style={{ fontSize: 12, color: color.text.muted }}>
-              {total > 0 ? `${startIdx}–${endIdx} de ${total}` : '0 resultados'}
+              {total > 0
+                ? t('transacoes.pagination.summary', { start: startIdx, end: endIdx, total })
+                : t('transacoes.pagination.zero')}
             </span>
             <div style={{ display: 'flex', gap: 4 }}>
               <button
@@ -264,7 +267,7 @@ function Transacoes() {
                 disabled={page === 0}
                 style={{ ...navBtnStyle, opacity: page === 0 ? 0.3 : 1 }}
               >
-                <ChevronLeft size={14} /> Anterior
+                <ChevronLeft size={14} /> {t('transacoes.pagination.previous')}
               </button>
               <button
                 className="sans"
@@ -272,7 +275,7 @@ function Transacoes() {
                 disabled={page >= totalPages - 1}
                 style={{ ...navBtnStyle, opacity: page >= totalPages - 1 ? 0.3 : 1 }}
               >
-                Próxima <ChevronRight size={14} />
+                {t('transacoes.pagination.next')} <ChevronRight size={14} />
               </button>
             </div>
           </div>

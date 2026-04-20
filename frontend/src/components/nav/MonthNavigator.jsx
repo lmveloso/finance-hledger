@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { useMonth } from '../../contexts/MonthContext.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
 import { radius } from '../../theme/tokens';
+import { t } from '../../i18n';
 
 // MonthNavigator — month stepper shared by the desktop sidebar and the
 // mobile top bar.
@@ -69,8 +70,8 @@ export default function MonthNavigator({ variant = 'sidebar' }) {
           onClick={goPrev}
           className="sans"
           style={stepBtnStyle}
-          title="Mês anterior"
-          aria-label="Mês anterior"
+          title={t('month.prev')}
+          aria-label={t('month.prev')}
         >
           <ChevronLeft size={16} />
         </button>
@@ -90,8 +91,8 @@ export default function MonthNavigator({ variant = 'sidebar' }) {
           onClick={goNext}
           className="sans"
           style={stepBtnStyle}
-          title="Próximo mês"
-          aria-label="Próximo mês"
+          title={t('month.next')}
+          aria-label={t('month.next')}
         >
           <ChevronRight size={16} />
         </button>
@@ -119,8 +120,8 @@ export default function MonthNavigator({ variant = 'sidebar' }) {
           onClick={goPrev}
           className="sans"
           style={stepBtnStyle}
-          title="Mês anterior"
-          aria-label="Mês anterior"
+          title={t('month.prev')}
+          aria-label={t('month.prev')}
         >
           <ChevronLeft size={16} />
         </button>
@@ -129,8 +130,8 @@ export default function MonthNavigator({ variant = 'sidebar' }) {
           onClick={goNext}
           className="sans"
           style={stepBtnStyle}
-          title="Próximo mês"
-          aria-label="Próximo mês"
+          title={t('month.next')}
+          aria-label={t('month.next')}
         >
           <ChevronRight size={16} />
         </button>
@@ -149,9 +150,9 @@ export default function MonthNavigator({ variant = 'sidebar' }) {
               gap: 4,
               color: tokens.text.muted,
             }}
-            title="Voltar ao mês atual"
+            title={t('month.today.title')}
           >
-            <CalendarDays size={12} /> Hoje
+            <CalendarDays size={12} /> {t('month.today')}
           </button>
         )}
       </div>
@@ -172,7 +173,7 @@ export default function MonthNavigator({ variant = 'sidebar' }) {
           onChange={(e) => setCompareMode(e.target.checked)}
           style={{ accentColor: tokens.accent.primary }}
         />
-        vs ano anterior
+        {t('month.compareYoY')}
       </label>
     </div>
   );

@@ -8,7 +8,7 @@ const Spinner = () => (
   <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
     <Loader2
       size={24}
-      style={{ color: color.accent.warm, animation: 'spin 1s linear infinite' }}
+      style={{ color: color.accent.primary, animation: 'spin 1s linear infinite' }}
     />
   </div>
 );

@@ -1,12 +1,13 @@
 import React from 'react';
 import { color } from '../../../theme/tokens';
+import { t } from '../../../i18n';
 
 // Two-way toggle between Ano tab views: "Princípio × Mês" (default) and
 // "Categoria × Mês". Matches the .tab styling used in App.jsx but rendered
 // as pill buttons so it nests comfortably inside the Ano header.
 const OPTIONS = [
-  { id: 'principio', label: 'Princípio × Mês' },
-  { id: 'categoria', label: 'Categoria × Mês' },
+  { id: 'principio', labelKey: 'ano.view.principio' },
+  { id: 'categoria', labelKey: 'ano.view.categoria' },
 ];
 
 function ViewToggle({ value, onChange }) {
@@ -33,7 +34,7 @@ function ViewToggle({ value, onChange }) {
             className="sans"
             style={{
               background: active ? color.bg.hover : 'transparent',
-              color: active ? color.accent.warm : color.text.muted,
+              color: active ? color.accent.primary : color.text.muted,
               border: 'none',
               borderRadius: 2,
               cursor: 'pointer',
@@ -44,7 +45,7 @@ function ViewToggle({ value, onChange }) {
               transition: 'all 0.12s',
             }}
           >
-            {opt.label}
+            {t(opt.labelKey)}
           </button>
         );
       })}

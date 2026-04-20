@@ -1,5 +1,6 @@
 import React from 'react';
 import { color } from '../../../theme/tokens';
+import { t } from '../../../i18n';
 
 // Year dropdown for the Ano tab. Default range: current year + prior 3.
 // Keeps the "sans" class + editorial dark palette consistent with
@@ -22,7 +23,7 @@ function YearSelector({ year, onChange, span = 3 }) {
         letterSpacing: '0.08em',
       }}
     >
-      Ano
+      {t('ano.year.label')}
       <select
         value={year}
         onChange={e => onChange(parseInt(e.target.value, 10))}

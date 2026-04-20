@@ -1,5 +1,6 @@
 import React from 'react';
 import { color } from '../../../theme/tokens';
+import { t } from '../../../i18n';
 
 // Localised short month labels. Mirrors the convention already used in
 // features/previsao/Previsao.jsx, kept local to avoid premature sharing.
@@ -60,7 +61,7 @@ function MatrixTable({ months, rows, totals, showPct = false }) {
   const totalsCellStyle = {
     borderTop: `1px solid ${color.border.default}`,
     background: color.bg.hover,
-    color: color.accent.warm,
+    color: color.accent.primary,
     fontWeight: 600,
   };
 
@@ -108,7 +109,7 @@ function MatrixTable({ months, rows, totals, showPct = false }) {
           ))}
           {totals && (
             <tr>
-              <td style={{ ...rowLabelStyle, ...totalsCellStyle }} className="sans">Totais</td>
+              <td style={{ ...rowLabelStyle, ...totalsCellStyle }} className="sans">{t('ano.totals')}</td>
               {months.map(m => (
                 <td key={m} style={{ ...dataCellStyle, ...totalsCellStyle }}>
                   {(totals[m] || 0) > 0 ? BRL(totals[m]) : <span style={{ color: color.text.faint }}>—</span>}
