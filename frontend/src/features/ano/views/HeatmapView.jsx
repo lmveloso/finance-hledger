@@ -4,6 +4,7 @@ import Spinner from '../../../components/Spinner.jsx';
 import ErrorBox from '../../../components/ErrorBox.jsx';
 import { useCategoriaMes } from '../hooks/useCategoriaMes.js';
 import { monthLabel } from '../components/MatrixTable.jsx';
+import { t } from '../../../i18n';
 
 // View 1 (PR-U4) — Categoria × Mês as a CSS-grid heatmap.
 //
@@ -48,7 +49,7 @@ function HeatmapView({ year }) {
   if (!categories.length) {
     return (
       <div className="sans" style={{ color: color.text.muted, fontSize: 13, padding: 24 }}>
-        Nenhuma despesa registrada em {year}.
+        {t('ano.empty', { year })}
       </div>
     );
   }
@@ -75,7 +76,7 @@ function HeatmapView({ year }) {
             marginBottom: 16,
           }}
         >
-          Categoria × Mês · {year}
+          {t('ano.title.categoria', { year })}
         </div>
 
         <div style={{ minWidth: 640 }}>
@@ -191,7 +192,7 @@ function HeatmapView({ year }) {
                 letterSpacing: '0.08em',
               }}
             >
-              Total
+              {t('ano.total.row')}
             </div>
             {monthTotals.map((tot, mi) => (
               <div
@@ -244,7 +245,7 @@ function HeatmapView({ year }) {
           className="sans"
           style={{ fontSize: 10, color: color.text.disabled }}
         >
-          Intensidade por categoria:
+          {t('ano.legend.intensity')}
         </span>
         {LEGEND_STOPS.map(v => (
           <div
@@ -263,7 +264,7 @@ function HeatmapView({ year }) {
           className="sans"
           style={{ fontSize: 10, color: color.text.disabled }}
         >
-          máx da categoria
+          {t('ano.legend.max')}
         </span>
       </div>
     </div>

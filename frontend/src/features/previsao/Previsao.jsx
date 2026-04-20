@@ -1,4 +1,7 @@
 import React from 'react';
+// TODO(PR-UXX): Previsao is the last consumer of Recharts in the codebase.
+// Kept intentionally pending a native-SVG port (see PR-U7 patrimonio for the
+// reference pattern). Tab is hidden from nav in Fase U; route remains reachable.
 import {
   LineChart,
   Line,
@@ -10,6 +13,7 @@ import {
 } from 'recharts';
 import { useApi } from '../../api.js';
 import { color } from '../../theme/tokens';
+import { t } from '../../i18n';
 import Spinner from '../../components/Spinner.jsx';
 import ErrorBox from '../../components/ErrorBox.jsx';
 import { useMonth } from '../../contexts/MonthContext.jsx';
@@ -69,24 +73,24 @@ function Previsao() {
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase' }}>
-            Previsão de fluxo · 12 meses
+            {t('previsao.forecast.title')}
           </div>
-          <span className="sans" style={{ fontSize: 12, color: color.accent.warm, background: color.bg.hover, border: `1px solid ${color.border.default}`, borderRadius: 3, padding: '3px 8px' }}>
-            Saldo projetado 6 meses: {BRL(projectedSaldo)}
+          <span className="sans" style={{ fontSize: 12, color: color.accent.primary, background: color.bg.hover, border: `1px solid ${color.border.default}`, borderRadius: 3, padding: '3px 8px' }}>
+            {t('previsao.forecast.projectedBalance', { amount: BRL(projectedSaldo) })}
           </span>
         </div>
         <div style={{ display: 'flex', gap: 20, marginBottom: 16, flexWrap: 'wrap' }}>
           <span className="sans" style={{ fontSize: 12, color: color.text.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 10, height: 10, background: color.feedback.positive, display: 'inline-block' }} /> Receitas
+            <span style={{ width: 10, height: 10, background: color.feedback.positive, display: 'inline-block' }} /> {t('previsao.legend.revenue')}
           </span>
           <span className="sans" style={{ fontSize: 12, color: color.text.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 10, height: 10, background: color.feedback.negative, display: 'inline-block' }} /> Despesas
+            <span style={{ width: 10, height: 10, background: color.feedback.negative, display: 'inline-block' }} /> {t('previsao.legend.expense')}
           </span>
           <span className="sans" style={{ fontSize: 12, color: color.text.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 18, height: 2, background: color.feedback.info, display: 'inline-block' }} /> Saldo
+            <span style={{ width: 18, height: 2, background: color.feedback.info, display: 'inline-block' }} /> {t('previsao.legend.balance')}
           </span>
           <span className="sans" style={{ fontSize: 12, color: color.text.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 18, height: 0, borderTop: `2px dashed ${color.border.default}`, display: 'inline-block', opacity: 0.5 }} /> Previsão
+            <span style={{ width: 18, height: 0, borderTop: `2px dashed ${color.border.default}`, display: 'inline-block', opacity: 0.5 }} /> {t('previsao.legend.forecast')}
           </span>
         </div>
         <ResponsiveContainer width="100%" height={300}>
@@ -102,9 +106,9 @@ function Previsao() {
                 return item?.mes || label;
               }}
             />
-            <Line type="monotone" dataKey="receitas" stroke={color.feedback.positive} strokeWidth={2} dot={{ r: 3, fill: color.feedback.positive }} activeDot={{ r: 5 }} name="Receitas" strokeDasharray="" />
-            <Line type="monotone" dataKey="despesas" stroke={color.feedback.negative} strokeWidth={2} dot={{ r: 3, fill: color.feedback.negative }} activeDot={{ r: 5 }} name="Despesas" />
-            <Line type="monotone" dataKey="saldo" stroke={color.feedback.info} strokeWidth={2} dot={{ r: 3, fill: color.feedback.info }} activeDot={{ r: 5 }} name="Saldo" />
+            <Line type="monotone" dataKey="receitas" stroke={color.feedback.positive} strokeWidth={2} dot={{ r: 3, fill: color.feedback.positive }} activeDot={{ r: 5 }} name={t('previsao.legend.revenue')} strokeDasharray="" />
+            <Line type="monotone" dataKey="despesas" stroke={color.feedback.negative} strokeWidth={2} dot={{ r: 3, fill: color.feedback.negative }} activeDot={{ r: 5 }} name={t('previsao.legend.expense')} />
+            <Line type="monotone" dataKey="saldo" stroke={color.feedback.info} strokeWidth={2} dot={{ r: 3, fill: color.feedback.info }} activeDot={{ r: 5 }} name={t('previsao.legend.balance')} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -113,13 +117,13 @@ function Previsao() {
       {categorias.length > 0 && seasonMeses.length > 0 && (
         <div className="card">
           <div className="sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: color.text.muted, textTransform: 'uppercase', marginBottom: 16 }}>
-            Sazonalidade · Despesas por categoria
+            {t('previsao.seasonality.title')}
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '8px 10px', color: color.text.muted, borderBottom: `1px solid ${color.border.default}`, fontWeight: 500, whiteSpace: 'nowrap' }}>Categoria</th>
+                  <th style={{ textAlign: 'left', padding: '8px 10px', color: color.text.muted, borderBottom: `1px solid ${color.border.default}`, fontWeight: 500, whiteSpace: 'nowrap' }}>{t('previsao.seasonality.header.category')}</th>
                   {seasonMeses.map(m => (
                     <th key={m.mes} style={{ textAlign: 'right', padding: '8px 8px', color: color.text.muted, borderBottom: `1px solid ${color.border.default}`, fontWeight: 500, whiteSpace: 'nowrap' }}>
                       {monthLabel(m.mes)}
@@ -148,11 +152,10 @@ function Previsao() {
                             fontFamily: "'Instrument Serif', Georgia, serif",
                             fontSize: 12,
                             color: color.text.primary,
-                            // Heat-map fill: data-driven alpha over the warm-brown legacy accent (rgb 212,165,116).
-                            // Previsão is hidden from nav in Fase U (see docs/04-PRD-ui-ux.md §4.1); this fill will
-                            // be replaced when the tab is redesigned or retired. Left as literal rgba so the rest
-                            // of the app can migrate to indigo-violet without touching this code path.
-                            background: val > 0 ? `rgba(212, 165, 116, ${opacity * 0.4})` : 'transparent',
+                            // Heat-map fill: data-driven alpha. Previsão is hidden from nav in Fase U
+                            // (see docs/04-PRD-ui-ux.md §4.1) and slated for a native-SVG redesign,
+                            // so this literal rgba is kept rather than threaded through the theme tokens.
+                            background: val > 0 ? `rgba(99, 102, 241, ${opacity * 0.5})` : 'transparent',
                             whiteSpace: 'nowrap',
                           }}
                         >

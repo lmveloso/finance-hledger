@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { color } from './theme/tokens';
+import { t } from './i18n';
 
 const API = import.meta.env.VITE_API_URL || '';
 
@@ -48,7 +49,7 @@ export default function Login({ onLogin }) {
       padding: '0.6rem',
       border: 'none',
       borderRadius: 8,
-      background: color.accent.warm,
+      background: color.accent.primary,
       color: color.bg.pageAlt,
       fontSize: '1rem',
       fontWeight: 600,
@@ -72,7 +73,7 @@ export default function Login({ onLogin }) {
         body: JSON.stringify({ password }),
       });
       if (!r.ok) {
-        setError('Senha incorreta');
+        setError(t('auth.error.wrongPassword'));
         return;
       }
       const data = await r.json();
@@ -80,7 +81,7 @@ export default function Login({ onLogin }) {
       localStorage.setItem('user', data.user);
       onLogin();
     } catch {
-      setError('Erro de conexão');
+      setError(t('auth.error.connection'));
     } finally {
       setSubmitting(false);
     }
@@ -89,17 +90,17 @@ export default function Login({ onLogin }) {
   return (
     <div style={styles.wrapper}>
       <form style={styles.card} onSubmit={handleSubmit}>
-        <div style={styles.title}>🔐 Finance Hledger</div>
+        <div style={styles.title}>{t('auth.title')}</div>
         <input
           style={styles.input}
           type="password"
-          placeholder="Senha"
+          placeholder={t('auth.password.placeholder')}
           value={password}
           onChange={e => setPassword(e.target.value)}
           autoFocus
         />
         <button style={styles.button} type="submit" disabled={submitting}>
-          {submitting ? 'Entrando...' : 'Entrar'}
+          {submitting ? t('auth.submitting') : t('auth.submit')}
         </button>
         {error && <div style={styles.error}>{error}</div>}
       </form>

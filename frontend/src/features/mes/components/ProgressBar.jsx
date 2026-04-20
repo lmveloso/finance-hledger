@@ -10,7 +10,7 @@ import { color } from '../../../theme/tokens';
 function ProgressBar({
   pct,
   height = 6,
-  fillColor = color.accent.warm,
+  fillColor = color.accent.primary,
   overColor = color.feedback.negative,
   bgColor = color.border.default,
 }) {

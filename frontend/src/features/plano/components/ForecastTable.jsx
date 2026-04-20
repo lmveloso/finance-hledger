@@ -69,7 +69,7 @@ function ForecastTable({ months }) {
   };
 
   const cumulativeCellStyle = {
-    background: color.overlay.accentWarmSoft,
+    background: color.overlay.accentPrimarySoft,
     fontWeight: 600,
   };
 

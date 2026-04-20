@@ -100,7 +100,7 @@ function TotalChip({ label, value, accent = false }) {
         className="serif"
         style={{
           fontSize: 14,
-          color: accent ? color.accent.warm : color.text.primary,
+          color: accent ? color.accent.primary : color.text.primary,
           fontWeight: 600,
         }}
       >

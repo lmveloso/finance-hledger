@@ -57,7 +57,7 @@ function ParcelamentoCard({ row }) {
           style={{
             width: `${pct}%`,
             height: '100%',
-            background: color.accent.warm,
+            background: color.accent.primary,
             transition: 'width 0.2s ease',
           }}
         />
@@ -102,7 +102,7 @@ function Field({ label, value, accent = false }) {
         className="serif"
         style={{
           fontSize: 14,
-          color: accent ? color.accent.warm : color.text.primary,
+          color: accent ? color.accent.primary : color.text.primary,
           fontWeight: accent ? 600 : 500,
         }}
       >

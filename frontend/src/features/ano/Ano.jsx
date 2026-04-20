@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { color } from '../../theme/tokens';
+import { t } from '../../i18n';
 import YearSelector from './components/YearSelector.jsx';
 import ViewToggle from './components/ViewToggle.jsx';
 import PrincipioMesView from './views/PrincipioMesView.jsx';
@@ -33,7 +34,7 @@ function Ano() {
             textTransform: 'uppercase',
           }}
         >
-          Visão anual
+          {t('ano.header')}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <YearSelector year={year} onChange={setYear} />

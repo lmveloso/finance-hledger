@@ -173,6 +173,79 @@ const dict = {
 
   // Navigation
   'nav.patrimonio': 'Net Worth',
+
+  // ── Pull-to-refresh ────────────────────────────────────────────────────
+  'pull.pulling': 'Pull to refresh...',
+  'pull.ready': 'Release to refresh...',
+  'pull.refreshing': 'Refreshing...',
+
+  // ── Auth ───────────────────────────────────────────────────────────────
+  'auth.title': 'Finance Hledger',
+  'auth.password.placeholder': 'Password',
+  'auth.submit': 'Sign in',
+  'auth.submitting': 'Signing in...',
+  'auth.error.wrongPassword': 'Wrong password',
+  'auth.error.connection': 'Connection error',
+
+  // ── Month stepper (MonthNavigator) ─────────────────────────────────────
+  'month.prev': 'Previous month',
+  'month.next': 'Next month',
+  'month.today': 'Today',
+  'month.today.title': 'Back to current month',
+  'month.compareYoY': 'vs. previous year',
+
+  // ── ErrorBox ───────────────────────────────────────────────────────────
+  'errorBox.title': 'Loading error: {msg}',
+  'errorBox.checkBackend':
+    'Check that the backend is running and LEDGER_FILE points to the correct journal.',
+
+  // ── Transacoes tab ─────────────────────────────────────────────────────
+  'transacoes.title': 'Transactions',
+  'transacoes.search.placeholder': 'Search by description...',
+  'transacoes.filter.allCategories': 'All categories',
+  'transacoes.range.month': 'Month',
+  'transacoes.range.date': 'Range',
+  'transacoes.range.until': 'to',
+  'transacoes.range.toggleTitle.toRange': 'Switch to date range',
+  'transacoes.range.toggleTitle.toMonth': 'Back to single month',
+  'transacoes.table.date': 'Date',
+  'transacoes.table.description': 'Description',
+  'transacoes.table.category': 'Category',
+  'transacoes.table.amount': 'Amount',
+  'transacoes.empty': 'No transactions found for the selected filters.',
+  'transacoes.pagination.previous': 'Previous',
+  'transacoes.pagination.next': 'Next',
+  'transacoes.pagination.summary': '{start}–{end} of {total}',
+  'transacoes.pagination.zero': '0 results',
+  'transacoes.tags.label': 'Tags',
+  'transacoes.tags.clear': 'Clear filters',
+
+  // ── Ano tab ────────────────────────────────────────────────────────────
+  'ano.header': 'Year overview',
+  'ano.year.label': 'Year',
+  'ano.view.principio': 'Principle × Month',
+  'ano.view.categoria': 'Category × Month',
+  'ano.empty': 'No expenses recorded in {year}.',
+  'ano.title.principio': 'Principle × Month · {year}',
+  'ano.title.categoria': 'Category × Month · {year}',
+  'ano.totals': 'Totals',
+  'ano.total.row': 'Total',
+  'ano.legend.intensity': 'Intensity per category:',
+  'ano.legend.max': 'category max',
+  'ano.warning.sumNot100':
+    'Warning: the sum of percentages for some month did not reach 100% (check backend).',
+  'ano.warning.sumOk':
+    'Each column sums to 100% (largest-remainder rounding).',
+
+  // ── Previsao tab (kept for symmetry; hidden from nav in Fase U) ────────
+  'previsao.forecast.title': 'Flow forecast · 12 months',
+  'previsao.forecast.projectedBalance': 'Projected balance 6 months: {amount}',
+  'previsao.legend.revenue': 'Revenue',
+  'previsao.legend.expense': 'Expense',
+  'previsao.legend.balance': 'Balance',
+  'previsao.legend.forecast': 'Forecast',
+  'previsao.seasonality.title': 'Seasonality · Expenses by category',
+  'previsao.seasonality.header.category': 'Category',
 };
 
 export default dict;

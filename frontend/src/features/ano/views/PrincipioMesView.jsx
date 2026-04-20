@@ -4,25 +4,13 @@ import Spinner from '../../../components/Spinner.jsx';
 import ErrorBox from '../../../components/ErrorBox.jsx';
 import MatrixTable from '../components/MatrixTable.jsx';
 import { usePrincipioMes } from '../hooks/usePrincipioMes.js';
+import { t } from '../../../i18n';
 
-// Display-key → pt-BR label. These mirror what backend returns as
-// `display_key` (e.g. "principle.custos-fixos"). i18n proper is still
-// deferred (see ErrorBox.jsx note "post PR-F9"), so we inline the
-// dictionary here and will migrate to frontend/src/i18n/ when i18n
-// lands. Keeping keys identical to the ones the backend emits ensures
-// a future t()-based replacement is a pure search-and-replace.
-const PRINCIPLE_LABELS_PT_BR = {
-  'principle.custos-fixos':          'Custos Fixos',
-  'principle.conforto':              'Conforto',
-  'principle.metas':                 'Metas',
-  'principle.prazeres':              'Prazeres',
-  'principle.liberdade-financeira':  'Liberdade Financeira',
-  'principle.aumentar-renda':        'Aumentar Renda',
-  'principle.reserva-oportunidade':  'Reserva de Oportunidade',
-};
-
+// Backend emits `display_key` as `principle.<id>` (e.g.
+// "principle.custos-fixos"). These keys live in the i18n dictionaries so we
+// resolve labels through `t()` — keeps EN/PT in sync without a local table.
 function labelFor(key) {
-  return PRINCIPLE_LABELS_PT_BR[key] || key;
+  return t(key);
 }
 
 function PrincipioMesView({ year }) {
@@ -33,7 +21,7 @@ function PrincipioMesView({ year }) {
   if (!data || !data.principles?.length) {
     return (
       <div className="sans" style={{ color: color.text.muted, fontSize: 13, padding: 24 }}>
-        Nenhum dado encontrado para {year}.
+        {t('ano.empty', { year })}
       </div>
     );
   }
@@ -74,7 +62,7 @@ function PrincipioMesView({ year }) {
           marginBottom: 16,
         }}
       >
-        Princípio × Mês · {year}
+        {t('ano.title.principio', { year })}
       </div>
       <MatrixTable months={months} rows={rows} totals={totals} showPct />
       <div
@@ -85,9 +73,7 @@ function PrincipioMesView({ year }) {
           marginTop: 12,
         }}
       >
-        {anyOff
-          ? 'Atenção: soma dos % em algum mês não bateu 100% (verifique backend).'
-          : 'Cada coluna soma 100% (arredondamento por maior resto).'}
+        {anyOff ? t('ano.warning.sumNot100') : t('ano.warning.sumOk')}
       </div>
     </div>
   );

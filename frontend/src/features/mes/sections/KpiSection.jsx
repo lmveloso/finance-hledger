@@ -5,7 +5,7 @@
 //
 // Result color is conditional (PRD §5.2):
 //   > +threshold → feedback.positive
-//   | delta | ≤ threshold → accent.warm (amber-ish: "neutral / small")
+//   | delta | ≤ threshold → accent.primary (neutral / small delta)
 //   < -threshold → feedback.negative
 //
 // Threshold: 1% of revenue, floor 100 BRL. Picks revenue (not |expense|) as
@@ -23,7 +23,7 @@ function pickResultColor(result, revenue) {
   const ref = Math.max(Math.abs(revenue || 0) * 0.01, 100);
   if (result > ref) return color.feedback.positive;
   if (result < -ref) return color.feedback.negative;
-  return color.accent.warm;
+  return color.accent.primary;
 }
 
 function KpiSection() {

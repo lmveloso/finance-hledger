@@ -143,10 +143,9 @@ const _legacy = {
     faint:      () => _modes[_activeMode].text.disabled,
     faintAlt:   () => _modes[_activeMode].text.disabled,
   },
-  accent: {
-    warm: () => _modes[_activeMode].accent.primary,
-    // accent.secondary is already present in the new tree — no shim needed.
-  },
+  // The `accent.warm` shim was removed in PR-U9 after all call-sites were
+  // migrated to `accent.primary`. `accent.secondary` has always lived in the
+  // active tree directly, so no shim is needed there.
   feedback: {
     errorText:   () => _modes[_activeMode].feedback.negative,
     errorBg:     () => _modes[_activeMode].feedback.negativeMuted,
@@ -160,9 +159,9 @@ const _legacy = {
     credito:        () => _modes[_activeMode].feedback.positiveMuted,
     debito:         () => _modes[_activeMode].feedback.negativeMuted,
     transferencia:  () => _modes[_activeMode].feedback.infoMuted,
-    saldoInicial:   () => _modes[_activeMode].bg.cardAlt,
-    accentWarmSoft: () => _modes[_activeMode].accent.primaryMuted,
-    pageScrim:      () => (_activeMode === 'dark' ? 'rgba(13,15,26,0.4)' : 'rgba(240,241,255,0.4)'),
+    saldoInicial:      () => _modes[_activeMode].bg.cardAlt,
+    accentPrimarySoft: () => _modes[_activeMode].accent.primaryMuted,
+    pageScrim:         () => (_activeMode === 'dark' ? 'rgba(13,15,26,0.4)' : 'rgba(240,241,255,0.4)'),
   },
 };
 

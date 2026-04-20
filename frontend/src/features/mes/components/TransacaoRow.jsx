@@ -1,8 +1,8 @@
 // Row per transaction in the "Top 10" section.
 //
 // Layout: description on the left with date+category underneath; amount on the
-// right in accent.warm. Values displayed as absolute BRL (top-expenses already
-// returns positive amounts).
+// right in accent.primary. Values displayed as absolute BRL (top-expenses
+// already returns positive amounts).
 
 import React from 'react';
 import { color } from '../../../theme/tokens';
@@ -50,7 +50,7 @@ function TransacaoRow({ data, descricao, categoria, valor, isLast }) {
         className="serif"
         style={{
           fontSize: 16,
-          color: color.accent.warm,
+          color: color.accent.primary,
           whiteSpace: 'nowrap',
         }}
       >

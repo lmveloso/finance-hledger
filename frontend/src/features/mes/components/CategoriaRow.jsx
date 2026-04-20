@@ -36,7 +36,7 @@ function CategoriaRow({ nome, valor, pct, isLast, accentColor }) {
             style={{
               width: 10,
               height: 10,
-              background: accentColor || color.accent.warm,
+              background: accentColor || color.accent.primary,
               flexShrink: 0,
             }}
           />
@@ -73,7 +73,7 @@ function CategoriaRow({ nome, valor, pct, isLast, accentColor }) {
           style={{
             height: '100%',
             width: `${Math.max(0, Math.min(100, pct || 0))}%`,
-            background: accentColor || color.accent.warm,
+            background: accentColor || color.accent.primary,
             opacity: 0.8,
           }}
         />

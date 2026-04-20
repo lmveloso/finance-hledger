@@ -36,7 +36,7 @@ function FlowKpiCards({ data }) {
     {
       label: 'Economia',
       value: economia,
-      cor: economia >= 0 ? color.accent.warm : color.feedback.negative,
+      cor: economia >= 0 ? color.accent.primary : color.feedback.negative,
       destaque: true,
     },
     {
