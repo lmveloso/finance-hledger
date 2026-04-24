@@ -120,7 +120,7 @@ function AppInner() {
     @keyframes spin { to { transform: rotate(360deg); } }
     * { box-sizing: border-box; margin: 0; }
     body { background: ${tokens.bg.page}; }
-    .serif { font-family: 'Instrument Serif', Georgia, serif; }
+    .serif { font-family: 'Google Sans Flex', 'Plus Jakarta Sans', system-ui, sans-serif; }
     .sans { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
     .card { background: ${tokens.bg.card}; border: 1px solid ${tokens.border.default}; border-radius: 4px; padding: 24px; }
     .tab { padding: 10px 16px; cursor: pointer; border: none; background: transparent; color: ${tokens.text.muted}; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid transparent; transition: all 0.15s; }
