@@ -25,9 +25,12 @@ const BRL = (n) =>
  * Uses CSS Grid `repeat(auto-fit, minmax(220px, 1fr))` for responsive wrap.
  */
 function AccountCards({ contas }) {
-  const sorted = useMemo(() => sortAccounts(contas || []), [contas]);
+  const { ativos, passivos } = useMemo(
+    () => partitionAccounts(contas || []),
+    [contas],
+  );
 
-  if (sorted.length === 0) return null;
+  if (ativos.length === 0 && passivos.length === 0) return null;
 
   return (
     <div>
@@ -43,22 +46,69 @@ function AccountCards({ contas }) {
       >
         {t('fluxo.contas.title')}
       </div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 12,
-        }}
-      >
-        {sorted.map((c) => (
-          <AccountCard key={c.conta} conta={c} />
-        ))}
-      </div>
+
+      {ativos.length > 0 && (
+        <div>
+          <div
+            className="sans"
+            style={{
+              fontSize: 10,
+              color: color.text.muted,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              marginBottom: 8,
+              marginTop: 4,
+            }}
+          >
+            {t('fluxo.contas.sectionAtivos')}
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {ativos.map((c) => (
+              <AccountCard key={c.conta} conta={c} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {passivos.length > 0 && (
+        <div style={{ marginTop: 20 }}>
+          <div
+            className="sans"
+            style={{
+              fontSize: 10,
+              color: color.text.muted,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              marginBottom: 8,
+              marginTop: 4,
+            }}
+          >
+            {t('fluxo.contas.sectionPassivos')}
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {passivos.map((c) => (
+              <AccountCard key={c.conta} conta={c} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function sortAccounts(contas) {
+function partitionAccounts(contas) {
   const ativos = contas
     .filter((c) => c.tipo === 'ativo')
     .slice()
@@ -71,7 +121,7 @@ function sortAccounts(contas) {
         Math.abs((b.saldo_final ?? 0) - (b.saldo_inicial ?? 0)) -
         Math.abs((a.saldo_final ?? 0) - (a.saldo_inicial ?? 0)),
     );
-  return [...ativos, ...passivos];
+  return { ativos, passivos };
 }
 
 function AccountCard({ conta }) {
