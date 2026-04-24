@@ -91,7 +91,7 @@ function TotalHeroCard({ total }) {
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
             <span
               style={{
-                fontFamily: "'Instrument Serif', Georgia, serif",
+                fontFamily: "'Google Sans Flex', 'Plus Jakarta Sans', system-ui, sans-serif",
                 fontSize: 36,
                 color: over ? color.feedback.negative : color.text.primary,
                 letterSpacing: '-0.02em',

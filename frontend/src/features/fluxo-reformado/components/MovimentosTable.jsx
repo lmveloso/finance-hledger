@@ -103,7 +103,7 @@ const td = (align) => ({
   padding: '10px',
   borderBottom: `1px solid ${color.border.subtle}`,
   color: color.text.secondary,
-  fontFamily: align === 'right' ? "'Instrument Serif', Georgia, serif" : "'Plus Jakarta Sans', system-ui, sans-serif",
+  fontFamily: align === 'right' ? "'Google Sans Flex', 'Plus Jakarta Sans', system-ui, sans-serif" : "'Plus Jakarta Sans', system-ui, sans-serif",
   whiteSpace: 'nowrap',
 });
 

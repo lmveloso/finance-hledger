@@ -93,7 +93,7 @@ function CategoryRow({ nome, orcado, realizado, barColor, isLast }) {
   const realizadoText = (
     <span
       style={{
-        fontFamily: "'Instrument Serif', Georgia, serif",
+        fontFamily: "'Google Sans Flex', 'Plus Jakarta Sans', system-ui, sans-serif",
         fontSize: 14,
         color: over ? color.feedback.negative : color.text.primary,
       }}

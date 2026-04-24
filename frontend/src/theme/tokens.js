@@ -242,7 +242,7 @@ export function getModeTokens(mode) {
 export const fonts = {
   jakarta: {
     body:    "'Plus Jakarta Sans', system-ui, sans-serif",
-    display: "'Instrument Serif', Georgia, serif",
+    display: "'Google Sans Flex', 'Plus Jakarta Sans', system-ui, sans-serif",
     label:   'Jakarta',
   },
 };

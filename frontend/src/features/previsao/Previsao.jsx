@@ -149,7 +149,7 @@ function Previsao() {
                             textAlign: 'right',
                             padding: '6px 8px',
                             borderBottom: `1px solid ${color.border.subtle}`,
-                            fontFamily: "'Instrument Serif', Georgia, serif",
+                            fontFamily: "'Google Sans Flex', 'Plus Jakarta Sans', system-ui, sans-serif",
                             fontSize: 12,
                             color: color.text.primary,
                             // Heat-map fill: data-driven alpha. Previsão is hidden from nav in Fase U
