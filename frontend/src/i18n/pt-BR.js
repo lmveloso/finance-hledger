@@ -241,6 +241,10 @@ const dict = {
     'Atenção: soma dos % em algum mês não bateu 100% (verifique backend).',
   'ano.warning.sumOk':
     'Cada coluna soma 100% (arredondamento por maior resto).',
+  'ano.drilldown.principio.title': 'Metas por Princípio',
+  'ano.drilldown.categoria.title': 'Despesas por categoria',
+  'ano.drilldown.empty': 'Sem dados para este mês.',
+  'ano.drilldown.collapseHint': 'Clique novamente para fechar',
 
   // ── Previsao tab (mantida para simetria; oculta da nav em Fase U) ──────
   'previsao.forecast.title': 'Previsão de fluxo · 12 meses',

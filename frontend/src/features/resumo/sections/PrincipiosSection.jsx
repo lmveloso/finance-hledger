@@ -1,12 +1,12 @@
 // Resumo — Section 3: Compact Principios (7 progress bars).
 //
-// Different layout from the `features/mes/sections/PrincipiosSection` table:
-// this one is a dense, scanable list optimized for the Resumo overview card.
-// Each row: principle label + realized/target % + ProgressBar. Consuming the
+// Dense, scanable list optimized for the Resumo overview card. Each row:
+// principle label + realized/target % + ProgressBar. Consumes the
 // ProgressBar component from features/mes (shared by design; each feature
 // keeps its own section). If `/api/principles/summary` errors, we show the
 // existing `mes.principles.unavailable` placeholder so messaging stays
-// consistent between Resumo and Mês.
+// consistent across the app. The Mês tab no longer renders a Metas card;
+// that surface moved to the Ano tab drill-down in Fase UX-Polish (#4).
 
 import React from 'react';
 import { color } from '../../../theme/tokens';

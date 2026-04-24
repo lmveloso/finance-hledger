@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { color } from '../../theme/tokens';
 import { t } from '../../i18n';
 import YearSelector from './components/YearSelector.jsx';
@@ -12,6 +12,19 @@ import HeatmapView from './views/HeatmapView.jsx';
 function Ano() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [view, setView] = useState('principio'); // 'principio' | 'categoria'
+
+  // Column drill-down: clicking a month header in the active view opens a
+  // per-month card underneath the matrix. Resets whenever the user changes
+  // year or view, so the drill-down never points at stale context.
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  useEffect(() => {
+    setSelectedMonth(null);
+  }, [year, view]);
+
+  const handleMonthSelect = useCallback(
+    (month) => setSelectedMonth((prev) => (prev === month ? null : month)),
+    [],
+  );
 
   return (
     <div className="grid">
@@ -42,8 +55,20 @@ function Ano() {
         </div>
       </div>
 
-      {view === 'principio' && <PrincipioMesView year={year} />}
-      {view === 'categoria' && <HeatmapView year={year} />}
+      {view === 'principio' && (
+        <PrincipioMesView
+          year={year}
+          selectedMonth={selectedMonth}
+          onMonthSelect={handleMonthSelect}
+        />
+      )}
+      {view === 'categoria' && (
+        <HeatmapView
+          year={year}
+          selectedMonth={selectedMonth}
+          onMonthSelect={handleMonthSelect}
+        />
+      )}
     </div>
   );
 }

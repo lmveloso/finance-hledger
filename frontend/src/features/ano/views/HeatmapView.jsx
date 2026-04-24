@@ -4,6 +4,7 @@ import Spinner from '../../../components/Spinner.jsx';
 import ErrorBox from '../../../components/ErrorBox.jsx';
 import { useCategoriaMes } from '../hooks/useCategoriaMes.js';
 import { monthLabel } from '../components/MatrixTable.jsx';
+import AnoDrilldown from '../components/AnoDrilldown.jsx';
 import { t } from '../../../i18n';
 
 // View 1 (PR-U4) — Categoria × Mês as a CSS-grid heatmap.
@@ -17,31 +18,25 @@ import { t } from '../../../i18n';
 //
 // The monthly totals row summarises the 7 rendered rows only (not all
 // categories) so the mini-bars match what the user actually sees above.
-const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', {
-  style: 'currency', currency: 'BRL',
-});
-
+const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const LEGEND_STOPS = [0.1, 0.3, 0.55, 0.8, 1.0];
 
 function cellBackground(value, rowMax, isDark) {
   if (value <= 0) return color.bg.cardAlt;
-  const intensity = value / rowMax;
-  const alpha = 0.1 + intensity * 0.78;
-  return isDark
-    ? `rgba(99,102,241,${alpha})`
-    : `rgba(79,82,221,${alpha})`;
+  const alpha = 0.1 + (value / rowMax) * 0.78;
+  return isDark ? `rgba(99,102,241,${alpha})` : `rgba(79,82,221,${alpha})`;
 }
 
 function cellTextColor(value, rowMax, isDark) {
   if (value <= 0) return color.text.disabled;
-  const intensity = value / rowMax;
-  if (intensity > 0.5) return isDark ? '#e0e6ff' : '#ffffff';
+  if (value / rowMax > 0.5) return isDark ? '#e0e6ff' : '#ffffff';
   return color.text.secondary;
 }
 
-function HeatmapView({ year }) {
+function HeatmapView({ year, selectedMonth = null, onMonthSelect = null }) {
   const { loading, error, months, categories, matrix } = useCategoriaMes(year);
   const [hoveredCell, setHoveredCell] = useState(null);
+  const interactive = typeof onMonthSelect === 'function';
 
   if (loading) return <Spinner />;
   if (error) return <ErrorBox msg={error} />;
@@ -90,21 +85,43 @@ function HeatmapView({ year }) {
             }}
           >
             <div />
-            {months.map(m => (
-              <div
-                key={m}
-                className="sans"
-                style={{
-                  fontSize: 10,
-                  color: color.text.muted,
-                  textAlign: 'center',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                }}
-              >
-                {monthLabel(m)}
-              </div>
-            ))}
+            {months.map(m => {
+              const isSelected = interactive && selectedMonth === m;
+              return (
+                <div
+                  key={m}
+                  className="sans"
+                  style={{
+                    fontSize: 10,
+                    color: isSelected ? color.accent.primary : color.text.muted,
+                    textAlign: 'center',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    padding: '4px 0',
+                    borderRadius: radius.rounded.xs,
+                    transition: 'background-color 0.12s, color 0.12s',
+                    ...(interactive && {
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      background: isSelected ? color.accent.primaryMuted : 'transparent',
+                      borderBottom: `2px solid ${isSelected ? color.accent.primary : 'transparent'}`,
+                    }),
+                  }}
+                  onClick={interactive ? () => onMonthSelect(m) : undefined}
+                  onKeyDown={interactive ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onMonthSelect(m);
+                    }
+                  } : undefined}
+                  role={interactive ? 'button' : undefined}
+                  tabIndex={interactive ? 0 : undefined}
+                  aria-pressed={interactive ? isSelected : undefined}
+                >
+                  {monthLabel(m)}
+                </div>
+              );
+            })}
           </div>
 
           {/* Category rows */}
@@ -267,6 +284,8 @@ function HeatmapView({ year }) {
           {t('ano.legend.max')}
         </span>
       </div>
+
+      <AnoDrilldown kind="categoria" month={selectedMonth} />
     </div>
   );
 }
