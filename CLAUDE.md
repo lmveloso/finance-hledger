@@ -26,7 +26,8 @@ This project is executed in **sequential phases**. Always check which phase is a
 - [x] Fase D — Dashboard 2.0 (see `docs/02-PRD-dashboard-v2.md`) - COMPLETED
 - [x] Fase U — UI/UX (see `docs/04-PRD-ui-ux.md`) — COMPLETED
 - [x] Fase UX-Polish — post-Fase U feedback pass (see `docs/05-PRD-ux-polish.md`) — COMPLETED
-- [ ] Fase 1 — Magic Import (see `docs/03-PRD-magic-import.md`) ← ACTIVE
+- [ ] Fase Audit Stabilization — post-audit trust-restoration pass (see `docs/06-PRD-audit-stabilization.md`) ← ACTIVE
+- [ ] Fase 1 — Magic Import (see `docs/03-PRD-magic-import.md`)
 
 ### Phase boundaries
 
@@ -34,7 +35,14 @@ This project is executed in **sequential phases**. Always check which phase is a
 - **Fase D:** dashboard rework inspired by the family's old spreadsheet (see `docs/00-DIAGNOSTICO-planilha.md`). Introduces the Principle dimension, new tab structure (Mês, Ano, Plano, Fluxo reformulado, Patrimônio, Transações). Magic Import tab is a placeholder.
 - **Fase U:** UI/UX overhaul — indigo-violet dual-mode palette, new nav (sidebar + bottom tabs), redesigned visualizations per tab. Nine PRs (U0–U9). Plano/Previsão hidden from nav during this phase.
 - **Fase UX-Polish:** bug fixes and layout corrections from daily use of the Fase U output. No new features, no new endpoints (except where a bug requires it). Tracked as a finite backlog of GitHub issues labeled `ux-polish`. Must complete before Fase 1.
-- **Fase 1:** Magic Import — AI-powered ingestion of bank statements and credit card invoices. Depends on the Principle dimension from Phase D.
+- **Fase Audit Stabilization:** post-audit trust-restoration pass. Fixes inconsistencies where the UI, API contracts, or auth experience can misrepresent the journal or the real backend state. Scope is limited to the audited issue set in `docs/06-PRD-audit-stabilization.md`.
+- **Fase 1:** Magic Import — AI-powered ingestion of bank statements and credit card invoices. Depends on the Principle dimension from Phase D and should resume only after Audit Stabilization closes.
+
+### Working through Fase Audit Stabilization issues
+
+The current active phase is the audited trust-restoration pass documented in `docs/06-PRD-audit-stabilization.md`.
+
+Treat the GitHub issue set in that PRD as the only in-scope backlog until the phase is closed. In particular, agents should work from issues #17, #18, #19, and #20 before resuming any Fase 1 Magic Import work.
 
 ### Working through Fase UX-Polish issues
 
@@ -151,7 +159,7 @@ Full setup guide: `docs/onboarding.md`
 ## Getting started with a new task
 
 1. Check this file's "Current phase" section.
-2. Read the phase's PRD (`docs/01-*`, `docs/02-*`, or `docs/03-*`).
+2. Read the PRD referenced by the active phase (for this audit pass: `docs/06-PRD-audit-stabilization.md`).
 3. Read relevant ADRs in `docs/adr/`.
 4. Pick the right subagent (`architect` to plan, `backend-dev` or `frontend-dev` to implement, `reviewer` to review, `spike-runner` for exploratory work).
 5. Follow the subagent's rules — each has its own preamble.
