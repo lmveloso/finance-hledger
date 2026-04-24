@@ -1,5 +1,9 @@
-// Inline subcategoria drill-down used by CategoriasSection. Rendered in place
-// of the category bars (no modal, per frontend-dev rules).
+// Inline subcategoria drill-down used by CategoriasSection. Rendered in
+// place of the category bars (no modal, per frontend-dev rules).
+//
+// Ported from features/resumo/sections/CategoriaDrilldown.jsx during the
+// Resumo + Mês merge (Fase UX-Polish #3). i18n keys moved from `resumo.*`
+// to `mes.expand.*` to match the new location.
 
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
@@ -35,7 +39,7 @@ function CategoriaDrilldown({ detalhe, onBack }) {
           marginBottom: 20,
         }}
       >
-        <ArrowLeft size={14} /> {t('resumo.drilldown.back')}
+        <ArrowLeft size={14} /> {t('mes.expand.drilldown.back')}
       </button>
       <div
         style={{
@@ -67,7 +71,7 @@ function CategoriaDrilldown({ detalhe, onBack }) {
           className="sans"
           style={{ fontSize: 13, color: color.text.muted }}
         >
-          {t('resumo.drilldown.empty')}
+          {t('mes.expand.drilldown.empty')}
         </div>
       ) : (
         detalhe.subcats.map((s, i) => {

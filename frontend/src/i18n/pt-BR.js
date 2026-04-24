@@ -8,26 +8,14 @@
 // dictionary maps them to human-readable labels.
 
 const dict = {
-  // ── Resumo tab ─────────────────────────────────────────────────────────
-  'resumo.title': 'Resumo',
-  'resumo.kpi.expenses': 'Despesas',
-  'resumo.kpi.balance': 'Saldo',
-  'resumo.categories.title': 'Despesas por categoria',
-  'resumo.principles.title': 'Metas por princípio',
-  'resumo.topExpenses.title': 'Maiores gastos',
-  'resumo.topExpenses.seeAll': 'Ver todas ({count})',
-  'resumo.drilldown.back': 'Voltar',
-  'resumo.drilldown.empty': 'Sem subcategorias registradas neste mês.',
-
   // ── Mes tab ────────────────────────────────────────────────────────────
+  // The old Resumo tab was merged into Mês in Fase UX-Polish #3. The
+  // `resumo.*` keys moved under `mes.expand.*` to reflect their new role
+  // as contents of the KPI expansion panels.
   'mes.title': 'Mês',
-  'mes.revenues.title': 'Receitas',
-  'mes.revenues.total': 'Total de receitas',
-  'mes.revenues.empty': 'Nenhuma receita registrada neste mês.',
   'mes.kpi.revenue': 'Receitas',
   'mes.kpi.expense': 'Despesas',
-  'mes.kpi.result': 'Resultado',
-  'mes.principles.title': 'Metas por princípio',
+  'mes.kpi.result': 'Saldo',
   'mes.principles.unavailable':
     'Endpoint de princípios indisponível — aguarde PR-D1.',
   'mes.principles.header.principle': 'Princípio',
@@ -35,10 +23,6 @@ const dict = {
   'mes.principles.header.realized': 'Realizado',
   'mes.principles.header.amount': 'R$',
   'mes.principles.meta': 'meta {pct}',
-  'mes.expenses.title': 'Despesas por categoria',
-  'mes.expenses.empty': 'Nenhuma despesa registrada neste mês.',
-  'mes.topTransactions.title': 'Top 10 transações',
-  'mes.topTransactions.empty': 'Nenhuma transação registrada neste mês.',
   'mes.creditCards.title': 'Despesas por cartão de crédito',
   'mes.creditCards.empty': 'Nenhum cartão com despesas neste mês.',
   'mes.creditCards.transactions': 'Maiores compras',
@@ -46,6 +30,30 @@ const dict = {
   'mes.creditCards.expand': 'Ver compras',
   'mes.creditCards.collapse': 'Ocultar',
   'mes.creditCards.showOnMobile': 'Ver cartões ({count})',
+
+  // ── Mes KPI expansion panels ───────────────────────────────────────────
+  // Receita expansion — grouped-by-type list of revenue postings.
+  'mes.expand.revenue.title': 'Receitas por tipo',
+  'mes.expand.revenue.empty': 'Nenhuma receita registrada neste mês.',
+  'mes.expand.revenue.total': 'Total de receitas',
+  'mes.expand.revenue.count': '× {count}',
+
+  // Despesa expansion — categorias + maiores gastos + drill-down.
+  'mes.expand.categories.title': 'Despesas por categoria',
+  'mes.expand.topExpenses.title': 'Maiores gastos',
+  'mes.expand.topExpenses.seeAll': 'Ver todas ({count})',
+  'mes.expand.drilldown.back': 'Voltar',
+  'mes.expand.drilldown.empty': 'Sem subcategorias registradas neste mês.',
+
+  // Saldo expansion — Contábil × Caixa real × Δ reconciliation strip.
+  'mes.expand.balance.title': 'Reconciliação contábil × caixa',
+  'mes.expand.balance.contabil': 'Contábil',
+  'mes.expand.balance.caixa': 'Caixa real',
+  'mes.expand.balance.delta': 'Δ Reconciliação',
+  'mes.expand.balance.deltaExplanation':
+    'Diferença explicada por cartão de crédito / parcelas.',
+  'mes.expand.balance.noCardActivity':
+    'Sem movimento em cartões neste mês — contábil e caixa coincidem.',
 
   // ── Principles (identifier → label) ────────────────────────────────────
   'principle.custos-fixos': 'Custos Fixos',
@@ -59,7 +67,7 @@ const dict = {
   'principle.reserva-oportunidade': 'Reserva de Oportunidade',
 
   // ── Navigation tabs ────────────────────────────────────────────────────
-  'nav.resumo': 'Resumo',
+  // `nav.resumo` was removed in Fase UX-Polish #3 (Resumo + Mês merge).
   'nav.mes': 'Mês',
   'nav.ano': 'Ano',
   'nav.fluxo': 'Fluxo',

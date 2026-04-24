@@ -6,7 +6,6 @@ import { t } from '../../i18n';
 // NavContext keeps Portuguese-with-diacritics tab IDs; slug map mirrors
 // NavList.jsx for i18n key resolution.
 const SLUG = {
-  'resumo': 'resumo',
   'mês': 'mes',
   'ano': 'ano',
   'fluxo': 'fluxo',

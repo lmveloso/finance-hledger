@@ -7,7 +7,6 @@ import { t } from '../../i18n';
 // NavContext keeps Portuguese-with-diacritics tab IDs. Mirror the slug map
 // used in NavList/BottomNav so the displayed label flows through i18n.
 const SLUG = {
-  'resumo': 'resumo',
   'mês': 'mes',
   'ano': 'ano',
   'fluxo': 'fluxo',

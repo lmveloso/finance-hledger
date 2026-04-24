@@ -1,14 +1,16 @@
-// Resumo — Section 4: Maiores Gastos (top 5 with "see all" shortcut).
+// Maiores Gastos (top 5 with "see all" shortcut) — ported from
+// features/resumo/sections/MaioresGastosSection.jsx during the Resumo + Mês
+// merge (Fase UX-Polish #3). Rendered inside the Despesa KPI expansion,
+// next to CategoriasSection.
 //
-// Visual layout ported from docs/design/fase-u/project/src/tab-resumo.jsx
-// (lines 51-66). Key design choice: amounts use `color.text.primary` (not
-// `feedback.negative`) — the redesign argues that colour-coding every single
-// expense as "red" adds noise. The list is already bounded to "big spends";
-// the amount contrast through serif weight is enough.
+// Key design choice: amounts use `color.text.primary` (not
+// `feedback.negative`) — the redesign argues that colour-coding every
+// single expense as "red" adds noise. The list is already bounded to
+// "big spends"; the amount contrast through serif weight is enough.
 //
 // If there are more than 5 transactions, the footer exposes "Ver todas (N)"
-// which delegates to `goToTransactions` from NavContext — inline handoff to
-// the Transações tab, not a modal.
+// which delegates to `goToTransactions` from NavContext — inline handoff
+// to the Transações tab, not a modal.
 
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
@@ -54,7 +56,7 @@ function MaioresGastosSection() {
           marginBottom: 16,
         }}
       >
-        {t('resumo.topExpenses.title')}
+        {t('mes.expand.topExpenses.title')}
       </div>
 
       {loading ? (
@@ -151,7 +153,7 @@ function MaioresGastosSection() {
                 (e.currentTarget.style.background = 'transparent')
               }
             >
-              {t('resumo.topExpenses.seeAll', { count: transactions.length })}{' '}
+              {t('mes.expand.topExpenses.seeAll', { count: transactions.length })}{' '}
               <ChevronRight size={14} />
             </button>
           )}

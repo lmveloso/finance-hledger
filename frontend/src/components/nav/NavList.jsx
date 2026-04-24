@@ -9,7 +9,6 @@ import { t } from '../../i18n';
 // below translates them to ASCII keys so the i18n dictionaries stay
 // portable. See PR-U1 plan §R1.
 const SLUG = {
-  'resumo': 'resumo',
   'mês': 'mes',
   'ano': 'ano',
   'fluxo': 'fluxo',
