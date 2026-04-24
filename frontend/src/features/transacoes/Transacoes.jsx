@@ -74,8 +74,14 @@ function Transacoes() {
   const { data: catsData } = useApi(`/api/categories?month=${selectedMonth}&depth=2`, [selectedMonth, refreshKey]);
   const categories = catsData?.categorias || [];
 
-  // Fetch tags
-  const { data: tagsData } = useApi('/api/tags', [refreshKey]);
+  // Fetch tags — scoped to the same period as the transactions table
+  let tagsPath;
+  if (rangeMode === 'range' && rangeStart && rangeEnd) {
+    tagsPath = `/api/tags?start=${rangeStart}&end=${rangeEnd}`;
+  } else {
+    tagsPath = `/api/tags?month=${selectedMonth}`;
+  }
+  const { data: tagsData } = useApi(tagsPath, [tagsPath, refreshKey]);
   const allTags = tagsData?.tags || [];
 
   const txs = data?.transactions || [];
