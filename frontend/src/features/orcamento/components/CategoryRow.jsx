@@ -14,12 +14,11 @@ const BRL = (n) =>
 const PCT = (n) => `${Math.round(n)}%`;
 
 /**
- * Single category row inside the "Por categoria" card (PR-U6).
+ * Single category row inside the "Por categoria" card (PR-U6 / ux-polish #8).
  *
  * Responsive behaviour (breakpoint 768px):
- *   - Desktop (≥768px): flex row matching the design prototype — swatch + name
- *     on the left, chips + realizado + "/ orçado" on the right, full-width bar
- *     below, % right-aligned under the bar.
+ *   - Desktop (≥768px): single-row CSS Grid — dot / name / bar / chip /
+ *     realizado + "/ orçado" / pct. Everything on one line.
  *   - Mobile (<768px): CSS Grid with template-areas
  *       "name      realizado"
  *       "bar       bar"
@@ -181,34 +180,75 @@ function CategoryRow({ nome, orcado, realizado, barColor, isLast }) {
   };
 
   if (isDesktop) {
+    const ariaLabel = `${nome}: ${BRL(safeReal)} ${t('orcamento.category.separator')} ${BRL(safeOrcado)} (${PCT(pct)})`;
+
+    // Standalone dot (detached from nameLabel so the name cell can ellipsis
+    // independently in its own grid column).
+    const dotStandalone = (
+      <span
+        style={{
+          display: 'inline-block',
+          width: 8,
+          height: 8,
+          borderRadius: 999,
+          background: barColor,
+          flexShrink: 0,
+        }}
+      />
+    );
+
+    const nameOnly = (
+      <span
+        style={{
+          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+          fontSize: 13,
+          color: color.text.secondary,
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          display: 'block',
+          textTransform: 'capitalize',
+        }}
+      >
+        {nome}
+      </span>
+    );
+
     return (
-      <div style={wrapperStyle}>
+      <div
+        role="group"
+        aria-label={ariaLabel}
+        style={{
+          ...wrapperStyle,
+          display: 'grid',
+          gridTemplateColumns:
+            'auto minmax(0, 1.4fr) minmax(160px, 2fr) auto auto 44px',
+          gap: 12,
+          alignItems: 'center',
+          padding: '10px 0',
+          marginBottom: isLast ? 0 : 4,
+        }}
+      >
+        {dotStandalone}
+        {nameOnly}
+        {bar}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {overChip}
+          {surplusChip}
+        </div>
         <div
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
             alignItems: 'baseline',
-            marginBottom: 6,
-            gap: 12,
+            gap: 4,
+            whiteSpace: 'nowrap',
           }}
         >
-          {nameLabel}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: 10,
-              flexShrink: 0,
-            }}
-          >
-            {overChip}
-            {surplusChip}
-            {realizadoText}
-            {orcadoText}
-          </div>
+          {realizadoText}
+          {orcadoText}
         </div>
-        {bar}
-        <div style={{ marginTop: 3, textAlign: 'right' }}>{pctText}</div>
+        <div style={{ textAlign: 'right' }}>{pctText}</div>
       </div>
     );
   }
