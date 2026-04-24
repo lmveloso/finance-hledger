@@ -4,9 +4,16 @@
 //   1. Fetch /api/flow?month=YYYY-MM and filter to liability card accounts.
 //   2. For each discovered card, parallel-fetch /api/transactions with
 //      account=<card>&limit=500.
-//   3. Aggregate per card client-side: purchases only (tipo_movimento ===
-//      'credito' AND contra_conta starts with 'expenses:'), grouped by L1
-//      category (second segment of the expense account path).
+//   3. Aggregate per card client-side: purchases only (contra_conta starts
+//      with 'expenses:'), grouped by L1 category (second segment of the
+//      expense account path).
+//
+// Note on tipo_movimento (issue #5): from the card's (liability) perspective,
+// a purchase posts a NEGATIVE valor (balance grows more negative), so the
+// backend tags it as 'debito'. A refund/chargeback posts a POSITIVE valor
+// and is tagged 'credito'. We keep both here — anything whose contra-posting
+// lands in `expenses:` is a card activity we want to aggregate — and take
+// the absolute value so totals read as positive spend.
 //
 // Output shape:
 //   {
@@ -78,20 +85,26 @@ async function fetchJson(path) {
   return r.json();
 }
 
-function aggregateCard(conta, nome, txResponse, palette) {
+export function aggregateCard(conta, nome, txResponse, palette) {
   const all = Array.isArray(txResponse?.transactions)
     ? txResponse.transactions
     : [];
-  // Purchases only: the liability shows tipo_movimento='credito' with the
-  // contra posting going to an expense account.
+  // Purchases: contra-posting lands in an expense account. Backend tags these
+  // as 'debito' (negative valor on the liability) for a real purchase or
+  // 'credito' (positive valor) for a refund/chargeback. Both are card
+  // activity we want to surface. Transfers (contra starts with 'assets:' /
+  // 'liabilities:') and opening balances ('saldo_inicial') are excluded by
+  // the expense-prefix test; we still check tipo_movimento to be defensive.
   const purchases = all.filter(
     (tx) =>
-      tx.tipo_movimento === 'credito' &&
+      (tx.tipo_movimento === 'debito' || tx.tipo_movimento === 'credito') &&
       typeof tx.contra_conta === 'string' &&
       tx.contra_conta.startsWith('expenses:'),
   );
 
-  const total = purchases.reduce((s, tx) => s + (tx.valor || 0), 0);
+  // Flip sign so aggregates read as positive spend regardless of the
+  // liability-side sign convention.
+  const total = purchases.reduce((s, tx) => s + Math.abs(tx.valor || 0), 0);
 
   // Group by L1 category (second segment of 'expenses:<l1>:...').
   const byCategory = new Map();
@@ -99,7 +112,7 @@ function aggregateCard(conta, nome, txResponse, palette) {
     const parts = (tx.contra_conta || '').split(':');
     const raw = parts[1] || 'outros';
     const prev = byCategory.get(raw) || { raw, valor: 0 };
-    prev.valor += tx.valor || 0;
+    prev.valor += Math.abs(tx.valor || 0);
     byCategory.set(raw, prev);
   }
 
