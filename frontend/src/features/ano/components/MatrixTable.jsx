@@ -24,12 +24,24 @@ const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', {
 //   - totals row at the bottom
 //
 // Props:
-//   months:    ['YYYY-MM', ...] (exactly 12 expected, but any length works)
-//   rows:      [{ key, label, cells: { [ym]: { value, pct? } } }]
-//   totals:    { [ym]: number } — rendered as a "Totais" row
-//   showPct:   boolean — if true, cell is "R$ value \n pct%"
-//   emptyText: string for rows with no cells (unused currently — kept for reuse)
-function MatrixTable({ months, rows, totals, showPct = false }) {
+//   months:        ['YYYY-MM', ...] (exactly 12 expected, but any length works)
+//   rows:          [{ key, label, cells: { [ym]: { value, pct? } } }]
+//   totals:        { [ym]: number } — rendered as a "Totais" row
+//   showPct:       boolean — if true, cell is "R$ value \n pct%"
+//   selectedMonth: 'YYYY-MM' | null — highlights the matching column header
+//   onMonthSelect: (ym) => void — when provided, the month headers become
+//                  clickable buttons. Omit it (the default) and the table
+//                  renders exactly like it did pre-drill-down.
+function MatrixTable({
+  months,
+  rows,
+  totals,
+  showPct = false,
+  selectedMonth = null,
+  onMonthSelect = null,
+}) {
+  const interactive = typeof onMonthSelect === 'function';
+
   const headCellStyle = (align) => ({
     textAlign: align,
     padding: '8px 10px',
@@ -39,6 +51,21 @@ function MatrixTable({ months, rows, totals, showPct = false }) {
     whiteSpace: 'nowrap',
     fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
   });
+
+  const monthHeaderStyle = (month) => {
+    const base = headCellStyle('right');
+    if (!interactive) return base;
+    const isSelected = selectedMonth === month;
+    return {
+      ...base,
+      cursor: 'pointer',
+      userSelect: 'none',
+      background: isSelected ? color.accent.primaryMuted : 'transparent',
+      color: isSelected ? color.accent.primary : color.text.muted,
+      borderBottomColor: isSelected ? color.accent.primary : color.border.default,
+      transition: 'background-color 0.12s, color 0.12s, border-color 0.12s',
+    };
+  };
 
   const rowLabelStyle = {
     padding: '8px 10px',
@@ -58,11 +85,23 @@ function MatrixTable({ months, rows, totals, showPct = false }) {
     whiteSpace: 'nowrap',
   };
 
+  const selectedColumnCellStyle = {
+    background: color.accent.primaryMuted,
+  };
+
   const totalsCellStyle = {
     borderTop: `1px solid ${color.border.default}`,
     background: color.bg.hover,
     color: color.accent.primary,
     fontWeight: 600,
+  };
+
+  const handleKeyDown = (e, month) => {
+    if (!interactive) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onMonthSelect(month);
+    }
   };
 
   return (
@@ -71,11 +110,22 @@ function MatrixTable({ months, rows, totals, showPct = false }) {
         <thead>
           <tr>
             <th style={headCellStyle('left')}>&nbsp;</th>
-            {months.map(m => (
-              <th key={m} style={headCellStyle('right')}>
-                {monthLabel(m)}
-              </th>
-            ))}
+            {months.map(m => {
+              const isSelected = interactive && selectedMonth === m;
+              return (
+                <th
+                  key={m}
+                  style={monthHeaderStyle(m)}
+                  onClick={interactive ? () => onMonthSelect(m) : undefined}
+                  onKeyDown={interactive ? (e) => handleKeyDown(e, m) : undefined}
+                  role={interactive ? 'button' : undefined}
+                  tabIndex={interactive ? 0 : undefined}
+                  aria-pressed={interactive ? isSelected : undefined}
+                >
+                  {monthLabel(m)}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
@@ -84,11 +134,12 @@ function MatrixTable({ months, rows, totals, showPct = false }) {
               <td style={rowLabelStyle} className="sans">{row.label}</td>
               {months.map(m => {
                 const cell = row.cells?.[m];
+                const isSelectedCol = interactive && selectedMonth === m;
                 return (
                   <td
                     key={m}
                     title={cell ? `${row.label} · ${monthLabel(m)}: ${BRLc(cell.value)}` : undefined}
-                    style={dataCellStyle}
+                    style={isSelectedCol ? { ...dataCellStyle, ...selectedColumnCellStyle } : dataCellStyle}
                   >
                     {cell && cell.value > 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.25 }}>
@@ -110,11 +161,17 @@ function MatrixTable({ months, rows, totals, showPct = false }) {
           {totals && (
             <tr>
               <td style={{ ...rowLabelStyle, ...totalsCellStyle }} className="sans">{t('ano.totals')}</td>
-              {months.map(m => (
-                <td key={m} style={{ ...dataCellStyle, ...totalsCellStyle }}>
-                  {(totals[m] || 0) > 0 ? BRL(totals[m]) : <span style={{ color: color.text.faint }}>—</span>}
-                </td>
-              ))}
+              {months.map(m => {
+                const isSelectedCol = interactive && selectedMonth === m;
+                const cellStyle = isSelectedCol
+                  ? { ...dataCellStyle, ...totalsCellStyle, ...selectedColumnCellStyle }
+                  : { ...dataCellStyle, ...totalsCellStyle };
+                return (
+                  <td key={m} style={cellStyle}>
+                    {(totals[m] || 0) > 0 ? BRL(totals[m]) : <span style={{ color: color.text.faint }}>—</span>}
+                  </td>
+                );
+              })}
             </tr>
           )}
         </tbody>

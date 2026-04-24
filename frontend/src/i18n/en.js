@@ -238,6 +238,10 @@ const dict = {
     'Warning: the sum of percentages for some month did not reach 100% (check backend).',
   'ano.warning.sumOk':
     'Each column sums to 100% (largest-remainder rounding).',
+  'ano.drilldown.principio.title': 'Goals by Principle',
+  'ano.drilldown.categoria.title': 'Spending by category',
+  'ano.drilldown.empty': 'No data for this month.',
+  'ano.drilldown.collapseHint': 'Click again to close',
 
   // ── Previsao tab (kept for symmetry; hidden from nav in Fase U) ────────
   'previsao.forecast.title': 'Flow forecast · 12 months',
