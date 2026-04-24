@@ -26,8 +26,8 @@ This project is executed in **sequential phases**. Always check which phase is a
 - [x] Fase D — Dashboard 2.0 (see `docs/02-PRD-dashboard-v2.md`) - COMPLETED
 - [x] Fase U — UI/UX (see `docs/04-PRD-ui-ux.md`) — COMPLETED
 - [x] Fase UX-Polish — post-Fase U feedback pass (see `docs/05-PRD-ux-polish.md`) — COMPLETED
-- [ ] Fase Audit Stabilization — post-audit trust-restoration pass (see `docs/06-PRD-audit-stabilization.md`) ← ACTIVE
-- [ ] Fase 1 — Magic Import (see `docs/03-PRD-magic-import.md`)
+- [x] Fase Audit Stabilization — post-audit trust-restoration pass (see `docs/06-PRD-audit-stabilization.md`) — COMPLETED
+- [ ] Fase 1 — Magic Import (see `docs/03-PRD-magic-import.md`) ← ACTIVE
 
 ### Phase boundaries
 

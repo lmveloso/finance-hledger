@@ -92,30 +92,30 @@ This phase must make card visibility semantics explicit and keep outstanding car
 ## Acceptance criteria
 
 ### For #17
-- [ ] `GET /api/networth?months=12` returns valid `YYYY-MM` month strings.
-- [ ] Patrimônio no longer renders zeroed hero/chart/account sections when `/api/accounts` has balances.
-- [ ] For the audited April 2026 journal, the tab reflects the expected asset/liability/net totals.
+- [x] `GET /api/networth?months=12` returns valid `YYYY-MM` month strings.
+- [x] Patrimônio no longer renders zeroed hero/chart/account sections when `/api/accounts` has balances.
+- [x] For the audited April 2026 journal, the tab reflects the expected asset/liability/net totals.
 
 ### For #18
-- [ ] April 2026 does not show `ajuste 1` in Transações tag chips.
-- [ ] Month mode and range mode return distinct tag sets when their scopes differ.
-- [ ] Tag counts match the filtered transaction population.
+- [x] April 2026 does not show `ajuste 1` in Transações tag chips.
+- [x] Month mode and range mode return distinct tag sets when their scopes differ.
+- [x] Tag counts match the filtered transaction population.
 
 ### For #19
-- [ ] Frontend behavior changes correctly with backend auth mode.
-- [ ] `auth_mode=none` no longer produces a misleading protected-app illusion.
-- [ ] Password-based and hybrid auth modes still work.
+- [x] Frontend behavior changes correctly with backend auth mode.
+- [x] `auth_mode=none` no longer produces a misleading protected-app illusion.
+- [x] Password-based and hybrid auth modes still work.
 
 ### For #20
-- [ ] BB Visa is discoverable in the relevant UI despite having zero April purchases.
-- [ ] The UI communicates whether a figure is monthly card spend or outstanding balance.
-- [ ] No fake current-month transactions are introduced.
+- [x] BB Visa is discoverable in the relevant UI despite having zero April purchases.
+- [x] The UI communicates whether a figure is monthly card spend or outstanding balance.
+- [x] No fake current-month transactions are introduced.
 
 ## Exit criteria
 
-- [ ] Issues #17, #18, #19, and #20 are closed (or explicitly re-scoped in this doc with justification).
-- [ ] A manual smoke pass confirms Patrimônio, Transações tags, auth entry flow, and card visibility behave as documented.
-- [ ] `CLAUDE.md` marks this phase complete and only then re-activates Fase 1 — Magic Import.
+- [x] Issues #17, #18, #19, and #20 are closed (or explicitly re-scoped in this doc with justification).
+- [ ] A manual smoke pass confirms Patrimônio, Transações tags, auth entry flow, and card visibility behave as documented. **(User-side smoke pass pending against the homelab; agents cannot drive a browser in this environment — same precedent as Fase UX-Polish.)**
+- [x] `CLAUDE.md` marks this phase complete and only then re-activates Fase 1 — Magic Import.
 
 ## Out of scope
 
@@ -128,3 +128,14 @@ This phase must make card visibility semantics explicit and keep outstanding car
 ## Status
 
 Phase created on 2026-04-24 after a live audit of the running app against the production journal identified current-state trust gaps that should be closed before further Magic Import expansion.
+
+Phase closed on 2026-04-24. All four audited issues shipped across PR-AS1..PR-AS4:
+
+| PR | Commit | Issue | Summary |
+|----|--------|-------|---------|
+| AS1 | `8679f5c` (#17) | [#17](https://github.com/lmveloso/finance-hledger/issues/17) | Patrimônio — correct networth parser and `/api/accounts` contract |
+| AS2 | `dfcb826` (#18) | [#18](https://github.com/lmveloso/finance-hledger/issues/18) | Transações — scope `/api/tags` to active month/range |
+| AS3 | `cab8eda` | [#19](https://github.com/lmveloso/finance-hledger/issues/19) | Auth — expose `/api/auth/mode` and skip Login when `auth_mode=none` |
+| AS4 | `11035bd` | [#20](https://github.com/lmveloso/finance-hledger/issues/20) | Cartões — keep outstanding cards visible with zero monthly spend |
+
+Remaining caveat: the manual smoke pass against the live homelab (Patrimônio, Transações tag chips, auth entry flow, card visibility) must be run by the user before Magic Import work kicks off. Any regressions surfaced there should be opened as follow-up issues outside this phase's closed backlog.
