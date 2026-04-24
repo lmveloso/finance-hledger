@@ -31,7 +31,7 @@ function interpolate(template, params) {
 /**
  * Resolve a translation key.
  *
- *   t('mes.revenues.title')                → 'Receitas'
+ *   t('mes.expand.revenue.title')          → 'Receitas por tipo'
  *   t('user.greeting', { name: 'Lucas' })  → 'Oi, Lucas' (if template has {name})
  *
  * Missing keys return the key itself so the gap is visible.

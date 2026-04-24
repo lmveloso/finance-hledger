@@ -5,26 +5,14 @@
 // dictionaries. Missing keys fall back to the key itself.
 
 const dict = {
-  // ── Resumo tab ─────────────────────────────────────────────────────────
-  'resumo.title': 'Summary',
-  'resumo.kpi.expenses': 'Expenses',
-  'resumo.kpi.balance': 'Balance',
-  'resumo.categories.title': 'Expenses by category',
-  'resumo.principles.title': 'Targets by principle',
-  'resumo.topExpenses.title': 'Top expenses',
-  'resumo.topExpenses.seeAll': 'See all ({count})',
-  'resumo.drilldown.back': 'Back',
-  'resumo.drilldown.empty': 'No subcategories recorded this month.',
-
   // ── Mes tab ────────────────────────────────────────────────────────────
+  // The old Resumo tab was merged into Mês in Fase UX-Polish #3. The
+  // `resumo.*` keys moved under `mes.expand.*` to reflect their new role
+  // as contents of the KPI expansion panels.
   'mes.title': 'Month',
-  'mes.revenues.title': 'Revenues',
-  'mes.revenues.total': 'Total revenues',
-  'mes.revenues.empty': 'No revenues recorded this month.',
   'mes.kpi.revenue': 'Revenue',
   'mes.kpi.expense': 'Expense',
-  'mes.kpi.result': 'Result',
-  'mes.principles.title': 'Targets by principle',
+  'mes.kpi.result': 'Balance',
   'mes.principles.unavailable':
     'Principles endpoint unavailable — waiting for PR-D1.',
   'mes.principles.header.principle': 'Principle',
@@ -32,10 +20,6 @@ const dict = {
   'mes.principles.header.realized': 'Realized',
   'mes.principles.header.amount': 'Amount',
   'mes.principles.meta': 'target {pct}',
-  'mes.expenses.title': 'Expenses by category',
-  'mes.expenses.empty': 'No expenses recorded this month.',
-  'mes.topTransactions.title': 'Top 10 transactions',
-  'mes.topTransactions.empty': 'No transactions recorded this month.',
   'mes.creditCards.title': 'Credit card spending',
   'mes.creditCards.empty': 'No card purchases this month.',
   'mes.creditCards.transactions': 'Largest purchases',
@@ -43,6 +27,30 @@ const dict = {
   'mes.creditCards.expand': 'View purchases',
   'mes.creditCards.collapse': 'Hide',
   'mes.creditCards.showOnMobile': 'Show cards ({count})',
+
+  // ── Mes KPI expansion panels ───────────────────────────────────────────
+  // Revenue expansion — grouped-by-type list of revenue postings.
+  'mes.expand.revenue.title': 'Revenue by type',
+  'mes.expand.revenue.empty': 'No revenues recorded this month.',
+  'mes.expand.revenue.total': 'Total revenues',
+  'mes.expand.revenue.count': '× {count}',
+
+  // Expense expansion — categories + top expenses + drill-down.
+  'mes.expand.categories.title': 'Expenses by category',
+  'mes.expand.topExpenses.title': 'Top expenses',
+  'mes.expand.topExpenses.seeAll': 'See all ({count})',
+  'mes.expand.drilldown.back': 'Back',
+  'mes.expand.drilldown.empty': 'No subcategories recorded this month.',
+
+  // Balance expansion — Accrual × Cash × Δ reconciliation strip.
+  'mes.expand.balance.title': 'Accrual vs. cash reconciliation',
+  'mes.expand.balance.contabil': 'Accrual',
+  'mes.expand.balance.caixa': 'Cash',
+  'mes.expand.balance.delta': 'Δ Reconciliation',
+  'mes.expand.balance.deltaExplanation':
+    'Difference explained by credit card / installments.',
+  'mes.expand.balance.noCardActivity':
+    'No card activity this month — accrual and cash coincide.',
 
   // ── Principles (identifier → label) ────────────────────────────────────
   'principle.custos-fixos': 'Fixed Costs',
@@ -56,7 +64,7 @@ const dict = {
   'principle.reserva-oportunidade': 'Opportunity Reserve',
 
   // ── Navigation tabs ────────────────────────────────────────────────────
-  'nav.resumo': 'Summary',
+  // `nav.resumo` was removed in Fase UX-Polish #3 (Resumo + Mês merge).
   'nav.mes': 'Month',
   'nav.ano': 'Year',
   'nav.fluxo': 'Flow',

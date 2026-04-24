@@ -1,7 +1,8 @@
-// Resumo — Section 2: Despesas por categoria.
+// Despesas por categoria — ported from features/resumo/sections/CategoriasSection.jsx
+// during the Resumo + Mês merge (Fase UX-Polish #3). Now rendered inside
+// the Despesa KPI expansion, alongside MaioresGastosSection.
 //
-// Visual layout ported from docs/design/fase-u/project/src/tab-resumo.jsx
-// (lines 19-49). Each row shows:
+// Each row shows:
 //   - color dot + category name (left)
 //   - percentage + BRL amount (right)
 //   - thin progress bar below, colored by the row's chart slot
@@ -165,7 +166,7 @@ function CategoriasSection() {
           marginBottom: 18,
         }}
       >
-        {t('resumo.categories.title')}
+        {t('mes.expand.categories.title')}
       </div>
 
       {loading || loadingDet ? (

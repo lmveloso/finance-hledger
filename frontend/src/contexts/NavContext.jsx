@@ -21,10 +21,13 @@ const NavContext = createContext(null);
 // docs/04-PRD-ui-ux.md §4.1). The route handlers in App.jsx are preserved so
 // the tabs can be re-enabled without code surgery. `ALL_TABS` is exported for
 // any route-legality logic that still needs to recognise the hidden tabs.
-const TABS = ['resumo', 'mês', 'ano', 'fluxo', 'orçamento', 'patrimônio', 'transações'];
-const ALL_TABS = ['resumo', 'mês', 'ano', 'plano', 'fluxo', 'orçamento', 'previsão', 'patrimônio', 'transações'];
+//
+// Fase UX-Polish #3 merged the old `resumo` tab into `mês`; both `TABS` and
+// `ALL_TABS` drop `resumo` accordingly, and `initialTab` defaults to `mês`.
+const TABS = ['mês', 'ano', 'fluxo', 'orçamento', 'patrimônio', 'transações'];
+const ALL_TABS = ['mês', 'ano', 'plano', 'fluxo', 'orçamento', 'previsão', 'patrimônio', 'transações'];
 
-export function NavProvider({ children, initialTab = 'resumo' }) {
+export function NavProvider({ children, initialTab = 'mês' }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [navCategory, setNavCategory] = useState(null);
 

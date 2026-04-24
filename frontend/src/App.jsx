@@ -9,7 +9,6 @@ import { NavProvider, useNav } from './contexts/NavContext.jsx';
 import { useTheme } from './contexts/ThemeContext.jsx';
 import { Sidebar, MobileTopBar, BottomNav } from './components/nav';
 import Mes from './features/mes';
-import Resumo from './features/resumo';
 import Ano from './features/ano';
 import Plano from './features/plano';
 import Fluxo from './features/fluxo-reformado';
@@ -97,7 +96,6 @@ function TabRoutes() {
   // defines them verbatim and renaming is out of scope for PR-U1.
   return (
     <>
-      {activeTab === 'resumo' && <Resumo />}
       {activeTab === 'mês' && <Mes />}
       {activeTab === 'ano' && <Ano />}
       {activeTab === 'plano' && <Plano />}
