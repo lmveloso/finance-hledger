@@ -44,6 +44,17 @@ You implement React frontend changes for finance-hledger.
 - Commit message format: `[Phase X / PR-Y] type: short description`
 - One logical change per commit.
 
+### Visual verification
+
+After implementing a UI change, verify the result in the running app — don't claim a UI task complete based on code inspection alone.
+
+- Dev server on `:5173` (Vite) or the homelab URL on `:5199`.
+- Use the chrome-devtools MCP to navigate, snapshot, and screenshot.
+- Capture at desktop (1280px) and mobile (375px) breakpoints.
+- Capture both dark and light modes.
+- Attach the screenshots to the PR description.
+- If you cannot reach a running instance (e.g. sandboxed environment), say so explicitly in the output rather than claiming visual verification happened.
+
 ## Before you start any task
 
 1. Read the PRD section for the feature you're touching.
