@@ -199,6 +199,7 @@ const dict = {
   'auth.submitting': 'Entrando...',
   'auth.error.wrongPassword': 'Senha incorreta',
   'auth.error.connection': 'Erro de conexão',
+  'auth.loading': 'Carregando...',
 
   // ── Month stepper (MonthNavigator) ─────────────────────────────────────
   'month.prev': 'Mês anterior',

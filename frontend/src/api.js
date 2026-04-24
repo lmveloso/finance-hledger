@@ -42,6 +42,17 @@ export function useApi(path, deps = []) {
   return { data, error, loading };
 }
 
+/**
+ * Fetch the backend's auth mode. Deliberately unauthenticated — the endpoint
+ * is public so the SPA can decide whether to show <Login> at boot.
+ * Returns `{ mode, required }`.
+ */
+export async function fetchAuthMode() {
+  const r = await fetch(`${API}/api/auth/mode`);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
 export async function fetchCategoryDetail(category, month) {
   const q = month ? `?month=${month}` : '';
   const r = await fetch(`${API}/api/categories/${encodeURIComponent(category.toLowerCase())}${q}`, { headers: authHeaders() });

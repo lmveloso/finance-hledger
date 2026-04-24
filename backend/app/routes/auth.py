@@ -21,3 +21,12 @@ async def login(
         raise HTTPException(401, "Senha incorreta")
     token = issue_token(username)
     return {"token": token, "user": username}
+
+
+# Intentionally unauthenticated: clients (browser SPA) must be able to discover
+# the active auth mode before they have any credentials, so the login screen
+# can be skipped when auth_mode == "none".
+@router.get("/api/auth/mode")
+def auth_mode(settings: Settings = Depends(get_settings)):
+    """Report the active auth mode so the UI can decide whether to prompt."""
+    return {"mode": settings.auth_mode, "required": settings.auth_mode != "none"}

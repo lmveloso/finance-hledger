@@ -196,6 +196,7 @@ const dict = {
   'auth.submitting': 'Signing in...',
   'auth.error.wrongPassword': 'Wrong password',
   'auth.error.connection': 'Connection error',
+  'auth.loading': 'Loading...',
 
   // ── Month stepper (MonthNavigator) ─────────────────────────────────────
   'month.prev': 'Previous month',
