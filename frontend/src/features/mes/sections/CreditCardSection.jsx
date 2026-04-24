@@ -1,9 +1,11 @@
 // Section 6 — Despesas por cartão de crédito.
 //
-// One row per active credit-card liability account discovered for the month,
-// sorted by total spend desc. Clicking a row toggles an inline expansion with
-// a category legend and the top 10 purchases for that card. Only one card can
-// be expanded at a time.
+// One row per credit-card liability account discovered from the union of
+// /api/flow (monthly activity) and /api/accounts (outstanding balance).
+// Active cards (monthly spend > 0) sort first and can be expanded to show the
+// category legend + top 10 purchases. Dormant cards (outstanding-only, issue
+// #20) render as a compact flat row showing the outstanding balance without
+// an expansion affordance.
 //
 // Mobile (<768px): the whole list stays collapsed behind a "Ver cartões (N)"
 // button to avoid a long scroll. Desktop renders the list immediately.
@@ -26,8 +28,13 @@ function CreditCardSection() {
   const [expandedCard, setExpandedCard] = useState(null);
   const [mobileVisible, setMobileVisible] = useState(false);
 
-  const toggle = (conta) =>
+  // Only toggles for cards with monthly activity. Dormant rows don't have an
+  // expansion target (no categories, no transactions) and render flat.
+  const toggle = (conta) => {
+    const card = (cards || []).find((c) => c.conta === conta);
+    if (!card || !card.hasMonthlyActivity) return;
     setExpandedCard((prev) => (prev === conta ? null : conta));
+  };
 
   const showList = isDesktop || mobileVisible;
 
@@ -80,13 +87,15 @@ function CreditCardSection() {
       ) : (
         cards.map((c, i) => {
           const isLast = i === cards.length - 1;
-          const expanded = expandedCard === c.conta;
+          const expanded = expandedCard === c.conta && c.hasMonthlyActivity;
           return (
             <div key={c.conta}>
               <CreditCardRow
                 conta={c.conta}
                 nome={c.nome}
-                total={c.total}
+                monthlySpend={c.monthlySpend}
+                outstandingBalance={c.outstandingBalance}
+                hasMonthlyActivity={c.hasMonthlyActivity}
                 categories={c.categories}
                 expanded={expanded}
                 onToggle={toggle}
@@ -97,6 +106,7 @@ function CreditCardSection() {
                 <CreditCardExpanded
                   categories={c.categories}
                   transactions={c.transactions}
+                  outstandingBalance={c.outstandingBalance}
                   isDesktop={isDesktop}
                 />
               )}

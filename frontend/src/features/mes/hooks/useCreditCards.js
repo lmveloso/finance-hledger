@@ -1,31 +1,37 @@
 // Hook: aggregate credit-card spending for the selected month.
 //
 // Strategy (per docs plan-u3-refined.md §1 — no backend changes):
-//   1. Fetch /api/flow?month=YYYY-MM and filter to liability card accounts.
-//   2. For each discovered card, parallel-fetch /api/transactions with
-//      account=<card>&limit=500.
-//   3. Aggregate per card client-side: purchases only (contra_conta starts
-//      with 'expenses:'), grouped by L1 category (second segment of the
-//      expense account path).
+//   1. Fetch /api/flow?month=YYYY-MM and /api/accounts in parallel.
+//   2. Union card-liability accounts from both sources: any card with
+//      outstanding balance (from /api/accounts) stays visible even with zero
+//      purchases in the month; any card with monthly activity (from /api/flow)
+//      stays visible even if the liability payload skips it.
+//   3. For each card present in flow, parallel-fetch /api/transactions with
+//      account=<card>&limit=500 and aggregate purchases client-side. Cards
+//      that are outstanding-only skip the tx fetch entirely.
 //
-// Note on tipo_movimento (issue #5): from the card's (liability) perspective,
-// a purchase posts a NEGATIVE valor (balance grows more negative), so the
-// backend tags it as 'debito'. A refund/chargeback posts a POSITIVE valor
-// and is tagged 'credito'. We keep both here — anything whose contra-posting
-// lands in `expenses:` is a card activity we want to aggregate — and take
-// the absolute value so totals read as positive spend.
+// Aggregation (issue #5 contract): from the card's liability perspective, a
+// purchase posts a NEGATIVE valor (balance grows more negative) and is tagged
+// 'debito'; a refund/chargeback posts a POSITIVE valor and is tagged
+// 'credito'. Both are card activity; we take the absolute value so totals
+// read as positive spend.
 //
 // Output shape:
 //   {
 //     cards: [{
-//       conta, nome, total,
+//       conta, nome,
+//       monthlySpend,            // spend posted in the selected month
+//       outstandingBalance,      // abs(saldo) from /api/accounts, >= 0
+//       hasMonthlyActivity,      // monthlySpend > 0
 //       categories: [{ raw, nome, valor, pct, color }],
-//       transactions: [...],  // top 10 by |valor|, shaped from /api/transactions
+//       transactions: [...],     // top 10 by |valor|, shaped from /api/transactions
 //     }],
 //     loading, error,
 //   }
 //
-// Cards sorted by total desc. Empty cards (no purchases) are filtered out.
+// Sorting: active cards (hasMonthlyActivity true) first by monthlySpend desc,
+// then dormant cards by outstandingBalance desc. Issue #20 — outstanding cards
+// must remain discoverable.
 
 import { useEffect, useState } from 'react';
 import { useMonth } from '../../../contexts/MonthContext.jsx';
@@ -66,13 +72,26 @@ function labelForL1(raw) {
   return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
-function isCardAccount(c) {
-  if (!c || c.tipo !== 'passivo') return false;
-  const acct = c.conta || '';
+// Card-account predicate. Accepts both /api/flow rows (which expose `conta`)
+// and /api/accounts rows (which expose `caminho`). The tipo check narrows to
+// passivos in both shapes.
+function isCardPath(path) {
+  if (!path) return false;
+  const lower = String(path).toLowerCase();
   return (
-    acct.startsWith('liabilities:cartao') ||
-    acct.startsWith('liabilities:cartão')
+    lower.startsWith('liabilities:cartao') ||
+    lower.startsWith('liabilities:cartão')
   );
+}
+
+function isFlowCardAccount(c) {
+  if (!c || c.tipo !== 'passivo') return false;
+  return isCardPath(c.conta);
+}
+
+function isAccountsCardRow(c) {
+  if (!c || c.tipo !== 'passivo') return false;
+  return isCardPath(c.caminho);
 }
 
 async function fetchJson(path) {
@@ -135,6 +154,85 @@ export function aggregateCard(conta, nome, txResponse, palette) {
   return { conta, nome, total, categories, transactions };
 }
 
+// Pure helper: union the cards discovered in /api/flow contas and in
+// /api/accounts contas, then merge per-card aggregates (already produced by
+// aggregateCard) into the unified list. Exported for unit testing.
+//
+// Inputs:
+//   - flowContas:  array of rows from /api/flow response (shape from backend)
+//   - accounts:    array of rows from /api/accounts response (shape: caminho,
+//                  nome, tipo, saldo)
+//   - aggregates:  Map<conta, { total, categories, transactions }> produced by
+//                  aggregateCard for every card that was present in flow.
+//
+// Output: array of unified card entries, sorted per the rules in the hook
+// docblock.
+export function buildCardList({ flowContas, accounts, aggregates }) {
+  const flowCards = (flowContas || []).filter(isFlowCardAccount);
+  const accountsCards = (accounts || []).filter(isAccountsCardRow);
+
+  // Index /api/accounts rows by path for O(1) outstanding lookups.
+  const accountsByPath = new Map();
+  for (const row of accountsCards) {
+    accountsByPath.set(row.caminho, row);
+  }
+
+  // Start from the set of flow cards (they drive monthly aggregates) and add
+  // any accounts card not yet present.
+  const seen = new Set();
+  const rows = [];
+
+  for (const c of flowCards) {
+    seen.add(c.conta);
+    const agg = aggregates?.get(c.conta) || {
+      total: 0,
+      categories: [],
+      transactions: [],
+    };
+    const acctRow = accountsByPath.get(c.conta);
+    const outstandingBalance = acctRow ? Math.abs(acctRow.saldo || 0) : 0;
+    rows.push({
+      conta: c.conta,
+      nome: c.nome || (acctRow ? acctRow.nome : c.conta),
+      monthlySpend: agg.total,
+      outstandingBalance,
+      hasMonthlyActivity: agg.total > 0,
+      categories: agg.categories,
+      transactions: agg.transactions,
+    });
+  }
+
+  for (const row of accountsCards) {
+    if (seen.has(row.caminho)) continue;
+    const outstandingBalance = Math.abs(row.saldo || 0);
+    // Only include outstanding-only cards when they actually owe something;
+    // a fully settled card with zero balance and no monthly spend adds noise.
+    if (outstandingBalance < 0.01) continue;
+    rows.push({
+      conta: row.caminho,
+      nome: row.nome || row.caminho,
+      monthlySpend: 0,
+      outstandingBalance,
+      hasMonthlyActivity: false,
+      categories: [],
+      transactions: [],
+    });
+  }
+
+  // Active first (by monthly spend desc), then dormant (by outstanding desc).
+  rows.sort((a, b) => {
+    if (a.hasMonthlyActivity !== b.hasMonthlyActivity) {
+      return a.hasMonthlyActivity ? -1 : 1;
+    }
+    if (a.hasMonthlyActivity) {
+      return b.monthlySpend - a.monthlySpend;
+    }
+    return b.outstandingBalance - a.outstandingBalance;
+  });
+
+  return rows;
+}
+
 export function useCreditCards() {
   const { selectedMonth, refreshKey } = useMonth();
   const [cards, setCards] = useState([]);
@@ -149,34 +247,39 @@ export function useCreditCards() {
 
     (async () => {
       try {
-        const flow = await fetchJson(`/api/flow?month=${selectedMonth}`);
+        const [flow, accountsResp] = await Promise.all([
+          fetchJson(`/api/flow?month=${selectedMonth}`),
+          fetchJson('/api/accounts'),
+        ]);
         if (cancelled) return;
 
-        const cardAccounts = (flow?.contas || []).filter(isCardAccount);
-        if (cardAccounts.length === 0) {
-          setCards([]);
-          return;
-        }
+        const flowContas = flow?.contas || [];
+        const accounts = accountsResp?.contas || [];
+        const cardAccounts = flowContas.filter(isFlowCardAccount);
 
         // Snapshot the palette at fetch-time. The tokens proxy resolves per
         // mode, but consumers re-render via the ThemeContext key=mode remount.
         const palette = color.chart.colors;
 
-        const results = await Promise.all(
-          cardAccounts.map(async (c) => {
-            const tx = await fetchJson(
-              `/api/transactions?month=${selectedMonth}` +
-                `&account=${encodeURIComponent(c.conta)}&limit=500`,
-            );
-            return aggregateCard(c.conta, c.nome, tx, palette);
-          }),
-        );
-        if (cancelled) return;
+        // Only fetch transactions for cards that are in flow — outstanding-only
+        // cards have no month postings to aggregate.
+        const aggregates = new Map();
+        if (cardAccounts.length > 0) {
+          const results = await Promise.all(
+            cardAccounts.map(async (c) => {
+              const tx = await fetchJson(
+                `/api/transactions?month=${selectedMonth}` +
+                  `&account=${encodeURIComponent(c.conta)}&limit=500`,
+              );
+              return aggregateCard(c.conta, c.nome, tx, palette);
+            }),
+          );
+          if (cancelled) return;
+          for (const r of results) aggregates.set(r.conta, r);
+        }
 
-        const nonEmpty = results
-          .filter((r) => r.total > 0)
-          .sort((a, b) => b.total - a.total);
-        setCards(nonEmpty);
+        const unified = buildCardList({ flowContas, accounts, aggregates });
+        setCards(unified);
       } catch (e) {
         if (!cancelled) setError(e.message);
       } finally {

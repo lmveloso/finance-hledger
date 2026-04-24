@@ -1,12 +1,22 @@
 // Collapsed row for one credit card in the "Despesas por cartão de crédito"
-// section. Clicking anywhere on the row toggles the inline expansion.
+// section.
 //
-// Desktop: [name + total] [stacked bar] [top-3 chips] [chevron].
-// Mobile:  name+total (row 1) · stacked bar (row 2) · chips wrap (row 3).
+// Two visual variants, split across two files for readability:
+//   • hasMonthlyActivity === true  — interactive row rendered here: stacked
+//     bar, chips, chevron. Big amount is the monthly spend, labelled
+//     "Este mês". Clicking anywhere on the row toggles the inline expansion.
+//   • hasMonthlyActivity === false — compact non-interactive row rendered by
+//     `CreditCardDormantRow` (issue #20: cards with outstanding liability
+//     but zero monthly purchases must stay visible but should not advertise
+//     a drill-down they can't produce).
+//
+// Desktop active: [name + monthly] [stacked bar] [top-3 chips] [chevron].
+// Mobile active:  name+monthly (row 1) · stacked bar (row 2) · chips wrap (row 3).
 
 import React from 'react';
 import { color } from '../../../theme/tokens';
 import CreditCardCategoryBar from './CreditCardCategoryBar.jsx';
+import CreditCardDormantRow from './CreditCardDormantRow.jsx';
 import { t } from '../../../i18n/index.js';
 
 const BRL = (n) =>
@@ -15,6 +25,22 @@ const BRL = (n) =>
     currency: 'BRL',
     maximumFractionDigits: 0,
   });
+
+function AmountCaption({ children }) {
+  return (
+    <span
+      className="sans"
+      style={{
+        fontSize: 10,
+        letterSpacing: '0.12em',
+        color: color.text.muted,
+        textTransform: 'uppercase',
+      }}
+    >
+      {children}
+    </span>
+  );
+}
 
 function CategoryChip({ nome, color: hue }) {
   return (
@@ -64,28 +90,42 @@ function Chevron({ expanded }) {
 function CreditCardRow({
   conta,
   nome,
-  total,
+  monthlySpend,
+  outstandingBalance,
+  hasMonthlyActivity,
   categories,
   expanded,
   onToggle,
   isLast,
   isDesktop,
 }) {
+  if (!hasMonthlyActivity) {
+    return (
+      <CreditCardDormantRow
+        nome={nome}
+        outstandingBalance={outstandingBalance}
+        isLast={isLast}
+        isDesktop={isDesktop}
+      />
+    );
+  }
+
   const chips = (categories || []).slice(0, 3);
-  const handleClick = () => onToggle(conta);
+  const handleClick = () => onToggle && onToggle(conta);
   const handleKey = (e) => {
+    if (!onToggle) return;
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       onToggle(conta);
     }
   };
 
-  const baseRow = {
+  const activeRow = {
     padding: '12px 0',
     borderBottom:
       expanded || isLast ? 'none' : `1px solid ${color.border.subtle}`,
-    cursor: 'pointer',
     userSelect: 'none',
+    cursor: 'pointer',
   };
 
   if (isDesktop) {
@@ -98,7 +138,7 @@ function CreditCardRow({
         onClick={handleClick}
         onKeyDown={handleKey}
         style={{
-          ...baseRow,
+          ...activeRow,
           display: 'grid',
           gridTemplateColumns: '220px 1fr auto 24px',
           gap: 16,
@@ -118,11 +158,12 @@ function CreditCardRow({
           >
             {nome}
           </span>
+          <AmountCaption>{t('mes.creditCards.thisMonthLabel')}</AmountCaption>
           <span
             className="serif"
             style={{ fontSize: 16, color: color.text.primary }}
           >
-            {BRL(total)}
+            {BRL(monthlySpend)}
           </span>
         </div>
         <div style={{ minWidth: 0 }}>
@@ -140,7 +181,7 @@ function CreditCardRow({
     );
   }
 
-  // Mobile: stacked layout.
+  // Mobile active: stacked layout.
   return (
     <div
       role="button"
@@ -150,7 +191,7 @@ function CreditCardRow({
       onClick={handleClick}
       onKeyDown={handleKey}
       style={{
-        ...baseRow,
+        ...activeRow,
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
@@ -176,14 +217,17 @@ function CreditCardRow({
         >
           {nome}
         </span>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-          <span
-            className="serif"
-            style={{ fontSize: 16, color: color.text.primary }}
-          >
-            {BRL(total)}
-          </span>
-          <Chevron expanded={expanded} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <AmountCaption>{t('mes.creditCards.thisMonthLabel')}</AmountCaption>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+            <span
+              className="serif"
+              style={{ fontSize: 16, color: color.text.primary }}
+            >
+              {BRL(monthlySpend)}
+            </span>
+            <Chevron expanded={expanded} />
+          </div>
         </div>
       </div>
       <CreditCardCategoryBar categories={categories} />

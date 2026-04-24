@@ -69,9 +69,11 @@ function LegendItem({ nome, valor, pct, hue }) {
   );
 }
 
-function CreditCardExpanded({ categories, transactions, isDesktop }) {
+function CreditCardExpanded({ categories, transactions, isDesktop, outstandingBalance }) {
   const legend = (categories || []).filter((c) => c.valor > 0);
   const txs = transactions || [];
+  const hasOutstanding =
+    typeof outstandingBalance === 'number' && outstandingBalance > 0;
 
   return (
     <div
@@ -100,6 +102,28 @@ function CreditCardExpanded({ categories, transactions, isDesktop }) {
               hue={c.color}
             />
           ))}
+        </div>
+      )}
+
+      {hasOutstanding && (
+        <div
+          className="sans"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+            gap: 12,
+            fontSize: 12,
+            color: color.text.secondary,
+          }}
+        >
+          <span>{t('mes.creditCards.outstandingBalanceExpandedLabel')}</span>
+          <span
+            className="serif"
+            style={{ fontSize: 13, color: color.text.primary }}
+          >
+            {BRL(outstandingBalance)}
+          </span>
         </div>
       )}
 

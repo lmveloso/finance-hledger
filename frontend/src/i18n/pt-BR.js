@@ -30,6 +30,9 @@ const dict = {
   'mes.creditCards.expand': 'Ver compras',
   'mes.creditCards.collapse': 'Ocultar',
   'mes.creditCards.showOnMobile': 'Ver cartões ({count})',
+  'mes.creditCards.thisMonthLabel': 'Este mês',
+  'mes.creditCards.outstandingBalanceLabel': 'Saldo devedor',
+  'mes.creditCards.outstandingBalanceExpandedLabel': 'Saldo devedor atual',
 
   // ── Mes KPI expansion panels ───────────────────────────────────────────
   // Receita expansion — grouped-by-type list of revenue postings.

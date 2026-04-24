@@ -27,6 +27,9 @@ const dict = {
   'mes.creditCards.expand': 'View purchases',
   'mes.creditCards.collapse': 'Hide',
   'mes.creditCards.showOnMobile': 'Show cards ({count})',
+  'mes.creditCards.thisMonthLabel': 'This month',
+  'mes.creditCards.outstandingBalanceLabel': 'Outstanding balance',
+  'mes.creditCards.outstandingBalanceExpandedLabel': 'Current outstanding balance',
 
   // ── Mes KPI expansion panels ───────────────────────────────────────────
   // Revenue expansion — grouped-by-type list of revenue postings.
