@@ -41,10 +41,26 @@ The user may re-order based on priority; this is guidance, not a dependency grap
 
 ## Exit criteria
 
-- All seven issues above closed (or moved out of the phase with written justification on this doc).
-- `grep -rn "Instrument" frontend/` returns zero matches.
-- A smoke pass on the running app (desktop + mobile, dark + light) shows no visible regressions against the pre-polish state.
-- `CLAUDE.md` "Current phase" block updated to mark this phase complete and Fase 1 active.
+- [x] All seven issues above closed (or moved out of the phase with written justification on this doc).
+- [x] `grep -rn "Instrument" frontend/` returns zero matches.
+- [ ] A smoke pass on the running app (desktop + mobile, dark + light) shows no visible regressions against the pre-polish state. **(User-side smoke pass pending against homelab; agent cannot drive a browser in this environment.)**
+- [x] `CLAUDE.md` "Current phase" block updated to mark this phase complete and Fase 1 active.
+
+## Status
+
+Phase closed on 2026-04-23. All seven issues shipped across PR-P1..PR-P7:
+
+| PR | Issue | Summary |
+|----|-------|---------|
+| P1 (#10) | #5 | Credit-card section Mês — include debito purchases |
+| P2 (#11) | #7 | Capitalize category segments + seed missing accents |
+| P3 (#12) | #6 | Fluxo Contas grid split into Ativos / Passivos |
+| P4 (#13) | #2 | Instrument Serif → Google Sans Flex |
+| P5 (#14) | #4 | Ano month-drilldown for Metas and Categorias |
+| P6 (#15) | #8 | Orçamento desktop one-line category row |
+| P7 (#16) | #3 | Merge Resumo + Mês with click-to-expand KPIs |
+
+Remaining caveat: the visual smoke pass (desktop + mobile, dark + light) must be run against the live homelab instance before declaring the UX of Fase 1 ready to kick off. Any regressions surfaced there should be opened as follow-up issues outside this phase's closed backlog.
 
 ## Out of scope
 
