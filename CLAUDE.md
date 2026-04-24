@@ -16,7 +16,7 @@ Personal/family finance dashboard that reads from an [hledger](https://hledger.o
 
 ## Development phases
 
-This project is executed in **three sequential phases**. Always check which phase is active before making architectural decisions. **Do not skip ahead.** Phase D assumes Phase 0 is complete. Phase 1 assumes Phase D is complete.
+This project is executed in **sequential phases**. Always check which phase is active before making architectural decisions. **Do not skip ahead.** Each phase assumes the previous one is complete.
 
 ### Current phase
 
@@ -25,14 +25,20 @@ This project is executed in **three sequential phases**. Always check which phas
 - [x] Fase 0 — Estabilização (see `docs/01-ESTABILIZACAO.md`) — COMPLETED
 - [x] Fase D — Dashboard 2.0 (see `docs/02-PRD-dashboard-v2.md`) - COMPLETED
 - [x] Fase U — UI/UX (see `docs/04-PRD-ui-ux.md`) — COMPLETED
-- [ ] Fase 1 — Magic Import (see `docs/03-PRD-magic-import.md`) ← ACTIVE
+- [ ] Fase UX-Polish — post-Fase U feedback pass (see `docs/05-PRD-ux-polish.md`) ← ACTIVE
+- [ ] Fase 1 — Magic Import (see `docs/03-PRD-magic-import.md`)
 
 ### Phase boundaries
 
 - **Fase 0:** refactoring only. No new user-visible features. Target structure in §3 (backend) and §4 (frontend) of the Estabilização doc.
 - **Fase D:** dashboard rework inspired by the family's old spreadsheet (see `docs/00-DIAGNOSTICO-planilha.md`). Introduces the Principle dimension, new tab structure (Mês, Ano, Plano, Fluxo reformulado, Patrimônio, Transações). Magic Import tab is a placeholder.
 - **Fase U:** UI/UX overhaul — indigo-violet dual-mode palette, new nav (sidebar + bottom tabs), redesigned visualizations per tab. Nine PRs (U0–U9). Plano/Previsão hidden from nav during this phase.
+- **Fase UX-Polish:** bug fixes and layout corrections from daily use of the Fase U output. No new features, no new endpoints (except where a bug requires it). Tracked as a finite backlog of GitHub issues labeled `ux-polish`. Must complete before Fase 1.
 - **Fase 1:** Magic Import — AI-powered ingestion of bank statements and credit card invoices. Depends on the Principle dimension from Phase D.
+
+### Working through Fase UX-Polish issues
+
+The `ux-polish` label marks a finite backlog (see `docs/05-PRD-ux-polish.md` for the current issue index). Pick one per PR, in any order — they have no interdependencies except that the Resumo/Mês merge benefits from the card-crédito bug fix landing first so the merged tab's Cartões section works out of the box.
 
 ## Architectural decisions
 
