@@ -109,6 +109,8 @@ const dict = {
   'fluxo.waterfall.footnote.suffix': '.',
   'fluxo.movimentos.title': 'Movements per account',
   'fluxo.contas.title': 'Accounts',
+  'fluxo.contas.sectionAtivos': 'Assets',
+  'fluxo.contas.sectionPassivos': 'Liabilities · cards',
   'fluxo.contas.tipo_ativo': 'Asset',
   'fluxo.contas.tipo_passivo': 'Liability',
   'fluxo.contas.entradas': 'Inflow',
