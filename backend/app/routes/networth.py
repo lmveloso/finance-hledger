@@ -28,22 +28,48 @@ def networth(
 
 @router.get("/api/accounts")
 def accounts(user: Optional[str] = Depends(get_current_user)):
-    """Lista de contas com saldos."""
+    """Lista de contas com saldos (ativos e passivos).
+
+    Response contract consumed by the Patrimônio tab:
+        {"contas": [{"nome", "caminho", "tipo", "saldo"}, ...]}
+
+    where ``tipo`` is ``"ativo"`` for ``assets[:...]`` paths and ``"passivo"``
+    for ``liabilities[:...]`` paths. ``saldo`` keeps the signed value emitted
+    by hledger (liabilities stay negative); the frontend applies ``abs`` where
+    the display requires it.
+    """
     import main
+    from app.hledger.models import Amount
 
     begin, end = month_bounds()
     data = main.hledger("balance", "assets", "liabilities", "-e", end, "--historical", "--flat")
-    result = []
+    contas: list[dict] = []
     if isinstance(data, list) and len(data) >= 1:
         rows = data[0] if isinstance(data[0], list) else []
         for row in rows:
-            if isinstance(row, list) and len(row) >= 4:
-                name = row[0] if isinstance(row[0], str) else ""
-                from app.hledger.models import Amount
-                balance = Amount.sum_list(row[3])
-                if abs(balance) > 0.01:
-                    result.append({"conta": name, "saldo": round(balance, 2)})
-    return {"accounts": sorted(result, key=lambda x: abs(x["saldo"]), reverse=True)}
+            if not (isinstance(row, list) and len(row) >= 4):
+                continue
+            caminho = row[0] if isinstance(row[0], str) else ""
+            if not caminho:
+                continue
+            if caminho == "assets" or caminho.startswith("assets:"):
+                tipo = "ativo"
+            elif caminho == "liabilities" or caminho.startswith("liabilities:"):
+                tipo = "passivo"
+            else:
+                # Defensively skip anything outside assets/liabilities.
+                continue
+            balance = Amount.sum_list(row[3])
+            if abs(balance) <= 0.01:
+                continue
+            nome = caminho.rsplit(":", 1)[-1] or caminho
+            contas.append({
+                "nome": nome,
+                "caminho": caminho,
+                "tipo": tipo,
+                "saldo": round(balance, 2),
+            })
+    return {"contas": sorted(contas, key=lambda x: abs(x["saldo"]), reverse=True)}
 
 
 @router.get("/api/accounts/{account_path:path}/balance-history")

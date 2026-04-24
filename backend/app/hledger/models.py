@@ -19,6 +19,24 @@ from .errors import HledgerParseError
 PostingStatus = Literal["Unmarked", "Pending", "Cleared"]
 
 
+def _date_str(value: Any) -> str:
+    """Normalize a hledger date entry into a plain ``YYYY-MM-DD`` string.
+
+    hledger 1.52 wraps each ``cbrDates`` endpoint as
+    ``{"contents": "2026-04-01", "tag": "Exact"}`` instead of a bare string.
+    Older versions (and some code paths) still emit a bare ISO string.
+    Anything else (``None``, unexpected shapes) collapses to ``""`` so the
+    caller can defensively filter it downstream.
+    """
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        contents = value.get("contents")
+        if isinstance(contents, str):
+            return contents
+    return ""
+
+
 class Amount(BaseModel):
     commodity: str = ""
     quantity: float = 0.0
@@ -149,7 +167,7 @@ class PeriodReport(BaseModel):
         if not isinstance(raw, dict):
             raise HledgerParseError("period report JSON must be an object")
         dates = [
-            (str(p[0]), str(p[1]))
+            (_date_str(p[0]), _date_str(p[1]))
             for p in raw.get("cbrDates", [])
             if isinstance(p, list) and len(p) == 2
         ]

@@ -41,6 +41,9 @@ def test_networth_mes_format(client):
     for item in data["months"]:
         assert len(item["mes"]) == 7
         assert item["mes"][4] == "-"
+        # Guard against the hledger 1.52 regression where cbrDates dicts
+        # were stringified ({'contents': ...}) and leaked into the label.
+        assert not item["mes"].startswith("{")
 
 
 def test_networth_default_months(client):

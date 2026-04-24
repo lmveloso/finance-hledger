@@ -6,6 +6,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from app.legacy import _extract_one_amount, _parse_amount_list, _amount
 from app.hledger.helpers import month_bounds, months_back_bounds
+from app.hledger.models import PeriodReport
+from app.hledger.parsers import networth_from_balancesheet
 
 
 # ── _extract_one_amount ──────────────────────────────────────────────
@@ -183,3 +185,93 @@ def test_months_back_bounds_one_month():
     begin, end = months_back_bounds(1)
     # begin deve ser antes de end
     assert begin < end
+
+
+# ── PeriodReport.from_raw (cbrDates shape handling) ─────────────────
+
+
+def test_period_report_cbrDates_hledger152_dict_shape():
+    """hledger 1.52 wraps each date as {"contents": "YYYY-MM-DD", "tag": ...}."""
+    raw = {
+        "cbrDates": [
+            [
+                {"contents": "2025-05-01", "tag": "Exact"},
+                {"contents": "2025-06-01", "tag": "Exact"},
+            ],
+            [
+                {"contents": "2025-06-01", "tag": "Exact"},
+                {"contents": "2025-07-01", "tag": "Exact"},
+            ],
+        ],
+        "cbrSubreports": [],
+    }
+    report = PeriodReport.from_raw(raw)
+    assert report.dates == [
+        ("2025-05-01", "2025-06-01"),
+        ("2025-06-01", "2025-07-01"),
+    ]
+    # Plain-string tuples, not stringified dicts.
+    assert all(isinstance(a, str) and isinstance(b, str) for a, b in report.dates)
+    assert not any(d.startswith("{") for pair in report.dates for d in pair)
+
+
+def test_period_report_cbrDates_legacy_str_shape():
+    """Older hledger emits bare ISO strings — parser must still accept them."""
+    raw = {
+        "cbrDates": [
+            ["2025-01-01", "2025-02-01"],
+            ["2025-02-01", "2025-03-01"],
+        ],
+        "cbrSubreports": [],
+    }
+    report = PeriodReport.from_raw(raw)
+    assert report.dates == [
+        ("2025-01-01", "2025-02-01"),
+        ("2025-02-01", "2025-03-01"),
+    ]
+
+
+def test_period_report_cbrDates_garbage_falls_back_to_empty():
+    """Mixed / malformed entries must not raise; unknown shapes collapse to ""."""
+    raw = {
+        "cbrDates": [
+            ["2025-01-01", {"contents": "2025-02-01", "tag": "Exact"}],
+            [None, 42],
+            ["too", "many", "items"],  # wrong length — skipped entirely
+            "not-a-list",  # wrong type — skipped entirely
+        ],
+        "cbrSubreports": [],
+    }
+    report = PeriodReport.from_raw(raw)
+    # First pair: mixed legacy+dict shape is normalized.
+    # Second pair: unknown types collapse to "".
+    assert report.dates == [
+        ("2025-01-01", "2025-02-01"),
+        ("", ""),
+    ]
+
+
+# ── networth_from_balancesheet consuming the fixed parser ───────────
+
+
+def test_networth_from_balancesheet_handles_hledger152_dates():
+    """Regression: dict-shaped cbrDates must yield clean 7-char YYYY-MM labels."""
+    raw = {
+        "cbrDates": [
+            [
+                {"contents": "2025-05-01", "tag": "Exact"},
+                {"contents": "2025-06-01", "tag": "Exact"},
+            ],
+            [
+                {"contents": "2025-06-01", "tag": "Exact"},
+                {"contents": "2025-07-01", "tag": "Exact"},
+            ],
+        ],
+        "cbrSubreports": [],
+    }
+    months = networth_from_balancesheet(raw)
+    assert [m["mes"] for m in months] == ["2025-05", "2025-06"]
+    for m in months:
+        assert isinstance(m["mes"], str)
+        assert len(m["mes"]) == 7
+        assert not m["mes"].startswith("{")
