@@ -328,32 +328,29 @@ When `$impeccable craft` runs (or a freehand JSX pass guided by this brief):
 
 `reference/typeset.md` is implicit — the type map is fully fixed by DESIGN.md tokens, so no creative typography decisions remain.
 
-## 15. Open questions
+## 15. Open questions (RESOLVED — recommendations accepted)
 
-These are surfaced for user resolution before craft. None block the brief from being approved as the foundation; they are micro-decisions the implementer would otherwise have to invent.
+User confirmed: stick to the recommendation in every case. Resolutions below are now contract for the craft round.
 
-### 15.1 Heading semantics for the four card labels
+### 15.1 Heading semantics — RESOLVED
 
-Should the four eyebrows (`mes.anchor.label`, `mes.row.income.label`, `mes.row.expense.label`, `mes.row.cards.label`) be rendered as `<h2>`s for screen-reader landmark navigation, or as styled `<span>`s? `<h2>`s give the partner using a screen reader a quick way to jump between the four sections; `<span>`s keep the document outline shallower (the tab shell already has the page `<h1>`). PRD-08 doesn't specify. Recommend `<h2>` for the partner-glance use case; defer to user.
+Render the four eyebrows (`mes.anchor.label`, `mes.row.income.label`, `mes.row.expense.label`, `mes.row.cards.label`) as `<h2>` elements. Screen-reader landmark navigation wins over a shallower outline; the partner-glance use case is well-served.
 
-### 15.2 Pluralization in EN for `mes.row.cards.installmentsAlive`
+### 15.2 EN plural for `installmentsAlive` — RESOLVED
 
-The current key produces "1 active installments" when `count === 1`. The pt-BR translation is fine because Portuguese uses "1 parcela" / "N parcelas" but the ledger generally has count > 1 in this context. Either:
-- (a) Accept the English awkwardness for now (matches the plan) and revisit in a `$impeccable clarify` pass.
-- (b) Switch to ICU plurals or two keys (`installmentsAlive.one` / `installmentsAlive.other`).
-Recommend (a) — defer to a later clarify pass; not a Step-0 blocker.
+Accept the "1 active installments" awkwardness for now. Revisit in a future `$impeccable clarify` pass if it bites; not a Step-0 blocker.
 
-### 15.3 Last-updated relative vs absolute time in the footer
+### 15.3 Footer last-updated format — RESOLVED
 
-`summary.last_updated` (from `/api/month-summary`, per PR-F1-1) is presumably an ISO timestamp. The footer can render it as relative ("3 hours ago") or absolute ("today at 09:14"). PRD-08 §6.4 calls it "data e hora da última atualização" — leans absolute. Recommend absolute (`pt-BR`: "Última atualização: 25/04/2026 09:14"). EN source: "Last updated: Apr 25, 2026 9:14am". Defer to user if relative is preferred.
+Absolute time. EN: "Last updated: Apr 25, 2026 9:14am". pt-BR: "Última atualização: 25/04/2026 09:14".
 
-### 15.4 Behavior when `summary.last_updated` is null
+### 15.4 Footer when `summary.last_updated` is null — RESOLVED
 
-If the backend returns `null` (never imported), the footer should render `t('mes.footer.lastUpdated', { when: '—' })` or hide entirely. Recommend rendering with `—` as a fallback rather than hiding (the partner deserves to see "we have no record of an update" honestly). Not in the plan; flag for confirmation.
+Render with the `—` fallback: `t('mes.footer.lastUpdated', { when: '—' })`. Do not hide. Honest about the unknown.
 
-### 15.5 Whether the anchor's number leading sign uses the unicode minus (`−`, U+2212) or the ASCII hyphen-minus (`-`)
+### 15.5 Sign glyph for negative leftover — RESOLVED
 
-DESIGN.md does not specify. The unicode minus is typographically tighter and matches the Tight-Number aesthetic. Recommend `−` (U+2212). Localized currency formatting via `Intl.NumberFormat` produces the unicode minus by default in pt-BR for negative values, so this is likely already resolved by `formatBRL`; flagging anyway.
+Unicode minus (`−`, U+2212). `Intl.NumberFormat` (and `formatBRL`) already produces it by default for pt-BR; no extra code path needed unless a manual sign-prefix is being constructed.
 
 ---
 

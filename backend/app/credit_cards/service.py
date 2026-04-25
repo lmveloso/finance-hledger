@@ -156,11 +156,7 @@ class CreditCardsService:
     def _load_aliases(self) -> dict[str, str]:
         if self._journal_path is None:
             return {}
-        try:
-            return parse_account_aliases(self._journal_path)
-        except Exception as exc:  # pragma: no cover - defensive
-            logger.warning("credit_cards.alias_parse_failed error=%s", exc)
-            return {}
+        return parse_account_aliases(self._journal_path)
 
     def _last_updated(self) -> str:
         """ISO-8601 mtime of the journal file, or ``now`` when unavailable."""

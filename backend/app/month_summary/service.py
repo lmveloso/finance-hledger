@@ -163,7 +163,12 @@ class MonthSummaryService:
             return ""
         try:
             mtime = self._journal_path.stat().st_mtime
-        except OSError:
+        except OSError as exc:
+            logger.warning(
+                "month_summary.journal_stat_failed path=%s error=%s",
+                self._journal_path,
+                exc,
+            )
             return ""
         return datetime.fromtimestamp(mtime).replace(microsecond=0).isoformat()
 

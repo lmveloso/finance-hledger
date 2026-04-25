@@ -16,7 +16,6 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.credit_cards.errors import CreditCardError
 from app.credit_cards.models import CreditCardsResponse
 from app.credit_cards.service import CreditCardsService
 from app.deps import get_credit_cards_service, get_current_user
@@ -48,5 +47,3 @@ def credit_cards(
         raise HTTPException(504, str(exc)) from exc
     except HledgerCallError as exc:
         raise HTTPException(500, f"hledger: {exc}") from exc
-    except CreditCardError as exc:
-        raise HTTPException(500, f"credit-cards: {exc}") from exc
