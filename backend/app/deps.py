@@ -18,12 +18,14 @@ from fastapi import Depends, HTTPException
 
 from app.auth.password import _tokens, get_current_user
 from app.config import Settings, get_settings
+from app.credit_cards.service import CreditCardsService
 from app.principles.errors import PrincipleError
 from app.principles.mappings import load_mapping
 from app.principles.service import PrincipleService
 
 __all__ = [
     "_tokens",
+    "get_credit_cards_service",
     "get_current_user",
     "get_principle_service",
 ]
@@ -64,3 +66,22 @@ def get_principle_service(
         ledger_file=settings.ledger_file, binary=settings.hledger_path
     )
     return PrincipleService(client=client, mapping=mapping)
+
+
+def get_credit_cards_service(
+    settings: Settings = Depends(get_settings),
+) -> CreditCardsService:
+    """Build a CreditCardsService for the current request.
+
+    The hledger client is rebuilt per request (no state, no connection).
+    The journal path is forwarded so the alias parser can read the file
+    directly — see ``app.credit_cards.aliases`` for the rationale on why
+    that is NOT an ADR-004 violation (ADR-004 forbids invoking the
+    binary outside :class:`HledgerClient`, not reading the source file).
+    """
+    from app.hledger.client import HledgerClient
+
+    client = HledgerClient(
+        ledger_file=settings.ledger_file, binary=settings.hledger_path
+    )
+    return CreditCardsService(client=client, journal_path=settings.ledger_file)
