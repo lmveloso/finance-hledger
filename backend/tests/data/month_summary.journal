@@ -1,0 +1,49 @@
+; Fixture journal for /api/month-summary integration tests.
+; Covers:
+;   - Salary income paid into bank
+;   - Expense paid via debit (assets contra)
+;   - Expense paid via credit card (liability contra)
+;   - Card payment (asset -> liability, no expense)
+;   - Installment per ADR-010 — single tx with full amount + parcelamento: tag
+;   - One card under each of the three accepted spellings
+;     (cartão, cartao, credit-card) so the aggregate sums them all.
+
+; Opening balances (so --historical has something to start from).
+2025-12-31 * Opening balance
+    assets:bank                     5000.00
+    equity:opening
+
+; ── April 2026 — the month we test against ──────────────────────────
+
+2026-04-01 * Salary
+    assets:bank                    10000.00
+    income:salary
+
+2026-04-05 * Mercado (debit)
+    expenses:groceries               300.00
+    assets:bank
+
+2026-04-10 * Restaurante (credit card)
+    expenses:dining                  150.00
+    liabilities:cartão:nubank
+
+2026-04-12 * Streaming (credit card, ascii spelling)
+    expenses:entertainment            29.90
+    liabilities:cartao:itau
+
+2026-04-14 * SaaS (credit card, english spelling)
+    expenses:services                 49.90
+    liabilities:credit-card:amex
+
+; ADR-010: an installment is recorded as ONE transaction on the original
+; purchase date with the FULL amount as expense and as card-liability,
+; tagged with `parcelamento:`. Subsequent invoice lines for that same
+; purchase are skipped on import.
+2026-04-20 * Eletrodomestico parcelado  ; parcelamento: ELECTROLUX 1/10
+    expenses:moradia:equipamentos    1200.00
+    liabilities:cartão:nubank
+
+; Card payment — settles previous-month balance. Must NOT count as expense.
+2026-04-25 * Pagamento fatura cartão
+    liabilities:cartão:nubank        500.00
+    assets:bank
