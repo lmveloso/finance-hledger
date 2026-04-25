@@ -18,6 +18,7 @@ from fastapi import Depends, HTTPException
 
 from app.auth.password import _tokens, get_current_user
 from app.config import Settings, get_settings
+from app.month_summary.service import MonthSummaryService
 from app.principles.errors import PrincipleError
 from app.principles.mappings import load_mapping
 from app.principles.service import PrincipleService
@@ -25,6 +26,7 @@ from app.principles.service import PrincipleService
 __all__ = [
     "_tokens",
     "get_current_user",
+    "get_month_summary_service",
     "get_principle_service",
 ]
 
@@ -64,3 +66,21 @@ def get_principle_service(
         ledger_file=settings.ledger_file, binary=settings.hledger_path
     )
     return PrincipleService(client=client, mapping=mapping)
+
+
+def get_month_summary_service(
+    settings: Settings = Depends(get_settings),
+) -> MonthSummaryService:
+    """Build a MonthSummaryService for the current request.
+
+    Mirrors ``get_principle_service``: rebuilding the HledgerClient per
+    request is cheap (no state) and matches the existing modular-route
+    pattern. The journal path is forwarded so the service can stat it for
+    the ``last_updated`` ISO-8601 footer.
+    """
+    from app.hledger.client import HledgerClient
+
+    client = HledgerClient(
+        ledger_file=settings.ledger_file, binary=settings.hledger_path
+    )
+    return MonthSummaryService(client=client, journal_path=settings.ledger_file)
