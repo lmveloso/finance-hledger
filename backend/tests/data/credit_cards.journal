@@ -1,0 +1,60 @@
+; Fixture journal for /api/credit-cards integration tests.
+; Designed to exercise:
+;   - two card accounts under DIFFERENT prefix forms (cartão and credit-card)
+;   - one card with `; alias:` directive (Q4 path c) and one without (path b)
+;   - one active installment from 5 months ago (TV 6x → 1 month live)
+;   - one finished installment from ~2 years ago (OLD 6x → completed)
+;   - one refund on the credit-card side (Q3: positive expense-side reduces)
+;   - a normal purchase on each card
+;   - a card payment (assets → liability) that must NOT count as spend
+;   - a dormant card (zero balance + zero monthly spend) → excluded
+;
+; "Today" for tests is fixed via dependency injection; the dates here are
+; chosen so a today around 2026-04-15 hits all the desired states:
+;   - TV purchased 2025-11-01 + 6 months = 2026-05-01 ≥ 2026-04-15 → LIVE
+;   - OLD purchased 2024-04-01 + 6 months = 2024-10-01 < 2026-04-15 → done
+;
+; Account directives WITH and WITHOUT alias on purpose.
+
+account liabilities:cartão:nubank          ; alias: Nubank Lucas
+account liabilities:credit-card:visa
+account liabilities:cartão:dormente
+account assets:bank
+account income:salary
+account expenses:groceries
+account expenses:dining
+account expenses:moradia:equipamentos
+account expenses:other
+
+2026-01-01 * Opening
+    assets:bank                         5000.00
+    equity:opening
+
+; ── Active installment (5 months ago, 6x → still 1 month live).
+2025-11-01 * ELECTROLUX TV
+    expenses:moradia:equipamentos       1800.00  ; parcelamento: TV 6x
+    liabilities:cartão:nubank
+
+; ── Completed installment (April 2024, 6x → done by Oct 2024).
+2024-04-01 * Old fridge
+    expenses:moradia:equipamentos        900.00  ; parcelamento: OLD 6x
+    liabilities:cartão:nubank
+
+; ── Normal April purchases on each card.
+2026-04-05 * Supermarket on Nubank
+    expenses:groceries                   200.00
+    liabilities:cartão:nubank
+
+2026-04-10 * Restaurant on Visa
+    expenses:dining                      150.00
+    liabilities:credit-card:visa
+
+; ── Refund on Nubank in April (positive expense-side amount).
+2026-04-12 * Refund of groceries
+    expenses:groceries                   -50.00
+    liabilities:cartão:nubank
+
+; ── Payment of the Visa invoice (must NOT show up as spend).
+2026-04-20 * Pagamento Visa
+    assets:bank                         -100.00
+    liabilities:credit-card:visa
