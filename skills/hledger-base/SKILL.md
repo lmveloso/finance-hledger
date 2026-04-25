@@ -58,7 +58,8 @@ Usar `hledger_add_transaction` para adicionar transacoes individuais. Para lotes
 
 ```
 main.journal                         ; entry point — inclui todos os journals
-accounts.journal                      ; chart of accounts
+accounts.journal                      ; chart of accounts + declaração de commodity
+parcelamentos.journal                 ; declarações ~ monthly de parcelas ativas (ADR-009)
 YYYY-MM-banco-conta.journal           ; extrato conta bancaria (um por mes)
 YYYY-MM-fatura-BANCO.journal          ; fatura cartao de credito (um por ciclo)
 ```
@@ -148,20 +149,44 @@ Quando um pagamento ocorreu ANTES da data do saldo inicial, ele ja esta embutido
     equity:saldo-inicial                  BRL  -164.66
 ```
 
-## Protocolo de Validacao
+## Protocolo de Validacao (OBRIGATORIO apos qualquer escrita)
 
-Apos **qualquer** escrita no journal, executar na ordem:
+Executar **sempre na ordem**, parar no primeiro erro:
 
-1. **`hledger_check`** — valida sintaxe e balanceamento
-2. **`hledger_balance`** — verificar saldo da conta afetada
-3. **Comparar** o saldo com o valor real do banco/extrato
+1. **`hledger check -s`** (strict) — sintaxe + balanceamento + **contas declaradas** + **commodities declaradas**
+2. **`hledger check ordereddates`** — datas em ordem nao-decrescente dentro de cada arquivo
+3. **`hledger_balance`** — saldo das contas afetadas vs banco/extrato real
 
+```bash
+hledger -f "$LEDGER_FILE" check -s
+hledger -f "$LEDGER_FILE" check ordereddates
+hledger -f "$LEDGER_FILE" balance "<conta-afetada>"
 ```
-hledger_check(file="$LEDGER_FILE")
-hledger_balance(file="$LEDGER_FILE", query="<conta-afetada>")
-```
+
+Se `check -s` falhar com "account ... has not been declared":
+- **Pare e adicione a declaração em `accounts.journal`**, nao force a transação.
+
+Se `check ordereddates` falhar:
+- Reordene as transacoes no arquivo ofensor. Recurso pratico:
+  ```bash
+  hledger -f arquivo.journal print --explicit > /tmp/sorted.journal
+  # preserve cabeçalho (linhas `;` no topo) + concatene /tmp/sorted.journal
+  ```
 
 Se o saldo nao bater, investigar antes de adicionar ajuste.
+
+### Checks opcionais (uso pontual)
+
+- `hledger check uniqueleafnames` — bloqueia leaf names repetidos. **Desabilitar** se houver multiplos `:corrente` (um por banco) — eh padrão e desejado.
+- `hledger check payees` / `tags` — exigem declaração explicita de cada payee/tag. **Nao usar** sem antes declarar o universo fechado.
+
+### Script de validacao
+
+Existe um script canonico que roda toda a suite acima:
+
+```bash
+bash skills/hledger-base/scripts/validate.sh "$LEDGER_FILE"
+```
 
 ## Categorizacao
 
@@ -218,8 +243,65 @@ O mapeamento payee→conta vive em `payee-categories.json` junto a este skill (`
   expenses:alimentacao  BRL 100.00
   ```
 
+### Commodity (CRITICO — declarar uma única vez)
+
+`hledger check -s` exige diretiva `commodity` para todas as moedas usadas. Adicionar no topo de `accounts.journal`:
+
+```hledger
+; Base: BRL, ponto-decimal sem separador de milhar (formato hledger nativo).
+commodity BRL 1000.00
+```
+
+**A diretiva define o formato de parsing.** Se voce declarar `1000.00` (ponto-decimal) e algum lançamento usar `BRL 333,00` (vírgula-decimal brasileiro), hledger interpreta a vírgula como separador de milhar e o valor vira `33300`. **Sintoma**: API retorna valores 100x maiores que o esperado.
+
+Padronize TODOS os arquivos para o mesmo formato (recomendado: ponto-decimal). Para converter um arquivo brasileiro:
+
+```bash
+python3 -c "import re,sys; p=sys.argv[1]; s=open(p).read(); open(p,'w').write(re.sub(r'(BRL\s+-?\d+),(\d{2})\b', r'\1.\2', s))" arquivo.journal
+```
+
 ### Moeda
-- Cuidado com **BRL vs BHL** — `hledger check` NAO detecta moeda desconhecida. Verificar com grep apos escrita.
+- Cuidado com **BRL vs BHL** — agora `hledger check -s` detecta (vai recusar `BHL` se nao declarado), mas verificar tambem com grep apos escrita.
+
+### Contas (DECLARAR ANTES DE USAR)
+
+Toda conta usada em qualquer posting **deve** estar declarada em `accounts.journal`. Workflow ao introduzir conta nova:
+
+1. Antes de escrever a transação, abra `accounts.journal` e adicione `account expenses:nova:categoria  ; descricao breve`.
+2. Salve. Só então escreva a transação.
+3. Rode `hledger check -s` — se passar, OK.
+
+Para listar contas usadas mas nao declaradas em um journal existente:
+
+```bash
+diff <(hledger accounts --declared | sort) <(hledger accounts --used | sort) | grep '^> ' | sed 's/^> //'
+```
+
+### Ordem cronologica dentro de arquivos
+
+Cada arquivo deve ter datas em ordem **não-decrescente** (extrato/fatura nao-cronologico = falha de `ordereddates`). Bancos as vezes emitem com lançamentos fora de ordem — sortear sempre apos importar.
+
+**Recurso**: `hledger -f arquivo.journal print --explicit` emite os mesmos transactions ordenados por data, preservando tags. Concatenar com o cabeçalho original (linhas `;`):
+
+```bash
+awk '/^[^;]/ && !/^[[:space:]]*$/ { exit } { print }' arquivo.journal > /tmp/header
+hledger -f arquivo.journal print --explicit > /tmp/body
+cat /tmp/header /tmp/body > arquivo.journal
+```
+
+### Lançamentos retroativos (data anterior ao período do arquivo)
+
+Faturas de cartão e extratos as vezes contém entradas com data **antes** do período do arquivo (parcelas, lançamentos atrasados). Manter a **data real** do evento (não rebatizar para o período do arquivo) — isso preserva a verdade economica para queries por mês. O arquivo continua identificavel pelo nome, não pelo conteúdo cronológico.
+
+Para casos onde voce queira tanto a data fatura quanto a data compra, hledger suporta **data secundaria**:
+
+```hledger
+2026-04-05=2026-01-27 AM Presentes (filha)
+    liabilities:cartao:bb-visa   BRL -167.40
+    expenses:presentes            BRL  167.40
+```
+
+Primary date = lançamento na fatura. Secondary date (após `=`) = data real da compra. Queries com `--date2` usam a secundaria.
 
 ### Periodos
 - Usar `-b YYYY-MM-DD -e YYYY-MM-DD`. NAO usar `--period 2026-01/2026-02` (erro de parse).

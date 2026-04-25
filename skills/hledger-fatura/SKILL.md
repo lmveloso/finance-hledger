@@ -74,7 +74,71 @@ Toda fatura tem **tres entradas de abertura** para bootstrap correto do saldo:
 3. Se match e nao `ambiguous` → usar `account` e `tag`
 4. Se `ambiguous: true` ou sem match → adicionar a lista de perguntas
 5. Adicionar `; tipo: TAG` em cada posting de despesa
-6. Para parcelas: registrar **valor da parcela** (nao total), comentar `; X de Y`
+6. Para parcelas: ver seção "Parcelamentos" abaixo (workflow ADR-009)
+
+## Parcelamentos (ADR-009)
+
+Compras parceladas (`PARC N/M`, `parcela N/M`, `N de M`) seguem regra propria.
+
+### Modelo
+
+Mantemos os dois modelos em paralelo:
+
+| Tipo | Onde vive | Como aparece |
+|---|---|---|
+| Parcelas **passadas** (≤ hoje) | One-off em cada fatura, com `; parcelamento: NOME N/M` | Realidade — entrada por entrada |
+| Parcelas **futuras** (> hoje) | UMA declaração `~ monthly` em `parcelamentos.journal` | Forecast — geradas por `--forecast` |
+
+O endpoint `/api/installments` agrega ambos por NOME, conta dates ≤ hoje como `paid`, e calcula `remaining = total - paid`.
+
+### Tag obrigatoria
+
+Cada parcela passada (one-off) precisa do tag exato no posting de despesa:
+
+```hledger
+2026-04-29 Anuidade Caixa Mastercard (titular)  ; tipo: CUSTOS FIXOS
+    expenses:financeiro:taxas             BRL    17.25  ; parcelamento: Anuidade Caixa titular 8/12
+    liabilities:cartao:caixa-mastercard   BRL   -17.25
+```
+
+Regra do tag: `parcelamento: <NOME> <N>/<M>` (regex backend: `^(?P<name>.+?)\s+(?P<n>\d+)/(?P<m>\d+)\s*$`).
+
+- `<NOME>`: identificador estavel da serie (mesmo NOME em todas as parcelas e na declaração `~ monthly`).
+- `<N>`: numero da parcela atual.
+- `<M>`: total da serie.
+
+### Declaração ~ monthly em parcelamentos.journal
+
+Para parcelas com ocorrencias **futuras**:
+
+```hledger
+; --- Anuidade Caixa Mastercard (titular) — 12x ---
+; Já pagas: 6, 7, 8. Futuras: 9..12.
+~ monthly from 2026-05-01 to 2026-08-31
+    expenses:financeiro:taxas            BRL  17.25  ; parcelamento: Anuidade Caixa titular 9/12
+    liabilities:cartao:caixa-mastercard
+```
+
+- Período `from..to`: **inicio = primeiro mes futuro**, **fim = ultimo mes da serie**. Hledger gera 1 transacao no inicio de cada mes do intervalo.
+- O posting da liability fica sem valor explicito (auto-balance).
+- Comentario explicando quais parcelas ja foram pagas e quais sao futuras (auxilia debug humano).
+
+### Quando criar / atualizar a declaração
+
+1. **Detectou parcelamento** numa fatura sendo importada: cheque se ja existe declaração para esse NOME em `parcelamentos.journal`.
+   - **Existe**: ok, a declaração ja cobre parcelas futuras. Apenas adicione o one-off da parcela atual com tag.
+   - **Nao existe**: crie a declaração `~ monthly from <proximo_mes> to <ultimo_mes>`. Adicione o one-off.
+2. **Quando todas as parcelas de uma serie virarem passado**, mover a declaração para `parcelamentos-arquivados.journal` (ou remover) — o backend ignora declarações sem ocorrencias futuras.
+
+### Casos limite
+
+- **Parcela final unica** (ex: `Havan PARC 4/4`, sem 1, 2, 3 no journal): nao cria `~ monthly` (nao ha futuro). Adiciona o one-off normalmente. Aceitavel que `/api/installments` reporte essa serie como ativa com `remaining=3` por nao ter dates pre-journal — usuario pode resolver com backfill ou mudando `M`.
+- **Parcela 1/N nesta fatura**: cria one-off + `~ monthly from <proximo_mes> to <mes_final>` cobrindo 2..N.
+- **Parcelas pre-journal**: se a serie comeca antes do journal, parcelas faltantes aparecem como "remaining" inflado. Backfill manual ou aceitar a aproximacao.
+
+## Lançamentos retroativos (não parcelas)
+
+Algumas faturas trazem lançamentos com data anterior ao período do arquivo (não parcelas, apenas atrasados). Manter a data **real** do evento — sortear o arquivo cronologicamente apos importar (ver hledger-base, seção "Ordem cronologica"). Não rebatizar para a data do fechamento da fatura.
 
 ## Detalhes por Cartao
 
@@ -151,9 +215,13 @@ Se o pagamento da fatura anterior ocorreu ANTES da data de corte dos saldos inic
 
 ## Validacao
 
-```
-hledger_check(file="$LEDGER_FILE")
-hledger_balance(file="$LEDGER_FILE", query="liabilities:cartao:xp-visa")
+Use o protocolo completo do skill hledger-base — nao basta `hledger_check` simples:
+
+```bash
+bash skills/hledger-base/scripts/validate.sh "$LEDGER_FILE"
+hledger -f "$LEDGER_FILE" balance "liabilities:cartao:xp-visa"
 ```
 
 O saldo deve ser **negativo** e igual ao total da fatura atual. Exemplo: fatura de R$ 8.500 → saldo `BRL -8500.00`.
+
+Para conferir parcelamentos detectados: `curl -s http://127.0.0.1:8080/api/installments | jq` — todos os `parcelamento:` tags devem aparecer agrupados pelo NOME.
