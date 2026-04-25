@@ -1,10 +1,10 @@
 # ADR-009: Parcelamentos detectados geram `~ monthly from X to Y` no journal
 
-**Status:** Accepted
+**Status:** Superseded by ADR-010
 **Date:** 2026-04
 **Phase origin:** Fase 1 (Magic Import), alimenta Fase D (Dashboard 2.0)
 **Supersedes:** —
-**Superseded by:** —
+**Superseded by:** ADR-010
 
 ## Context
 

@@ -27,7 +27,7 @@ This project is executed in **sequential phases**. Always check which phase is a
 - [x] Fase U — UI/UX (see `docs/04-PRD-ui-ux.md`) — COMPLETED
 - [x] Fase UX-Polish — post-Fase U feedback pass (see `docs/05-PRD-ux-polish.md`) — COMPLETED
 - [x] Fase Audit Stabilization — post-audit trust-restoration pass (see `docs/06-PRD-audit-stabilization.md`) — COMPLETED
-- [ ] Fase 1 - Second pass of UI/UX polish (see `docs/<TO BE DEFINED>`) ← ACTIVE
+- [ ] Fase 1 - Monthly view dashboard (see `docs/08-PRD-visao-mensal-dashboard.md` `docs/07-PRD-dashboard-cartao-credito.md`) ← ACTIVE
 - [ ] Fase 2 — Magic Import (see `docs/03-PRD-magic-import.md`)
 
 ### Phase boundaries
@@ -37,17 +37,8 @@ This project is executed in **sequential phases**. Always check which phase is a
 - **Fase U:** UI/UX overhaul — indigo-violet dual-mode palette, new nav (sidebar + bottom tabs), redesigned visualizations per tab. Nine PRs (U0–U9). Plano/Previsão hidden from nav during this phase.
 - **Fase UX-Polish:** bug fixes and layout corrections from daily use of the Fase U output. No new features, no new endpoints (except where a bug requires it). Tracked as a finite backlog of GitHub issues labeled `ux-polish`. Must complete before Fase 1.
 - **Fase Audit Stabilization:** post-audit trust-restoration pass. Fixes inconsistencies where the UI, API contracts, or auth experience can misrepresent the journal or the real backend state. Scope is limited to the audited issue set in `docs/06-PRD-audit-stabilization.md`.
-- **Fase 1:** Magic Import — AI-powered ingestion of bank statements and credit card invoices. Depends on the Principle dimension from Phase D and should resume only after Audit Stabilization closes.
-
-### Working through Fase Audit Stabilization issues
-
-The current active phase is the audited trust-restoration pass documented in `docs/06-PRD-audit-stabilization.md`.
-
-Treat the GitHub issue set in that PRD as the only in-scope backlog until the phase is closed. In particular, agents should work from issues #17, #18, #19, and #20 before resuming any Fase 1 Magic Import work.
-
-### Working through Fase UX-Polish issues
-
-The `ux-polish` label marks a finite backlog (see `docs/05-PRD-ux-polish.md` for the current issue index). Pick one per PR, in any order — they have no interdependencies except that the Resumo/Mês merge benefits from the card-crédito bug fix landing first so the merged tab's Cartões section works out of the box.
+- **Fase 1** Changes for montly dashboard
+- **Fase 2:** Magic Import — AI-powered ingestion of bank statements and credit card invoices. Depends on the Principle dimension from Phase D and should resume only after Audit Stabilization closes.
 
 ## Architectural decisions
 
@@ -56,7 +47,7 @@ All major decisions are documented in `docs/adr/`. Before proposing any architec
 Key active ADRs to be aware of:
 - **ADR-004**: hledger access via internal Python module `app/hledger/client.py`. NOT via MCP, NOT via direct file write outside the module.
 - **ADR-008**: Principle is derived deterministically from category mapping. LLM does not infer Principle.
-- **ADR-009**: Installments from credit card invoices are declared as `~ monthly from X to Y` in the journal.
+- **ADR-010** (supersedes ADR-009): Installments from credit card invoices are recorded as a single transaction on the original purchase date — full amount as expense and as credit-card liability — with a `parcelamento:` tag. Subsequent invoice lines for that purchase are skipped on import.
 
 See `docs/adr/README.md` for the full index.
 
