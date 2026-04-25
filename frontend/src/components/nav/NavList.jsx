@@ -58,7 +58,7 @@ export default function NavList() {
               padding: '10px 12px',
               borderRadius: radius.rounded.sm,
               border: 'none',
-              background: isActive ? tokens.accent.primaryMuted : 'transparent',
+              background: 'transparent',
               color: isActive ? tokens.accent.primary : tokens.text.secondary,
               fontSize: 13,
               fontWeight: isActive ? 600 : 400,

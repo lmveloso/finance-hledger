@@ -18,14 +18,8 @@ import Spinner from '../../../components/Spinner.jsx';
 import ErrorBox from '../../../components/ErrorBox.jsx';
 import { useReceitas } from '../hooks/useReceitas.js';
 import { groupReceitas } from '../lib/groupReceitas.js';
+import { formatBRL } from '../../../lib/formatBRL';
 import { t } from '../../../i18n/index.js';
-
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 2,
-  });
 
 function ReceitaExpanded() {
   const { data, error, loading } = useReceitas();
@@ -107,7 +101,7 @@ function ReceitaExpanded() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {BRL(g.total)}
+                {formatBRL(g.total)}
               </span>
             </div>
           ))}
@@ -140,7 +134,7 @@ function ReceitaExpanded() {
                 fontWeight: 600,
               }}
             >
-              {BRL(total)}
+              {formatBRL(total)}
             </span>
           </div>
         </>

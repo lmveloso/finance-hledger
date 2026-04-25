@@ -33,14 +33,8 @@ import Spinner from '../../../components/Spinner.jsx';
 import ErrorBox from '../../../components/ErrorBox.jsx';
 import { useApi } from '../../../api.js';
 import { useMonth } from '../../../contexts/MonthContext.jsx';
+import { formatBRL } from '../../../lib/formatBRL';
 import { t } from '../../../i18n/index.js';
-
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  });
 
 function signedColor(value) {
   if (!Number.isFinite(value)) return color.text.muted;
@@ -157,18 +151,18 @@ function SaldoExpanded() {
           >
             <StripCell
               label={t('mes.expand.balance.contabil')}
-              value={BRL(contabil)}
+              value={formatBRL(contabil)}
               valueColor={signedColor(contabil)}
             />
             <StripCell
               label={t('mes.expand.balance.caixa')}
-              value={BRL(caixa)}
+              value={formatBRL(caixa)}
               valueColor={signedColor(caixa)}
             />
             {cardActivity && (
               <StripCell
                 label={t('mes.expand.balance.delta')}
-                value={BRL(delta)}
+                value={formatBRL(delta)}
                 valueColor={signedColor(delta)}
               />
             )}

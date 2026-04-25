@@ -20,14 +20,8 @@ import ErrorBox from '../../../components/ErrorBox.jsx';
 import { useApi } from '../../../api.js';
 import { useMonth } from '../../../contexts/MonthContext.jsx';
 import { useNav } from '../../../contexts/NavContext.jsx';
+import { formatBRL } from '../../../lib/formatBRL';
 import { t } from '../../../i18n/index.js';
-
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  });
 
 function MaioresGastosSection() {
   const { selectedMonth, refreshKey } = useMonth();
@@ -101,7 +95,7 @@ function MaioresGastosSection() {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {BRL(g.valor)}
+                  {formatBRL(g.valor)}
                 </span>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 3 }}>

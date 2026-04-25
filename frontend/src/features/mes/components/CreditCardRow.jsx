@@ -17,14 +17,8 @@ import React from 'react';
 import { color } from '../../../theme/tokens';
 import CreditCardCategoryBar from './CreditCardCategoryBar.jsx';
 import CreditCardDormantRow from './CreditCardDormantRow.jsx';
+import { formatBRL } from '../../../lib/formatBRL';
 import { t } from '../../../i18n/index.js';
-
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  });
 
 function AmountCaption({ children }) {
   return (
@@ -163,7 +157,7 @@ function CreditCardRow({
             className="serif"
             style={{ fontSize: 16, color: color.text.primary }}
           >
-            {BRL(monthlySpend)}
+            {formatBRL(monthlySpend)}
           </span>
         </div>
         <div style={{ minWidth: 0 }}>
@@ -224,7 +218,7 @@ function CreditCardRow({
               className="serif"
               style={{ fontSize: 16, color: color.text.primary }}
             >
-              {BRL(monthlySpend)}
+              {formatBRL(monthlySpend)}
             </span>
             <Chevron expanded={expanded} />
           </div>

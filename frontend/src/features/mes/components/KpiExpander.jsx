@@ -52,20 +52,20 @@ function KpiExpander({ id, expandedId, onToggle, panelId, children }) {
         cursor: 'pointer',
         borderRadius: 4,
         outline: 'none',
-        transition: 'box-shadow 0.15s, background 0.15s',
+        transition: 'background 0.15s, outline-color 0.12s',
         background: isActive ? color.accent.primaryMuted : 'transparent',
-        boxShadow: isActive
-          ? `0 0 0 1px ${color.accent.primary}`
-          : 'none',
+        // Keyboard focus uses the system outline so it doesn't read as a
+        // second emphasis layer on top of the active background tint.
+        outlineOffset: 2,
       }}
       onFocus={(e) => {
         if (!isActive) {
-          e.currentTarget.style.boxShadow = `0 0 0 1px ${color.border.focus}`;
+          e.currentTarget.style.outline = `2px solid ${color.border.focus}`;
         }
       }}
       onBlur={(e) => {
         if (!isActive) {
-          e.currentTarget.style.boxShadow = 'none';
+          e.currentTarget.style.outline = 'none';
         }
       }}
     >

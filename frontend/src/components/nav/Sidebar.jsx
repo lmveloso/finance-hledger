@@ -34,11 +34,11 @@ export default function Sidebar() {
         alignSelf: 'flex-start',
       }}
     >
-      {/* Brand block */}
+      {/* Brand block — bottom padding separates it from NavList; the divider
+          there was duplicating that whitespace. */}
       <div
         style={{
           padding: '26px 20px 22px',
-          borderBottom: `1px solid ${tokens.border.subtle}`,
         }}
       >
         <div
@@ -99,7 +99,8 @@ export default function Sidebar() {
         <ThemeToggle />
       </div>
 
-      {/* Version stamp */}
+      {/* Version stamp — footer-tone, no top border (the theme-toggle row
+          above already provides the visual closure). */}
       <div
         className="sans"
         style={{

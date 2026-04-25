@@ -8,16 +8,9 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { color } from '../../../theme/tokens';
+import { formatBRL } from '../../../lib/formatBRL';
 import { t } from '../../../i18n/index.js';
 
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  });
-const BRLc = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const pctLabel = (n) => `${Math.round(n)}%`;
 
 function CategoriaDrilldown({ detalhe, onBack }) {
@@ -63,7 +56,7 @@ function CategoriaDrilldown({ detalhe, onBack }) {
           {detalhe.nome}
         </span>
         <span className="serif" style={{ fontSize: 22, color: color.text.muted }}>
-          {BRL(detalhe.valor)}
+          {formatBRL(detalhe.valor)}
         </span>
       </div>
       {detalhe.subcats.length === 0 ? (
@@ -92,7 +85,7 @@ function CategoriaDrilldown({ detalhe, onBack }) {
                   {s.nome}
                 </span>
                 <span className="sans" style={{ fontSize: 14 }}>
-                  {BRLc(s.valor)}{' '}
+                  {formatBRL(s.valor)}{' '}
                   <span style={{ color: color.text.muted, fontSize: 12 }}>
                     ({pctLabel(p)})
                   </span>

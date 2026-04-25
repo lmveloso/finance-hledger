@@ -135,26 +135,30 @@ export default function MonthNavigator({ variant = 'sidebar' }) {
         >
           <ChevronRight size={16} />
         </button>
-        {!isCurrentMonth && (
-          <button
-            type="button"
-            onClick={goToday}
-            className="sans"
-            style={{
-              ...stepBtnStyle,
-              width: 'auto',
-              padding: '0 10px',
-              fontSize: 11,
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
-              gap: 4,
-              color: tokens.text.muted,
-            }}
-            title={t('month.today.title')}
-          >
-            <CalendarDays size={12} /> {t('month.today')}
-          </button>
-        )}
+        {/* "Hoje" stays mounted so the row width is stable; visibility flips
+            to hidden on the current month, reserving its space without an
+            interactive control. Tab order skips it via aria-hidden + tabIndex. */}
+        <button
+          type="button"
+          onClick={goToday}
+          className="sans"
+          style={{
+            ...stepBtnStyle,
+            width: 'auto',
+            padding: '0 10px',
+            fontSize: 11,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+            gap: 4,
+            color: tokens.text.muted,
+            visibility: isCurrentMonth ? 'hidden' : 'visible',
+          }}
+          aria-hidden={isCurrentMonth || undefined}
+          tabIndex={isCurrentMonth ? -1 : 0}
+          title={t('month.today.title')}
+        >
+          <CalendarDays size={12} /> {t('month.today')}
+        </button>
       </div>
       <label
         className="sans"
@@ -163,8 +167,9 @@ export default function MonthNavigator({ variant = 'sidebar' }) {
           alignItems: 'center',
           gap: 6,
           cursor: 'pointer',
-          fontSize: 12,
+          fontSize: 11,
           color: tokens.text.muted,
+          marginTop: 4,
         }}
       >
         <input

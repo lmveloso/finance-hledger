@@ -48,8 +48,13 @@ const _dark = {
   text: {
     primary:   '#e0e6ff',
     secondary: '#8b94c4',
-    muted:     '#555c88',
-    disabled:  '#2e3360',
+    // muted lifted from #555c88 (2.8:1 on bg.card) to hit WCAG AA 4.5:1.
+    // disabled lifted from #2e3360 (1.7:1 on bg.sidebar) for the same reason —
+    // both roles are used as content (eyebrows, brand subscript, version stamp),
+    // so they must clear AA. Differentiation from `secondary` now comes from
+    // letter-spacing and weight, not raw lightness.
+    muted:     '#7e87b8',
+    disabled:  '#7177ad',
   },
   accent: {
     primary:        '#6366f1',
@@ -90,8 +95,10 @@ const _light = {
   text: {
     primary:   '#18193a',
     secondary: '#4a5280',
-    muted:     '#7880aa',
-    disabled:  '#b8bcd8',
+    // Light-mode mirror of the dark contrast lift (see _dark.text). Original
+    // values (#7880aa / #b8bcd8) failed WCAG AA on white surfaces.
+    muted:     '#6a708e',
+    disabled:  '#6e7494',
   },
   accent: {
     primary:        '#6366f1',

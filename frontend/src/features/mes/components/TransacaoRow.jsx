@@ -6,13 +6,7 @@
 
 import React from 'react';
 import { color } from '../../../theme/tokens';
-
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 2,
-  });
+import { formatBRL } from '../../../lib/formatBRL';
 
 function TransacaoRow({ data, descricao, categoria, valor, isLast }) {
   return (
@@ -54,7 +48,7 @@ function TransacaoRow({ data, descricao, categoria, valor, isLast }) {
           whiteSpace: 'nowrap',
         }}
       >
-        {BRL(valor)}
+        {formatBRL(valor)}
       </span>
     </div>
   );

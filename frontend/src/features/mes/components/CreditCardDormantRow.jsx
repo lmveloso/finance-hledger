@@ -5,14 +5,8 @@
 
 import React from 'react';
 import { color } from '../../../theme/tokens';
+import { formatBRL } from '../../../lib/formatBRL';
 import { t } from '../../../i18n/index.js';
-
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  });
 
 function AmountCaption({ children }) {
   return (
@@ -59,7 +53,7 @@ function CreditCardDormantRow({
 
   const amountSpan = (
     <span className="serif" style={{ fontSize: 16, color: color.text.primary }}>
-      {BRL(outstandingBalance)}
+      {formatBRL(outstandingBalance)}
     </span>
   );
 

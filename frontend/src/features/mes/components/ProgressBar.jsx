@@ -32,9 +32,12 @@ function ProgressBar({
       <div
         style={{
           height: '100%',
-          width: `${clamped}%`,
+          width: '100%',
+          transformOrigin: 'left center',
+          transform: `scaleX(${clamped / 100})`,
           background: isOver ? overColor : fillColor,
-          transition: 'width 0.2s ease',
+          transition: 'transform 0.2s ease',
+          willChange: 'transform',
         }}
       />
     </div>

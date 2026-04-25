@@ -21,15 +21,10 @@ import Spinner from '../../../components/Spinner.jsx';
 import ErrorBox from '../../../components/ErrorBox.jsx';
 import { useApi, fetchCategoryDetail } from '../../../api.js';
 import { useMonth } from '../../../contexts/MonthContext.jsx';
+import { formatBRL } from '../../../lib/formatBRL';
 import { t } from '../../../i18n/index.js';
 import CategoriaDrilldown from './CategoriaDrilldown.jsx';
 
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  });
 const pctLabel = (n) => `${Math.round(n)}%`;
 
 function CategoriaBar({ nome, pct, valor, dotColor, onClick }) {
@@ -92,7 +87,7 @@ function CategoriaBar({ nome, pct, valor, dotColor, onClick }) {
             className="serif"
             style={{ fontSize: 14, color: color.text.primary }}
           >
-            {BRL(valor)}
+            {formatBRL(valor)}
           </span>
         </div>
       </div>
@@ -107,10 +102,13 @@ function CategoriaBar({ nome, pct, valor, dotColor, onClick }) {
         <div
           style={{
             height: '100%',
-            width: `${Math.max(0, Math.min(100, pct))}%`,
+            width: '100%',
+            transformOrigin: 'left center',
+            transform: `scaleX(${Math.max(0, Math.min(100, pct)) / 100})`,
             background: dotColor,
             borderRadius: 999,
-            transition: 'width 0.4s ease',
+            transition: 'transform 0.4s ease',
+            willChange: 'transform',
           }}
         />
       </div>

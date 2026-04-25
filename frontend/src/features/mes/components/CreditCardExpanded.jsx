@@ -7,14 +7,8 @@
 import React from 'react';
 import { color } from '../../../theme/tokens';
 import TransacaoRow from './TransacaoRow.jsx';
+import { formatBRL } from '../../../lib/formatBRL';
 import { t } from '../../../i18n/index.js';
-
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  });
 
 function LegendItem({ nome, valor, pct, hue }) {
   return (
@@ -62,7 +56,7 @@ function LegendItem({ nome, valor, pct, hue }) {
           whiteSpace: 'nowrap',
         }}
       >
-        <span className="serif" style={{ fontSize: 13 }}>{BRL(valor)}</span>
+        <span className="serif" style={{ fontSize: 13 }}>{formatBRL(valor)}</span>
         <span style={{ color: color.text.muted }}>{`${Math.round(pct)}%`}</span>
       </span>
     </div>
@@ -122,7 +116,7 @@ function CreditCardExpanded({ categories, transactions, isDesktop, outstandingBa
             className="serif"
             style={{ fontSize: 13, color: color.text.primary }}
           >
-            {BRL(outstandingBalance)}
+            {formatBRL(outstandingBalance)}
           </span>
         </div>
       )}
