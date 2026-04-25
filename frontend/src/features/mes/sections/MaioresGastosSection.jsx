@@ -23,14 +23,23 @@ import { useNav } from '../../../contexts/NavContext.jsx';
 import { formatBRL } from '../../../lib/formatBRL';
 import { t } from '../../../i18n/index.js';
 
-function MaioresGastosSection() {
+// `framing` controls whether the section ships its own outer card +
+// heading. Default `card` keeps the legacy behavior; `bare` strips both
+// for callers (like the new Despesa surface) that already provide a
+// surrounding container — DESIGN.md §5 forbids nested cards.
+//
+// `category` (optional) narrows the query to a specific L1 expense
+// category — used when the user has drilled into a categoria from the
+// sibling CategoriasSection so this list reflects "biggest spends in X"
+// instead of the global month list.
+function MaioresGastosSection({ framing = 'card', category = null } = {}) {
   const { selectedMonth, refreshKey } = useMonth();
   const { goToTransactions } = useNav();
 
-  const { data, error, loading } = useApi(
-    `/api/top-expenses?month=${selectedMonth}&limit=5`,
-    [selectedMonth, refreshKey],
-  );
+  const path = category
+    ? `/api/top-expenses?month=${selectedMonth}&limit=5&category=${encodeURIComponent(category)}`
+    : `/api/top-expenses?month=${selectedMonth}&limit=5`;
+  const { data, error, loading } = useApi(path, [path, refreshKey]);
 
   if (error) return <ErrorBox msg={error} />;
 
@@ -38,8 +47,11 @@ function MaioresGastosSection() {
   const displayed = transactions.slice(0, 5);
   const hasMore = transactions.length > 5;
 
+  const Wrapper = framing === 'card' ? 'div' : React.Fragment;
+  const wrapperProps = framing === 'card' ? { className: 'card' } : {};
+
   return (
-    <div className="card">
+    <Wrapper {...wrapperProps}>
       <div
         className="sans"
         style={{
@@ -122,7 +134,7 @@ function MaioresGastosSection() {
           ))}
           {hasMore && (
             <button
-              onClick={() => goToTransactions(null)}
+              onClick={() => goToTransactions(category || null)}
               className="sans"
               style={{
                 background: 'none',
@@ -153,7 +165,7 @@ function MaioresGastosSection() {
           )}
         </>
       )}
-    </div>
+    </Wrapper>
   );
 }
 

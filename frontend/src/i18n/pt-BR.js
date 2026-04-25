@@ -16,6 +16,27 @@ const dict = {
   'mes.kpi.revenue': 'Receitas',
   'mes.kpi.expense': 'Despesas',
   'mes.kpi.result': 'Saldo',
+
+  // PR-F1-3 — vertical four-card rebuild (Sobrou anchor → Receita → Despesa → Cartões).
+  'mes.anchor.label': 'Sobrou no mês',
+  'mes.anchor.expand.income': 'Receita',
+  'mes.anchor.expand.expense': 'Despesa',
+  'mes.anchor.expand.viaAssets': '↳ saiu da conta',
+  'mes.anchor.expand.viaCard': '↳ foi pro cartão',
+  'mes.anchor.expand.cardPayment': '↳ pagamento faturas cartão',
+  'mes.anchor.expand.label': 'Sobrou no Caixa',
+  'mes.row.income.label': 'Receita',
+  'mes.row.expense.label': 'Despesa',
+  'mes.row.cards.label': 'Cartões',
+  'mes.row.cards.aux.owing': 'devendo {x}',
+  'mes.row.cards.spentThisMonth': 'gasto {x}',
+  'mes.row.cards.installmentsAlive': '{count} parcelas vivas',
+  'mes.row.cards.cta.upcoming': 'Em breve',
+  'mes.row.expense.cta': 'Mostrar na tela de Transações',
+  'mes.row.income.empty': 'Nenhuma receita este mês',
+  'mes.row.expense.empty': 'Nenhuma despesa este mês',
+  'mes.row.cards.empty': 'Sem cartões cadastrados',
+  'mes.footer.lastUpdated': 'Última atualização: {when}',
   'mes.principles.unavailable':
     'Endpoint de princípios indisponível — aguarde PR-D1.',
   'mes.principles.header.principle': 'Princípio',
@@ -27,12 +48,18 @@ const dict = {
   'mes.creditCards.empty': 'Nenhum cartão com despesas neste mês.',
   'mes.creditCards.transactions': 'Maiores compras',
   'mes.creditCards.transactionsEmpty': 'Nenhuma compra neste cartão no mês.',
-  'mes.creditCards.expand': 'Ver compras',
-  'mes.creditCards.collapse': 'Ocultar',
-  'mes.creditCards.showOnMobile': 'Ver cartões ({count})',
-  'mes.creditCards.thisMonthLabel': 'Este mês',
-  'mes.creditCards.outstandingBalanceLabel': 'Saldo devedor',
-  'mes.creditCards.outstandingBalanceExpandedLabel': 'Saldo devedor atual',
+  // Lista → detalhe. Clique numa linha de cartão para ver o detalhe;
+  // "Voltar" retorna à lista.
+  'mes.creditCards.row.spentLabel': 'Gasto no mês',
+  'mes.creditCards.row.owingLabel': 'Devendo',
+  'mes.creditCards.row.viewDetail': 'Ver detalhe do cartão',
+  'mes.creditCards.totalOwing': 'Total devendo',
+  'mes.creditCards.detail.back': 'Voltar',
+  'mes.creditCards.detail.spentTile': 'Gasto no mês',
+  'mes.creditCards.detail.owingTile': 'Dívida Total',
+  'mes.creditCards.detail.categoriesTitle': 'Categorias do mês',
+  'mes.creditCards.detail.purchasesTitle': 'Maiores compras',
+  'mes.creditCards.detail.seeAllTransactions': 'Ver todas as transações ›',
 
   // ── Mes KPI expansion panels ───────────────────────────────────────────
   // Receita expansion — grouped-by-type list of revenue postings.
@@ -43,6 +70,8 @@ const dict = {
 
   // Despesa expansion — categorias + maiores gastos + drill-down.
   'mes.expand.categories.title': 'Despesas por categoria',
+  'mes.expand.categories.showMore': 'Mostrar mais ({count})',
+  'mes.expand.categories.showLess': 'Mostrar menos',
   'mes.expand.topExpenses.title': 'Maiores gastos',
   'mes.expand.topExpenses.seeAll': 'Ver todas ({count})',
   'mes.expand.drilldown.back': 'Voltar',

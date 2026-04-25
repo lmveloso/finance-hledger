@@ -1,19 +1,23 @@
 // Despesas por categoria — ported from features/resumo/sections/CategoriasSection.jsx
 // during the Resumo + Mês merge (Fase UX-Polish #3). Now rendered inside
-// the Despesa KPI expansion, alongside MaioresGastosSection.
+// the Despesa surface, alongside MaioresGastosSection.
 //
 // Each row shows:
 //   - color dot + category name (left)
 //   - percentage + BRL amount (right)
 //   - thin progress bar below, colored by the row's chart slot
 //
-// Bottom of the card has a stacked mini proportion bar — one segment per
-// category, widths proportional to their values. This gives the reader a
-// one-glance sense of composition without a separate chart.
+// At the TOP of the body sits a stacked mini proportion bar — one segment
+// per category, widths proportional to their values. After the user
+// feedback round it moved up from the bottom (where it read as a footer
+// stripe disconnected from the list) so it sits visually right under the
+// despesa total and gives a one-glance sense of composition before the
+// reader scans the rows.
 //
-// Clicking a row opens an inline subcategoria drill-down (no modal), which
-// lives in `CategoriaDrilldown.jsx`. Pattern matches FluxoDetail /
-// AccountDetail.
+// Clicking a row opens an inline subcategoria drill-down (no modal). The
+// drill-down state is HOISTED to the parent (Despesa.jsx) so a sibling
+// MaioresGastosSection can filter its query to the drilled category;
+// `selectedCategory`/`onSelectCategory` are the contract.
 
 import React, { useState } from 'react';
 import { color } from '../../../theme/tokens';
@@ -116,15 +120,35 @@ function CategoriaBar({ nome, pct, valor, dotColor, onClick }) {
   );
 }
 
-function CategoriasSection() {
+// Props:
+//   - framing: 'card' | 'bare' — see file header.
+//   - topLimit: number | null — cap visible rows; below the list, a
+//     right-aligned "Mostrar mais (N)" / "Mostrar menos" toggle controls
+//     the reveal. The stacked bar at the top always reflects ALL rows so
+//     the proportion read stays honest while the list is collapsed.
+//   - selectedCategory / onSelectCategory: optional hoisted state. When
+//     provided, the parent owns the drill-down so a sibling section can
+//     filter to it (e.g., MaioresGastosSection by category). When omitted,
+//     the section keeps a local fallback for legacy callers.
+function CategoriasSection({
+  framing = 'card',
+  topLimit = null,
+  selectedCategory: selectedCategoryProp,
+  onSelectCategory,
+} = {}) {
   const { selectedMonth, refreshKey } = useMonth();
   const { data, error, loading } = useApi(
     `/api/categories?month=${selectedMonth}&depth=2`,
     [selectedMonth, refreshKey],
   );
 
-  const [detalhe, setDetalhe] = useState(null);
+  const isHoisted = typeof onSelectCategory === 'function';
+  const [localSelected, setLocalSelected] = useState(null);
+  const detalhe = isHoisted ? selectedCategoryProp : localSelected;
+  const setDetalhe = isHoisted ? onSelectCategory : setLocalSelected;
+
   const [loadingDet, setLoadingDet] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   if (error) return <ErrorBox msg={error} />;
 
@@ -134,6 +158,9 @@ function CategoriasSection() {
     cor: palette[i % palette.length],
   }));
   const total = categorias.reduce((s, c) => s + (c.valor || 0), 0);
+  const visibleCategorias =
+    topLimit && !showAll ? categorias.slice(0, topLimit) : categorias;
+  const hiddenCount = categorias.length - visibleCategorias.length;
 
   const openCat = async (cat) => {
     setLoadingDet(true);
@@ -150,22 +177,26 @@ function CategoriasSection() {
     }
   };
 
-  const showDrilldown = detalhe !== null;
+  const showDrilldown = detalhe !== null && detalhe !== undefined;
+  const Wrapper = framing === 'card' ? 'div' : React.Fragment;
+  const wrapperProps = framing === 'card' ? { className: 'card' } : {};
 
   return (
-    <div className="card">
-      <div
-        className="sans"
-        style={{
-          fontSize: 11,
-          letterSpacing: '0.15em',
-          color: color.text.muted,
-          textTransform: 'uppercase',
-          marginBottom: 18,
-        }}
-      >
-        {t('mes.expand.categories.title')}
-      </div>
+    <Wrapper {...wrapperProps}>
+      {framing === 'card' && (
+        <div
+          className="sans"
+          style={{
+            fontSize: 11,
+            letterSpacing: '0.15em',
+            color: color.text.muted,
+            textTransform: 'uppercase',
+            marginBottom: 18,
+          }}
+        >
+          {t('mes.expand.categories.title')}
+        </div>
+      )}
 
       {loading || loadingDet ? (
         <Spinner />
@@ -176,24 +207,13 @@ function CategoriasSection() {
         />
       ) : (
         <>
-          {categorias.map((c) => {
-            const pct = total > 0 ? (c.valor / total) * 100 : 0;
-            return (
-              <CategoriaBar
-                key={c.segmento_raw || c.nome}
-                nome={c.nome}
-                pct={pct}
-                valor={c.valor}
-                dotColor={c.cor}
-                onClick={() => openCat(c)}
-              />
-            );
-          })}
-          {/* Stacked mini proportion bar — composition at a glance. */}
+          {/* Stacked composition bar — moved to the TOP after user feedback.
+              Always reflects ALL categories so the proportion read stays
+              honest even while the row list is capped to topLimit. */}
           {categorias.length > 0 && (
             <div
               style={{
-                marginTop: 4,
+                marginBottom: 18,
                 height: 8,
                 borderRadius: 999,
                 display: 'flex',
@@ -214,9 +234,77 @@ function CategoriasSection() {
               ))}
             </div>
           )}
+
+          {visibleCategorias.map((c) => {
+            const pct = total > 0 ? (c.valor / total) * 100 : 0;
+            return (
+              <CategoriaBar
+                key={c.segmento_raw || c.nome}
+                nome={c.nome}
+                pct={pct}
+                valor={c.valor}
+                dotColor={c.cor}
+                onClick={(e) => {
+                  e?.stopPropagation?.();
+                  openCat(c);
+                }}
+              />
+            );
+          })}
+
+          {hiddenCount > 0 && !showAll && (
+            <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: -4 }}>
+              <button
+                type="button"
+                data-stop
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAll(true);
+                }}
+                className="sans"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '4px 0 8px',
+                  color: color.accent.primary,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {t('mes.expand.categories.showMore', { count: hiddenCount })}
+              </button>
+            </div>
+          )}
+          {showAll && topLimit && (
+            <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: -4 }}>
+              <button
+                type="button"
+                data-stop
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAll(false);
+                }}
+                className="sans"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '4px 0 8px',
+                  color: color.text.muted,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {t('mes.expand.categories.showLess')}
+              </button>
+            </div>
+          )}
         </>
       )}
-    </div>
+    </Wrapper>
   );
 }
 

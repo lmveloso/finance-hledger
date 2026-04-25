@@ -1,81 +1,89 @@
-// Mes — the merged Month tab (Fase UX-Polish #3).
+// Mes — the Mês tab (PR-F1-3 destructive rebuild + post-craft revision).
 //
-// Replaces the old "Resumo + Mês" split. The surface is now:
+// Layout (vertical column, max content 720px):
+//   1. Sobrou no mês  — anchor (toggleable; closes when Receita opens).
+//   2. Receita        — peer (toggleable, accordion).
+//   3. Despesa        — peer, ALWAYS OPEN (no accordion). Top-5 categorias
+//                       with reveal toggle, then maiores gastos, then CTA.
+//   4. Cartões        — peer, ALWAYS OPEN. Restored CreditCardSection with
+//                       per-card list → inline drill-down (saldo devedor +
+//                       maiores compras + category breakdown).
+//   Footer            — last-updated stamp.
 //
-//   1. Three KPI cards (Receita / Despesa / Saldo) with sparklines.
-//      Clicking a card expands an inline panel BELOW the grid. Only one
-//      panel can be expanded at a time. Clicking the same card again
-//      collapses it.
+// User feedback after the craft round drove the always-open shape on
+// Despesa and Cartões: the disclosure pattern was swallowing inner clicks
+// (categoria drill-down, per-card row), and the user wanted more density,
+// not less. Mutual-exclusion now lives only between the anchor and Receita.
 //
-//   2. Expanded panel (one of):
-//      - Receita: grouped-by-type list + total.
-//      - Despesa: two-column — CategoriasSection (drill-down) +
-//                 MaioresGastosSection.
-//      - Saldo:   Contábil × Caixa real × Δ reconciliation strip.
-//
-//   3. Cartões de crédito (always visible below the expansion).
-//
-// Removed in this merge:
-//   - The old full-list ReceitasSection (replaced by grouped list in the
-//     Receita expansion).
-//   - DespesasSection (replaced by CategoriasSection in the Despesa
-//     expansion — the two were almost identical).
-//   - TopTransacoesSection (replaced by MaioresGastosSection in the same
-//     expansion — Maiores gastos + "Ver todas" cover the same need).
-//   - PrincipiosSection references (moved to Ano drill-down in UX-Polish #4).
-//
-// Drill-downs inside sections are still inline, never modals
-// (see frontend-dev rules).
+// Data: a single useResumoMes() call lives here so SobraAncora, Receita,
+// and Despesa read from one response. Receita owns useReceitas; Despesa
+// owns CategoriasSection + MaioresGastosSection (both with their own
+// fetches); CreditCardSection owns useCreditCards (per-card N+2 fetch
+// preserved for the rich list-with-drill view; PR-F1-2's
+// /api/credit-cards endpoint stays available for a future cleanup that
+// would extend it with category breakdowns).
 
 import React, { useState } from 'react';
-import KpiSection from './sections/KpiSection.jsx';
-import ReceitaExpanded from './sections/ReceitaExpanded.jsx';
-import DespesaExpanded from './sections/DespesaExpanded.jsx';
-import SaldoExpanded from './sections/SaldoExpanded.jsx';
+import ErrorBox from '../../components/ErrorBox.jsx';
+import { useResumoMes } from './hooks/useResumoMes.js';
+import SobraAncora from './sections/SobraAncora.jsx';
+import Receita from './sections/Receita.jsx';
+import Despesa from './sections/Despesa.jsx';
 import CreditCardSection from './sections/CreditCardSection.jsx';
+import Rodape from './sections/Rodape.jsx';
 
 function Mes() {
-  // `expandedKpi` is one of 'receita' | 'despesa' | 'saldo' | null.
-  // Mutual exclusion: toggling a card either expands it (if another was
-  // open) or collapses it (if it was already open).
-  const [expandedKpi, setExpandedKpi] = useState(null);
+  const { summary, error, loading } = useResumoMes();
 
-  const onToggle = (id) => {
-    setExpandedKpi((prev) => (prev === id ? null : id));
+  const [anchorOpen, setAnchorOpen] = useState(true);
+  const [receitaOpen, setReceitaOpen] = useState(false);
+
+  const toggleReceita = () => {
+    setReceitaOpen((prev) => {
+      const next = !prev;
+      // Opening Receita auto-closes the anchor (PRD-08 §5.1 mutual
+      // exclusion, scoped now to the only toggleable peer).
+      if (next) setAnchorOpen(false);
+      return next;
+    });
   };
 
-  // Only render the expanded panel currently in view — avoids unnecessary
-  // fetches (each panel owns its own /api calls).
-  const renderExpanded = () => {
-    if (expandedKpi === 'receita') {
-      return (
-        <div id="mes-kpi-panel-receita" role="region">
-          <ReceitaExpanded />
-        </div>
-      );
-    }
-    if (expandedKpi === 'despesa') {
-      return (
-        <div id="mes-kpi-panel-despesa" role="region">
-          <DespesaExpanded />
-        </div>
-      );
-    }
-    if (expandedKpi === 'saldo') {
-      return (
-        <div id="mes-kpi-panel-saldo" role="region">
-          <SaldoExpanded />
-        </div>
-      );
-    }
-    return null;
-  };
+  const toggleAnchor = () => setAnchorOpen((prev) => !prev);
 
   return (
-    <div className="grid" style={{ gap: 20 }}>
-      <KpiSection expandedKpi={expandedKpi} onToggle={onToggle} />
-      {renderExpanded()}
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 14, // spacing.gap-md between cards
+        maxWidth: 720,
+        margin: '0 auto',
+        width: '100%',
+      }}
+    >
+      {error && <ErrorBox msg={error} />}
+
+      <SobraAncora
+        summary={summary}
+        loading={loading}
+        open={anchorOpen}
+        onToggle={toggleAnchor}
+      />
+
+      <Receita
+        summary={summary}
+        summaryLoading={loading}
+        open={receitaOpen}
+        onToggle={toggleReceita}
+      />
+
+      <Despesa summary={summary} summaryLoading={loading} />
+
       <CreditCardSection />
+
+      <div style={{ marginTop: 6 /* gap-lg minus stack gap = 20 - 14 */ }}>
+        <Rodape summary={summary} />
+      </div>
     </div>
   );
 }

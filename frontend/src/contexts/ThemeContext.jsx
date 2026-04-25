@@ -10,9 +10,10 @@ import { _setActiveMode, getModeTokens } from '../theme/tokens';
 //   - localStorage key `finance.theme`.
 //   - First-load precedence:
 //       1. value stored under `finance.theme`
-//       2. `window.matchMedia('(prefers-color-scheme: dark)').matches`
-//       3. fallback `'dark'`
-//   - Does NOT react to OS changes after first load (per architect's plan).
+//       2. fallback `'light'` — light is the system default; users opt in
+//          to dark via the toggle, which then persists for them.
+//   - The OS `prefers-color-scheme` is intentionally ignored: the project
+//     decides its own default surface and lets the user override.
 //
 // Side-effect: flipping the mode also calls `_setActiveMode(mode)` on the
 // tokens module so that the live `color` proxy resolves against the new
@@ -23,24 +24,14 @@ import { _setActiveMode, getModeTokens } from '../theme/tokens';
 const STORAGE_KEY = 'finance.theme';
 
 function readInitialMode() {
-  if (typeof window === 'undefined') return 'dark';
+  if (typeof window === 'undefined') return 'light';
   try {
     const saved = window.localStorage.getItem(STORAGE_KEY);
     if (saved === 'dark' || saved === 'light') return saved;
   } catch {
     // localStorage can throw in private-mode / sandboxed iframes — fall through.
   }
-  try {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-      return 'light';
-    }
-  } catch {
-    // matchMedia unavailable — fall through.
-  }
-  return 'dark';
+  return 'light';
 }
 
 const ThemeContext = createContext(null);

@@ -16,48 +16,62 @@ const pctLabel = (n) => `${Math.round(n)}%`;
 function CategoriaDrilldown({ detalhe, onBack }) {
   return (
     <>
-      <button
-        onClick={onBack}
-        className="sans"
-        style={{
-          background: 'none',
-          border: 'none',
-          color: color.accent.primary,
-          cursor: 'pointer',
-          fontSize: 13,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          padding: 0,
-          marginBottom: 20,
-        }}
-      >
-        <ArrowLeft size={14} /> {t('mes.expand.drilldown.back')}
-      </button>
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
           gap: 12,
-          marginBottom: 20,
-          flexWrap: 'wrap',
         }}
       >
-        <span
+
+        <div
           style={{
-            width: 12,
-            height: 12,
-            background: detalhe.cor,
-            display: 'inline-block',
-            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            marginBottom: 20,
+            flexWrap: 'wrap',
           }}
-        />
-        <span className="serif" style={{ fontSize: 22, fontWeight: 600 }}>
-          {detalhe.nome}
-        </span>
-        <span className="serif" style={{ fontSize: 22, color: color.text.muted }}>
-          {formatBRL(detalhe.valor)}
-        </span>
+        >
+          <span
+            style={{
+              width: 12,
+              height: 12,
+              background: detalhe.cor,
+              display: 'inline-block',
+              borderRadius: 2,
+            }}
+          />
+          <span className="serif" style={{ fontSize: 22, fontWeight: 600 }}>
+            {detalhe.nome}
+          </span>
+          <span className="serif" style={{ fontSize: 22, color: color.text.muted }}>
+            {formatBRL(detalhe.valor)}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={onBack}
+          className="sans"
+          style={{
+            background: 'none',
+            border: `1px solid ${color.border.default}`,
+            borderRadius: 3,
+            color: color.accent.primary,
+            cursor: 'pointer',
+            fontSize: 12,
+            fontWeight: 500,
+            padding: '5px 12px',
+            fontFamily: 'inherit',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <ArrowLeft size={14} /> {t('mes.expand.drilldown.back')}
+        </button>
       </div>
       {detalhe.subcats.length === 0 ? (
         <div

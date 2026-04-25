@@ -13,6 +13,35 @@ const dict = {
   'mes.kpi.revenue': 'Revenue',
   'mes.kpi.expense': 'Expense',
   'mes.kpi.result': 'Balance',
+
+  // PR-F1-3 — vertical four-card rebuild (Sobrou anchor → Receita → Despesa → Cartões).
+  // Anchor.
+  'mes.anchor.label': 'Leftover this month',
+  'mes.anchor.expand.income': 'Revenue',
+  'mes.anchor.expand.expense': 'Expense',
+  'mes.anchor.expand.viaAssets': '↳ paid from accounts',
+  'mes.anchor.expand.viaCard': '↳ on credit card',
+  'mes.anchor.expand.cardPayment': '↳ card invoice payments this month',
+  'mes.anchor.expand.label': 'Leftover Money',
+  // Subordinate row labels.
+  'mes.row.income.label': 'Revenue',
+  'mes.row.expense.label': 'Expense',
+  'mes.row.cards.label': 'Credit cards',
+  // Cartões auxiliary line. Brief listed a single template `mes.row.cards.aux`
+  // = "owing {x} · {arrow} {y}" — split here so the variation arrow can
+  // render as an SVG glyph next to the currency span (Honest Color Rule:
+  // the arrow shape is the primary signal, color reinforces it).
+  'mes.row.cards.aux.owing': 'owing {x}',
+  'mes.row.cards.spentThisMonth': 'spent {x}',
+  'mes.row.cards.installmentsAlive': '{count} active installments',
+  'mes.row.cards.cta.upcoming': 'Coming soon',
+  'mes.row.expense.cta': 'Show in Transactions',
+  // Empty states (PRD-08: no celebratory tone, no emoji, no exclamation).
+  'mes.row.income.empty': 'No revenue this month',
+  'mes.row.expense.empty': 'No expense this month',
+  'mes.row.cards.empty': 'No cards registered',
+  // Footer.
+  'mes.footer.lastUpdated': 'Last updated: {when}',
   'mes.principles.unavailable':
     'Principles endpoint unavailable — waiting for PR-D1.',
   'mes.principles.header.principle': 'Principle',
@@ -24,12 +53,18 @@ const dict = {
   'mes.creditCards.empty': 'No card purchases this month.',
   'mes.creditCards.transactions': 'Largest purchases',
   'mes.creditCards.transactionsEmpty': 'No purchases on this card this month.',
-  'mes.creditCards.expand': 'View purchases',
-  'mes.creditCards.collapse': 'Hide',
-  'mes.creditCards.showOnMobile': 'Show cards ({count})',
-  'mes.creditCards.thisMonthLabel': 'This month',
-  'mes.creditCards.outstandingBalanceLabel': 'Outstanding balance',
-  'mes.creditCards.outstandingBalanceExpandedLabel': 'Current outstanding balance',
+  // List → detail navigation. Click a card row to drill into the per-card
+  // detail; "Back" returns to the list.
+  'mes.creditCards.row.spentLabel': 'Spent this month',
+  'mes.creditCards.row.owingLabel': 'Owing',
+  'mes.creditCards.row.viewDetail': 'View card detail',
+  'mes.creditCards.totalOwing': 'Total owing',
+  'mes.creditCards.detail.back': 'Back',
+  'mes.creditCards.detail.spentTile': 'Spent this month',
+  'mes.creditCards.detail.owingTile': 'Owing',
+  'mes.creditCards.detail.categoriesTitle': 'Categories this month',
+  'mes.creditCards.detail.purchasesTitle': 'Largest purchases',
+  'mes.creditCards.detail.seeAllTransactions': 'See all transactions ›',
 
   // ── Mes KPI expansion panels ───────────────────────────────────────────
   // Revenue expansion — grouped-by-type list of revenue postings.
@@ -40,6 +75,8 @@ const dict = {
 
   // Expense expansion — categories + top expenses + drill-down.
   'mes.expand.categories.title': 'Expenses by category',
+  'mes.expand.categories.showMore': 'Show more ({count})',
+  'mes.expand.categories.showLess': 'Show less',
   'mes.expand.topExpenses.title': 'Top expenses',
   'mes.expand.topExpenses.seeAll': 'See all ({count})',
   'mes.expand.drilldown.back': 'Back',

@@ -21,66 +21,44 @@ function wrap({ children }) {
   return <ThemeProvider>{children}</ThemeProvider>;
 }
 
-function mockMatchMedia(prefersDark) {
-  window.matchMedia = vi.fn().mockImplementation((query) => ({
-    matches: query === '(prefers-color-scheme: dark)' ? prefersDark : !prefersDark,
-    media: query,
-    onchange: null,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    dispatchEvent: () => false,
-  }));
-}
-
 describe('ThemeContext', () => {
   beforeEach(() => {
     window.localStorage.clear();
-    mockMatchMedia(true);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('defaults to dark when nothing is stored and OS prefers dark', () => {
-    const { result } = renderHook(() => useTheme(), { wrapper: wrap });
-    expect(result.current.mode).toBe('dark');
-    expect(_getActiveMode()).toBe('dark');
-  });
-
-  it('falls back to light when OS prefers light and storage is empty', () => {
-    mockMatchMedia(false);
+  it('defaults to light when nothing is stored', () => {
     const { result } = renderHook(() => useTheme(), { wrapper: wrap });
     expect(result.current.mode).toBe('light');
     expect(_getActiveMode()).toBe('light');
   });
 
-  it('reads the persisted mode on first render (localStorage > prefers-color-scheme)', () => {
-    mockMatchMedia(true); // OS says dark
-    window.localStorage.setItem(__THEME_STORAGE_KEY, 'light');
+  it('reads the persisted mode on first render — dark wins over the light default when set', () => {
+    window.localStorage.setItem(__THEME_STORAGE_KEY, 'dark');
     const { result } = renderHook(() => useTheme(), { wrapper: wrap });
-    expect(result.current.mode).toBe('light');
+    expect(result.current.mode).toBe('dark');
   });
 
   it('toggle() flips the mode, persists, and updates the tokens module', () => {
     const { result } = renderHook(() => useTheme(), { wrapper: wrap });
-    expect(result.current.mode).toBe('dark');
-
-    act(() => {
-      result.current.toggle();
-    });
-
     expect(result.current.mode).toBe('light');
-    expect(window.localStorage.getItem(__THEME_STORAGE_KEY)).toBe('light');
-    expect(_getActiveMode()).toBe('light');
 
     act(() => {
       result.current.toggle();
     });
+
     expect(result.current.mode).toBe('dark');
     expect(window.localStorage.getItem(__THEME_STORAGE_KEY)).toBe('dark');
+    expect(_getActiveMode()).toBe('dark');
+
+    act(() => {
+      result.current.toggle();
+    });
+    expect(result.current.mode).toBe('light');
+    expect(window.localStorage.getItem(__THEME_STORAGE_KEY)).toBe('light');
   });
 
   it('setMode("light") works directly and round-trips via localStorage', () => {
@@ -109,11 +87,11 @@ describe('ThemeContext', () => {
 
   it('exposes a tokens snapshot that matches the active mode', () => {
     const { result } = renderHook(() => useTheme(), { wrapper: wrap });
-    expect(result.current.tokens.isDark).toBe(true);
-    act(() => {
-      result.current.setMode('light');
-    });
     expect(result.current.tokens.isDark).toBe(false);
+    act(() => {
+      result.current.setMode('dark');
+    });
+    expect(result.current.tokens.isDark).toBe(true);
   });
 
   it('renders children without crashing', () => {
