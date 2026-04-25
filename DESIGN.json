@@ -1,0 +1,337 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-04-24T00:00:00Z",
+  "title": "Design System: Finanças Pessoais",
+  "extensions": {
+    "colorMeta": {
+      "indigo-anchor": {
+        "role": "primary",
+        "displayName": "Indigo Anchor",
+        "canonical": "oklch(58% 0.21 280)",
+        "tonalRamp": [
+          "oklch(15% 0.06 280)",
+          "oklch(25% 0.10 280)",
+          "oklch(36% 0.15 280)",
+          "oklch(46% 0.19 280)",
+          "oklch(58% 0.21 280)",
+          "oklch(70% 0.18 280)",
+          "oklch(82% 0.13 280)",
+          "oklch(94% 0.04 280)"
+        ],
+        "notes": "Carried unchanged across dark and light modes — identity continuity is intentional."
+      },
+      "violet-signal": {
+        "role": "secondary",
+        "displayName": "Violet Signal",
+        "canonical": "oklch(64% 0.22 295)",
+        "tonalRamp": [
+          "oklch(16% 0.07 295)",
+          "oklch(27% 0.12 295)",
+          "oklch(38% 0.17 295)",
+          "oklch(50% 0.20 295)",
+          "oklch(64% 0.22 295)",
+          "oklch(76% 0.18 295)",
+          "oklch(86% 0.12 295)",
+          "oklch(95% 0.04 295)"
+        ],
+        "notes": "Differentiation only — never a peer to Indigo Anchor on the same screen."
+      },
+      "dark-bg-page": {
+        "role": "neutral",
+        "displayName": "Deep Indigo Night",
+        "canonical": "oklch(15% 0.025 280)",
+        "tonalRamp": [
+          "oklch(8% 0.015 280)",
+          "oklch(12% 0.020 280)",
+          "oklch(15% 0.025 280)",
+          "oklch(20% 0.028 280)",
+          "oklch(28% 0.030 280)",
+          "oklch(40% 0.025 280)",
+          "oklch(60% 0.020 280)",
+          "oklch(85% 0.012 280)"
+        ]
+      },
+      "dark-bg-card": {
+        "role": "neutral",
+        "displayName": "Card Indigo",
+        "canonical": "oklch(20% 0.030 280)"
+      },
+      "dark-bg-card-alt": {
+        "role": "neutral",
+        "displayName": "Card Indigo Alt",
+        "canonical": "oklch(24% 0.035 280)"
+      },
+      "dark-text-primary": {
+        "role": "neutral",
+        "displayName": "Text Primary (Dark)",
+        "canonical": "oklch(92% 0.030 280)"
+      },
+      "light-bg-page": {
+        "role": "neutral",
+        "displayName": "Indigo Mist",
+        "canonical": "oklch(96% 0.018 280)",
+        "tonalRamp": [
+          "oklch(20% 0.018 280)",
+          "oklch(35% 0.018 280)",
+          "oklch(55% 0.018 280)",
+          "oklch(75% 0.018 280)",
+          "oklch(88% 0.018 280)",
+          "oklch(96% 0.018 280)",
+          "oklch(98% 0.012 280)",
+          "oklch(99% 0.005 280)"
+        ]
+      },
+      "light-bg-card": {
+        "role": "neutral",
+        "displayName": "Paper White",
+        "canonical": "oklch(100% 0 0)",
+        "notes": "The one place the system goes to pure white — paired only with Indigo Mist as the page background."
+      },
+      "light-text-primary": {
+        "role": "neutral",
+        "displayName": "Text Primary (Light)",
+        "canonical": "oklch(20% 0.040 280)"
+      },
+      "dark-ledger-green": {
+        "role": "tertiary",
+        "displayName": "Ledger Green (Dark)",
+        "canonical": "oklch(76% 0.16 162)",
+        "notes": "Credit, on-budget, positive delta. Always semantic, never decorative."
+      },
+      "light-ledger-green": {
+        "role": "tertiary",
+        "displayName": "Ledger Green (Light)",
+        "canonical": "oklch(58% 0.13 162)"
+      },
+      "dark-ledger-red": {
+        "role": "tertiary",
+        "displayName": "Ledger Red (Dark)",
+        "canonical": "oklch(70% 0.16 25)",
+        "notes": "Debit, over-budget, negative delta."
+      },
+      "light-ledger-red": {
+        "role": "tertiary",
+        "displayName": "Ledger Red (Light)",
+        "canonical": "oklch(54% 0.20 25)"
+      },
+      "dark-amber-caution": {
+        "role": "tertiary",
+        "displayName": "Amber Caution (Dark)",
+        "canonical": "oklch(82% 0.16 80)"
+      },
+      "light-amber-caution": {
+        "role": "tertiary",
+        "displayName": "Amber Caution (Light)",
+        "canonical": "oklch(64% 0.16 65)"
+      },
+      "dark-cool-blue": {
+        "role": "tertiary",
+        "displayName": "Cool Blue (Dark)",
+        "canonical": "oklch(74% 0.13 245)"
+      },
+      "light-cool-blue": {
+        "role": "tertiary",
+        "displayName": "Cool Blue (Light)",
+        "canonical": "oklch(54% 0.19 260)"
+      },
+      "dark-magenta-flag": {
+        "role": "tertiary",
+        "displayName": "Magenta Flag (Dark)",
+        "canonical": "oklch(72% 0.25 325)"
+      },
+      "dark-violet-soft": {
+        "role": "tertiary",
+        "displayName": "Violet Soft",
+        "canonical": "oklch(72% 0.16 295)"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "KPI headline numbers. Tight tracking (-0.02em) makes currency read as one shape."
+      },
+      "display-emphasis": {
+        "displayName": "Display Emphasis",
+        "purpose": "The single primary KPI per section, when one matters more than its peers."
+      },
+      "brand": {
+        "displayName": "Brand",
+        "purpose": "Sidebar wordmark — Finanças (regular) above Pessoais (italic, Violet Signal). The one place italic is sanctioned."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Active nav item, section headings inside cards."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default reading size — dense but legible at 13px."
+      },
+      "body-small": {
+        "displayName": "Body Small",
+        "purpose": "Row labels, supporting copy, compact MonthNavigator."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "KPI eyebrows in uppercase. The one place the system shouts — softly."
+      },
+      "micro": {
+        "displayName": "Micro",
+        "purpose": "TipoChips, brand subscript, version stamp. 10px uppercase with high tracking."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "ease-color",
+        "value": "0.12s linear",
+        "purpose": "Color transitions on nav items, step buttons, theme toggle. Short and unceremonious."
+      },
+      {
+        "name": "ease-tab",
+        "value": "0.15s ease",
+        "purpose": "Tab/active-state transitions."
+      },
+      {
+        "name": "ease-pull",
+        "value": "0.2s ease",
+        "purpose": "Pull-to-refresh transform settle on mobile."
+      },
+      {
+        "name": "spin-loader",
+        "value": "spin 1s linear infinite",
+        "purpose": "The only continuous animation in the system — the page-level spinner."
+      }
+    ],
+    "breakpoints": [
+      { "name": "mobile-max", "value": "767px" },
+      { "name": "desktop", "value": "768px" },
+      { "name": "wide", "value": "900px" },
+      { "name": "content-max", "value": "1200px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The base flat surface — 1px border, 4px radius, 24px padding, no shadow.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-eyebrow\">Cartão de exemplo</div><div class=\"ds-card-body\">Conteúdo do cartão. Linha tipográfica calma, sem decoração.</div></div>",
+      "css": ".ds-card { background: #12152a; border: 1px solid #252848; border-radius: 4px; padding: 24px; color: #e0e6ff; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; max-width: 360px; } .ds-card-eyebrow { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #555c88; margin-bottom: 12px; font-weight: 500; } .ds-card-body { font-size: 13px; line-height: 1.5; color: #e0e6ff; }"
+    },
+    {
+      "name": "KPI",
+      "kind": "card",
+      "refersTo": "kpi",
+      "description": "Labeled-number signature element. Eyebrow label + tight-tracked display number + optional delta badge.",
+      "html": "<div class=\"ds-kpi\"><div class=\"ds-kpi-label\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#6366f1\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2v20M2 12h20\"/></svg><span>Receita</span></div><div class=\"ds-kpi-value\"><span>R$ 18.420</span><span class=\"ds-delta-up\">+4%</span></div></div>",
+      "css": ".ds-kpi { background: #12152a; border: 1px solid #252848; border-radius: 4px; padding: 24px; color: #e0e6ff; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; min-width: 240px; } .ds-kpi-label { display: flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #555c88; margin-bottom: 12px; font-weight: 500; } .ds-kpi-value { font-family: 'Google Sans Flex', 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 30px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; color: #e0e6ff; display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; } .ds-delta-up { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 11px; font-weight: 400; letter-spacing: 0; color: #34d399; }"
+    },
+    {
+      "name": "Sidebar Nav Item (Active)",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Active state in the desktop sidebar — 3×16 left indicator bar, accent-tinted background, accent text.",
+      "html": "<button class=\"ds-nav-item ds-nav-item-active\"><span class=\"ds-nav-bar\" aria-hidden=\"true\"></span>Mês</button><button class=\"ds-nav-item\"><span class=\"ds-nav-bar\" aria-hidden=\"true\"></span>Ano</button><button class=\"ds-nav-item\"><span class=\"ds-nav-bar\" aria-hidden=\"true\"></span>Fluxo</button>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 10px; width: 188px; padding: 10px 12px; border-radius: 10px; border: none; background: transparent; color: #8b94c4; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 13px; font-weight: 400; text-align: left; cursor: pointer; transition: background 0.12s, color 0.12s; margin-bottom: 2px; } .ds-nav-item:hover { background: #1e2240; color: #e0e6ff; } .ds-nav-item-active { background: rgba(99,102,241,0.14); color: #6366f1; font-weight: 600; } .ds-nav-bar { width: 3px; height: 16px; border-radius: 2px; flex-shrink: 0; background: transparent; } .ds-nav-item-active .ds-nav-bar { background: #6366f1; }"
+    },
+    {
+      "name": "TipoChip — Crédito",
+      "kind": "chip",
+      "refersTo": "chip-credit",
+      "description": "Transaction-type tag. Tight 3px radius, 10px uppercase, 12% alpha background of the feedback color.",
+      "html": "<span class=\"ds-chip ds-chip-credito\">Crédito</span> <span class=\"ds-chip ds-chip-debito\">Débito</span> <span class=\"ds-chip ds-chip-transf\">Transferência</span>",
+      "css": ".ds-chip { display: inline-block; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 3px; padding: 2px 6px; white-space: nowrap; margin-right: 4px; } .ds-chip-credito { background: rgba(52,211,153,0.12); color: #34d399; border: 1px solid rgba(52,211,153,0.2); } .ds-chip-debito { background: rgba(248,113,113,0.12); color: #f87171; border: 1px solid rgba(248,113,113,0.2); } .ds-chip-transf { background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.2); }"
+    },
+    {
+      "name": "Step Button",
+      "kind": "button",
+      "refersTo": "step-button",
+      "description": "Outlined 28×28 chevron used in MonthNavigator, drilldowns, anywhere a paired ‹ › appears.",
+      "html": "<div style=\"display:flex;gap:6px;align-items:center;\"><button class=\"ds-step\" aria-label=\"Anterior\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"15 18 9 12 15 6\"/></svg></button><span style=\"font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;color:#e0e6ff;min-width:88px;text-align:center;\">Abr 2026</span><button class=\"ds-step\" aria-label=\"Próximo\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"9 18 15 12 9 6\"/></svg></button></div>",
+      "css": ".ds-step { width: 28px; height: 28px; border-radius: 6px; border: 1px solid #252848; background: transparent; color: #8b94c4; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; transition: background 0.12s, color 0.12s, border-color 0.12s; } .ds-step:hover { background: #1e2240; color: #e0e6ff; border-color: #6366f1; }"
+    },
+    {
+      "name": "Theme Toggle",
+      "kind": "button",
+      "refersTo": "theme-toggle",
+      "description": "Outlined utility button — sun/moon icon + label. Sits in the sidebar footer.",
+      "html": "<button class=\"ds-theme-toggle\" aria-label=\"Alternar para modo claro\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41\"/></svg>Modo claro</button>",
+      "css": ".ds-theme-toggle { width: 188px; padding: 8px 12px; border-radius: 10px; border: 1px solid #252848; background: transparent; color: #555c88; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 12px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: color 0.12s, border-color 0.12s; } .ds-theme-toggle:hover { color: #e0e6ff; border-color: #6366f1; }"
+    },
+    {
+      "name": "Primary Button (Login)",
+      "kind": "button",
+      "refersTo": "primary-button",
+      "description": "The one solid-fill button in the system — only used as the Login form submit. Inverse text (page color on accent).",
+      "html": "<button class=\"ds-btn-primary\" type=\"submit\">Entrar</button>",
+      "css": ".ds-btn-primary { width: 280px; padding: 10px 16px; border: none; border-radius: 8px; background: #6366f1; color: #0d0f1a; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.12s, transform 0.12s; } .ds-btn-primary:hover { background: #818cf8; } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }"
+    },
+    {
+      "name": "Inline Error Banner",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The system's only inline feedback surface. Rendered above a tab when its data fetch fails. Today uses a 3px violet stripe (legacy); future replacement uses a full 1px Ledger-Red border + tinted background per the Side-Stripe Don't.",
+      "html": "<div class=\"ds-error\"><div class=\"ds-error-title\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"/><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"/></svg>Erro: não foi possível carregar /api/summary</div><div class=\"ds-error-help\">Verifique se o backend está rodando.</div></div>",
+      "css": ".ds-error { background: #12152a; border: 1px solid #f87171; border-radius: 4px; padding: 24px; color: #e0e6ff; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; max-width: 480px; } .ds-error-title { color: #f87171; font-size: 13px; display: flex; gap: 8px; align-items: center; } .ds-error-help { color: #555c88; font-size: 12px; margin-top: 8px; }"
+    },
+    {
+      "name": "Sparkline",
+      "kind": "custom",
+      "refersTo": "kpi",
+      "description": "Inline SVG trend rendered below a KPI value. Stroke 1.5px in the accent color, gradient fill from 0.28→0 alpha.",
+      "html": "<div style=\"width:200px;background:#12152a;border:1px solid #252848;border-radius:4px;padding:24px;font-family:'Plus Jakarta Sans',system-ui,sans-serif;\"><div style=\"font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#555c88;font-weight:500;margin-bottom:10px;\">Saldo · 12 meses</div><svg viewBox=\"0 0 100 36\" style=\"width:100%;height:36px;display:block;\" preserveAspectRatio=\"none\"><defs><linearGradient id=\"sg6366f1\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#6366f1\" stop-opacity=\"0.28\"/><stop offset=\"100%\" stop-color=\"#6366f1\" stop-opacity=\"0\"/></linearGradient></defs><path d=\"M0,28 L9,24 L18,26 L27,18 L36,20 L45,14 L54,17 L63,11 L72,13 L81,8 L90,10 L100,5 L100,36 L0,36 Z\" fill=\"url(#sg6366f1)\"/><path d=\"M0,28 L9,24 L18,26 L27,18 L36,20 L45,14 L54,17 L63,11 L72,13 L81,8 L90,10 L100,5\" stroke=\"#6366f1\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></div>",
+      "css": ""
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Ledger",
+    "overview": "A ledger does not flatter you. It records, in precise rows and consistent columns, what is. Finanças Pessoais is that ledger as a dashboard — quiet enough to read at 7am with coffee, honest enough to hold up under a partner's questions, sharp enough that density feels like care, not clutter. Visually, the system is monochromatic indigo with a single saturated accent that earns its rarity. There are no gradients carrying decoration, no shadows imitating depth, no celebratory states. When a number is positive it's green; when it's negative it's red; both are stated plainly. Dark mode and light mode are equal citizens — neither is the 'true' view, both must hit the same calm.",
+    "keyCharacteristics": [
+      "Indigo-violet identity (#6366f1) carries across both modes unchanged.",
+      "Dual-mode is first-class; the app remounts on theme flip so every value is honest in either mode.",
+      "Flat by default — depth from 1px borders and tonal layering, never shadows.",
+      "Display type is geometric (Google Sans Flex); body is humanist sans (Plus Jakarta Sans). One pairing.",
+      "Ledger-precise components — chips are tight (3px radius, 10px label), KPI numbers are large but leading-tight (letter-spacing -0.02em).",
+      "Inline before modal: drilldowns expand in place; the only modal-like surface is the Login form."
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "Indigo Anchor and Violet Signal together cover ≤10% of any given screen. Their rarity is the point.", "section": "colors" },
+      { "name": "The Honest Color Rule", "body": "Color carries meaning, not decoration. A number is green because it's positive, never because green looks nice.", "section": "colors" },
+      { "name": "The Two-Mode Equality Rule", "body": "Dark and light are not 'default + alternate'. Every component must hit the same personality in both.", "section": "colors" },
+      { "name": "The Tinted-Neutral Rule", "body": "Pure black (#000) and pure white (#fff) are forbidden. Every neutral carries a faint indigo tint.", "section": "colors" },
+      { "name": "The Two-Family Rule", "body": "Google Sans Flex for display, Plus Jakarta Sans for everything else. No third face.", "section": "typography" },
+      { "name": "The Tight-Number Rule", "body": "All KPI numerals use letter-spacing -0.02em. Currency reads as a single shape.", "section": "typography" },
+      { "name": "The Quiet-Caps Rule", "body": "Uppercase is reserved for labels and chips at 10–11px with high tracking. Body and titles are never uppercased.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "A box-shadow on a card, KPI, button, or chip is forbidden. If you reach for one, reach for a tonal step instead.", "section": "elevation" },
+      { "name": "The Tonal-Depth Rule", "body": "Three depth levels: bg.page, bg.card, bg.cardAlt. Going deeper or nesting cards is forbidden.", "section": "elevation" },
+      { "name": "The 1px Border Rule", "body": "Every card border is 1px solid border.default. Internal partitions are 1px solid border.subtle. Nothing thicker, nothing colored.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep Indigo Anchor (#6366f1) and Violet Signal (#8b5cf6) at ≤10% of any screen.",
+      "Do convey depth through tonal step (bg.page → bg.card → bg.cardAlt), 1px borders, and spacing. Three layers maximum.",
+      "Do tint every neutral toward indigo. #0d0f1a not #000; #f0f1ff not #fff.",
+      "Do show ··· while a number is loading. A missing value is honest about being missing.",
+      "Do use feedback colors only with semantic backing — Ledger Green is credit, Ledger Red is debit.",
+      "Do prefer inline drilldowns and expansions. Resumo's KPI cards expand in place; follow that pattern.",
+      "Do apply letter-spacing -0.02em to every KPI number.",
+      "Do capitalize body and titles; reserve uppercase for 10–11px labels and chips with ≥0.05em tracking.",
+      "Do make dark and light hit the same personality. Verify in both modes before shipping.",
+      "Do respect prefers-reduced-motion."
+    ],
+    "donts": [
+      "Don't use border-left or border-right greater than 1px as a colored stripe on cards, KPIs, alerts, or rows. The active-nav 3×16 indicator is allowed because it's an inline mark; a parent-element side-stripe is not.",
+      "Don't put a box-shadow on a card, KPI, button, or chip.",
+      "Don't use gradient text (background-clip: text). Emphasis comes from weight or size.",
+      "Don't reach for glassmorphism (backdrop-filter: blur) anywhere.",
+      "Don't introduce a third font family.",
+      "Don't use #000 or #fff anywhere.",
+      "Don't build the hero-metric SaaS template (big number + tiny label + gradient accent + supporting stats grid).",
+      "Don't copy consumer-finance app patterns — Mint, Nubank, emoji-laden 'spending insight' cards, gamified savings goals, celebratory toasts.",
+      "Don't copy crypto / fintech maximalism — neon on black, animated gradients, glassmorphism stacks.",
+      "Don't reach for a modal as the first thought. Modals exist only for focused capture, destructive confirmation, or genuinely interrupting flows.",
+      "Don't drift back toward the warm-brown editorial palette retired in Fase U.",
+      "Don't use a shadow, gradient, or animation just because the surface 'looks empty'.",
+      "Don't write celebratory copy. The number is the message; the user decides how to feel about it."
+    ]
+  }
+}
