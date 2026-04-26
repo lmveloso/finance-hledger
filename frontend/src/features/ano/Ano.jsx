@@ -11,14 +11,19 @@ import HeatmapView from './views/HeatmapView.jsx';
 // TODO in the plan so the architecture supports them without rework.
 function Ano() {
   const [year, setYear] = useState(new Date().getFullYear());
-  const [view, setView] = useState('principio'); // 'principio' | 'categoria'
+  const [view, setView] = useState('categoria'); // 'principio' | 'categoria'
 
   // Column drill-down: clicking a month header in the active view opens a
   // per-month card underneath the matrix. Resets whenever the user changes
   // year or view, so the drill-down never points at stale context.
-  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  
   useEffect(() => {
-    setSelectedMonth(null);
+    const d = new Date();
+    setSelectedMonth(`${year}-${String(d.getMonth() + 1).padStart(2, '0')}`);
   }, [year, view]);
 
   const handleMonthSelect = useCallback(
@@ -50,8 +55,8 @@ function Ano() {
           {t('ano.header')}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <YearSelector year={year} onChange={setYear} />
           <ViewToggle value={view} onChange={setView} />
+          <YearSelector year={year} onChange={setYear} />
         </div>
       </div>
 

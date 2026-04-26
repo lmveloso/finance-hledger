@@ -19,6 +19,8 @@ def test_tags_march_2026_counts(client):
     assert data == {
         "tags": [
             {"tag": "viagem-floripa", "count": 2},
+            {"tag": "color:ancient white", "count": 1},
+            {"tag": "color:dust", "count": 1},
             {"tag": "pet-luna", "count": 1},
         ]
     }
@@ -96,3 +98,23 @@ def test_tags_count_parity_with_transactions_endpoint(client):
     assert tx_resp.status_code == 200
     tx_total = tx_resp.json()["total"]
     assert viagem["count"] == tx_total
+
+
+def test_tags_filter_by_value(client):
+    """Ensure that filtering by a tag with a value (like color:dust) correctly queries hledger."""
+    # Our fixture has exactly 1 transaction tagged with color:dust in March 2026.
+    r = client.get("/api/transactions?month=2026-03&tag=color:dust")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["total"] == 1
+    assert data["transactions"][0]["descricao"] == "Roupas"
+    assert data["transactions"][0]["valor"] == 150.0
+
+def test_tags_filter_by_value_with_spaces(client):
+    """Ensure that filtering by a tag with a value containing spaces (like color:ancient white) works."""
+    r = client.get("/api/transactions?month=2026-03&tag=color:ancient white")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["total"] == 1
+    assert data["transactions"][0]["descricao"] == "Tecidos"
+    assert data["transactions"][0]["valor"] == 250.0

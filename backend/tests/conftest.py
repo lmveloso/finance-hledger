@@ -72,6 +72,14 @@ MINIMAL_JOURNAL = """\
 2026-03-28 * Racao pet ; pet-luna:
     expenses:Outros:Pet  120.00
     assets:Banco:Nubank
+
+2026-03-30 * Roupas ; color:dust
+    expenses:Vestuario  150.00
+    liabilities:Cartao:Visa
+
+2026-03-31 * Tecidos ; color:ancient white
+    expenses:Vestuario  250.00
+    liabilities:Cartao:Visa
 """
 
 

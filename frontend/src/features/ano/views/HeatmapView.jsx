@@ -161,7 +161,6 @@ function HeatmapView({ year, selectedMonth = null, onMonthSelect = null }) {
                     title={val > 0 ? `${cat} · ${monthLabel(months[mi])}: ${BRL(val)}` : '—'}
                     style={{
                       height: 36,
-                      borderRadius: radius.rounded.xs,
                       background: cellBackground(val, catMax[ci], isDark),
                       border: `1px solid ${isHovered ? color.accent.primary : color.border.subtle}`,
                       display: 'flex',

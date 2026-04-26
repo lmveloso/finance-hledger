@@ -1,5 +1,6 @@
 import React from 'react';
 import { color } from '../../../theme/tokens';
+import { t } from '../../../i18n/index.js';
 
 const BRL = (n) =>
   (n ?? 0).toLocaleString('pt-BR', {
@@ -13,6 +14,41 @@ const BRL = (n) =>
 // node cards but gives a quick overview side by side.
 function MovimentosTable({ contas }) {
   if (!contas || contas.length === 0) return null;
+
+  const ativos = contas.filter((c) => c.tipo === 'ativo');
+  const passivos = contas.filter((c) => c.tipo === 'passivo');
+
+  const renderRow = (c) => {
+    const delta = (c.saldo_final ?? 0) - (c.saldo_inicial ?? 0);
+    const deltaColor = (delta >= 0 ? color.feedback.positive : color.feedback.negative);
+    return (
+      <tr key={c.conta}>
+        <td style={{ ...td('left'), color: color.text.primary }}>
+          {c.nome}
+        </td>
+        <td style={td('right')}>{BRL(c.saldo_inicial)}</td>
+        <td style={{ ...td('right'), color: color.feedback.positive }}>
+          {c.entradas_externas > 0 ? BRL(c.entradas_externas) : <span style={{ color: color.text.faint }}>—</span>}
+        </td>
+        <td style={{ ...td('right'), color: color.feedback.negative }}>
+          {c.saidas_externas > 0 ? BRL(c.saidas_externas) : <span style={{ color: color.text.faint }}>—</span>}
+        </td>
+        <td style={{ ...td('right'), color: color.feedback.info }}>
+          {c.transfers_in > 0 ? BRL(c.transfers_in) : <span style={{ color: color.text.faint }}>—</span>}
+        </td>
+        <td style={{ ...td('right'), color: color.feedback.info }}>
+          {c.transfers_out > 0 ? BRL(c.transfers_out) : <span style={{ color: color.text.faint }}>—</span>}
+        </td>
+        <td style={{ ...td('right'), color: color.text.primary, fontWeight: 600 }}>
+          {BRL(c.saldo_final)}
+        </td>
+        <td style={{ ...td('right'), color: deltaColor, fontWeight: 600 }}>
+          {delta > 0 ? '+' : ''}{BRL(delta)}
+        </td>
+      </tr>
+    );
+  };
+
   return (
     <div style={{ overflowX: 'auto' }}>
       <table
@@ -35,50 +71,22 @@ function MovimentosTable({ contas }) {
           </tr>
         </thead>
         <tbody>
-          {contas.map((c) => {
-            const delta = (c.saldo_final ?? 0) - (c.saldo_inicial ?? 0);
-            const deltaColor = c.tipo === 'ativo'
-              ? (delta >= 0 ? color.feedback.positive : color.feedback.negative)
-              : (delta <= 0 ? color.feedback.positive : color.feedback.negative);
-            return (
-              <tr key={c.conta}>
-                <td style={{ ...td('left'), color: color.text.primary }}>
-                  {c.nome}
-                  <span
-                    className="sans"
-                    style={{
-                      fontSize: 10,
-                      color: color.text.faint,
-                      marginLeft: 6,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.08em',
-                    }}
-                  >
-                    {c.tipo}
-                  </span>
-                </td>
-                <td style={td('right')}>{BRL(c.saldo_inicial)}</td>
-                <td style={{ ...td('right'), color: color.feedback.positive }}>
-                  {c.entradas_externas > 0 ? BRL(c.entradas_externas) : <span style={{ color: color.text.faint }}>—</span>}
-                </td>
-                <td style={{ ...td('right'), color: color.feedback.negative }}>
-                  {c.saidas_externas > 0 ? BRL(c.saidas_externas) : <span style={{ color: color.text.faint }}>—</span>}
-                </td>
-                <td style={{ ...td('right'), color: color.feedback.info }}>
-                  {c.transfers_in > 0 ? BRL(c.transfers_in) : <span style={{ color: color.text.faint }}>—</span>}
-                </td>
-                <td style={{ ...td('right'), color: color.feedback.info }}>
-                  {c.transfers_out > 0 ? BRL(c.transfers_out) : <span style={{ color: color.text.faint }}>—</span>}
-                </td>
-                <td style={{ ...td('right'), color: color.text.primary, fontWeight: 600 }}>
-                  {BRL(c.saldo_final)}
-                </td>
-                <td style={{ ...td('right'), color: deltaColor, fontWeight: 600 }}>
-                  {delta > 0 ? '+' : ''}{BRL(delta)}
-                </td>
-              </tr>
-            );
-          })}
+          {ativos.length > 0 && (
+            <tr>
+              <td colSpan="8" style={sectionHeaderStyle}>
+                {t('fluxo.contas.sectionAtivos')}
+              </td>
+            </tr>
+          )}
+          {ativos.map(renderRow)}
+          {passivos.length > 0 && (
+            <tr>
+              <td colSpan="8" style={sectionHeaderStyle}>
+                {t('fluxo.contas.sectionPassivos')}
+              </td>
+            </tr>
+          )}
+          {passivos.map(renderRow)}
         </tbody>
       </table>
     </div>
@@ -106,5 +114,16 @@ const td = (align) => ({
   fontFamily: align === 'right' ? "'Google Sans Flex', 'Plus Jakarta Sans', system-ui, sans-serif" : "'Plus Jakarta Sans', system-ui, sans-serif",
   whiteSpace: 'nowrap',
 });
+
+const sectionHeaderStyle = {
+  textAlign: 'left',
+  padding: '20px 10px 8px',
+  fontSize: 10,
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  color: color.text.muted,
+  fontWeight: 600,
+  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+};
 
 export default MovimentosTable;

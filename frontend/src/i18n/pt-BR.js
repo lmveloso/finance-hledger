@@ -142,6 +142,12 @@ const dict = {
 
   // ── Fluxo tab ──────────────────────────────────────────────────────────
   'fluxo.header': 'Fluxo',
+  'fluxo.kpi.receitas': 'Receitas',
+  'fluxo.kpi.consumo': 'Consumo',
+  'fluxo.kpi.economia': 'Economia',
+  'fluxo.kpi.deltaAtivos': 'Δ Ativos',
+  'fluxo.kpi.caixaLiquido': 'Caixa líquido',
+  'fluxo.kpi.deltaDivida': 'Δ Dívida',
   'fluxo.conta_singular': 'conta',
   'fluxo.conta_plural': 'contas',
   'fluxo.sem_movimento': 'Sem movimento neste mês.',
@@ -150,7 +156,7 @@ const dict = {
   'fluxo.outros': 'Outros',
   'fluxo.waterfall.title': 'Fluxo mensal · receita → saldo',
   'fluxo.waterfall.footnote.prefix': 'Receitas de',
-  'fluxo.waterfall.footnote.middle': 'menos despesas resultam em saldo de',
+  'fluxo.waterfall.footnote.middle': 'menos consumo resultam em saldo de',
   'fluxo.waterfall.footnote.suffix': '.',
   'fluxo.movimentos.title': 'Movimentos por conta',
   'fluxo.contas.title': 'Contas',
@@ -287,7 +293,7 @@ const dict = {
   'ano.drilldown.principio.title': 'Metas por Princípio',
   'ano.drilldown.categoria.title': 'Despesas por categoria',
   'ano.drilldown.empty': 'Sem dados para este mês.',
-  'ano.drilldown.collapseHint': 'Clique novamente para fechar',
+
 
   // ── Previsao tab (mantida para simetria; oculta da nav em Fase U) ──────
   'previsao.forecast.title': 'Previsão de fluxo · 12 meses',

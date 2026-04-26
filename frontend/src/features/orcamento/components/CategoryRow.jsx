@@ -17,11 +17,10 @@ const PCT = (n) => `${Math.round(n)}%`;
  * Single category row inside the "Por categoria" card (PR-U6 / ux-polish #8).
  *
  * Responsive behaviour (breakpoint 768px):
- *   - Desktop (≥768px): single-row CSS Grid — dot / name / bar / chip /
+ *   - Desktop (≥768px): single-row CSS Grid — dot / name / chip /
  *     realizado + "/ orçado" / pct. Everything on one line.
  *   - Mobile (<768px): CSS Grid with template-areas
  *       "name      realizado"
- *       "bar       bar"
  *       "orcado    pct"
  *
  * Over-budget visuals (PRD §5 PR-U6, refined plan):
@@ -69,8 +68,8 @@ function CategoryRow({ nome, orcado, realizado, barColor, isLast }) {
     <span
       style={{
         ...chipBase,
-        color: color.feedback.negative,
-        background: color.feedback.negativeMuted,
+        color: color.text.secondary,
+        background: color.bg.hover,
       }}
     >
       {t('orcamento.over.chip', { amount: BRL(safeReal - safeOrcado) })}
@@ -94,7 +93,7 @@ function CategoryRow({ nome, orcado, realizado, barColor, isLast }) {
       style={{
         fontFamily: "'Google Sans Flex', 'Plus Jakarta Sans', system-ui, sans-serif",
         fontSize: 14,
-        color: over ? color.feedback.negative : color.text.primary,
+        color: color.text.primary,
       }}
     >
       {BRL(safeReal)}
@@ -109,7 +108,7 @@ function CategoryRow({ nome, orcado, realizado, barColor, isLast }) {
         color: color.text.disabled,
       }}
     >
-      / {BRL(safeOrcado)}
+      {BRL(safeOrcado)}
     </span>
   );
 
@@ -124,28 +123,6 @@ function CategoryRow({ nome, orcado, realizado, barColor, isLast }) {
     >
       {PCT(pct)}
     </span>
-  );
-
-  const bar = (
-    <div
-      style={{
-        position: 'relative',
-        height: 8,
-        background: color.border.default,
-        borderRadius: 999,
-        overflow: 'hidden',
-      }}
-    >
-      <div
-        style={{
-          height: '100%',
-          width: `${Math.min(pct, 100)}%`,
-          background: barColor,
-          borderRadius: 999,
-          transition: 'width 0.6s ease',
-        }}
-      />
-    </div>
   );
 
   const nameLabel = (
@@ -219,33 +196,25 @@ function CategoryRow({ nome, orcado, realizado, barColor, isLast }) {
       <div
         role="group"
         aria-label={ariaLabel}
-        style={{
-          ...wrapperStyle,
-          display: 'grid',
-          gridTemplateColumns:
-            'auto minmax(0, 1.4fr) minmax(160px, 2fr) auto auto 44px',
-          gap: 12,
-          alignItems: 'center',
-          padding: '10px 0',
-          marginBottom: isLast ? 0 : 4,
-        }}
+        style={{ display: 'contents' }}
       >
         {dotStandalone}
         {nameOnly}
-        {bar}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          {overChip}
-          {surplusChip}
-        </div>
         <div
           style={{
             display: 'flex',
-            alignItems: 'baseline',
-            gap: 4,
+            alignItems: 'center',
+            justifyContent: 'flex-end',
             whiteSpace: 'nowrap',
           }}
         >
+          {overChip}
+          {surplusChip}
+        </div>
+        <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
           {realizadoText}
+        </div>
+        <div style={{ textAlign: 'right', whiteSpace: 'nowrap', display: 'flex', alignItems: 'baseline', gap: 4, justifyContent: 'flex-end' }}>
           {orcadoText}
         </div>
         <div style={{ textAlign: 'right' }}>{pctText}</div>
@@ -262,7 +231,6 @@ function CategoryRow({ nome, orcado, realizado, barColor, isLast }) {
           gridTemplateColumns: '1fr auto',
           gridTemplateAreas: `
             "name realizado"
-            "bar bar"
             "orcado pct"
           `,
           rowGap: 6,
@@ -279,13 +247,13 @@ function CategoryRow({ nome, orcado, realizado, barColor, isLast }) {
             gap: 8,
             justifyContent: 'flex-end',
             flexWrap: 'wrap',
+
           }}
         >
           {overChip}
           {surplusChip}
           {realizadoText}
         </div>
-        <div style={{ gridArea: 'bar' }}>{bar}</div>
         <div style={{ gridArea: 'orcado' }}>
           <span
             style={{

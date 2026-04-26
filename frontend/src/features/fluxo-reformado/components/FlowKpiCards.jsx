@@ -1,5 +1,6 @@
 import React from 'react';
 import { color } from '../../../theme/tokens';
+import { t } from '../../../i18n/index.js';
 
 const BRL = (n) =>
   (n ?? 0).toLocaleString('pt-BR', {
@@ -31,24 +32,24 @@ function FlowKpiCards({ data }) {
   );
 
   const items = [
-    { label: 'Receitas', value: receitas, cor: color.feedback.positive },
-    { label: 'Despesas', value: despesas, cor: color.feedback.negative },
+    { label: t('fluxo.kpi.receitas'), value: receitas, cor: color.feedback.positive },
+    { label: t('fluxo.kpi.consumo'), value: despesas, cor: color.feedback.negative },
     {
-      label: 'Economia',
+      label: t('fluxo.kpi.economia'),
       value: economia,
       cor: economia >= 0 ? color.accent.primary : color.feedback.negative,
-      destaque: true,
     },
     {
-      label: 'Δ Ativos',
+      label: t('fluxo.kpi.deltaAtivos'),
       value: dAtivos,
       cor: dAtivos >= 0 ? color.feedback.positive : color.feedback.negative,
-      hint: 'Caixa líquido',
+      hint: t('fluxo.kpi.caixaLiquido'),
+      destaque: true,
     },
   ];
   if (passivos.length > 0) {
     items.push({
-      label: 'Δ Dívida',
+      label: t('fluxo.kpi.deltaDivida'),
       value: dPassivos,
       // For liabilities, growth (positive delta) is bad.
       cor: dPassivos > 0 ? color.feedback.negative : dPassivos < 0 ? color.feedback.positive : color.text.muted,

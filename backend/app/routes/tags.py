@@ -71,12 +71,14 @@ def tags(
 
 
 def _tag_name(pair) -> Optional[str]:
-    """Extract the tag name from an hledger JSON tag entry.
+    """Extract the tag name (and value if present) from an hledger JSON tag entry.
 
     Tag entries look like ``["tagname", "tagvalue"]``. Empty names are skipped.
     """
     if isinstance(pair, (list, tuple)) and pair:
         name = pair[0]
         if isinstance(name, str) and name:
+            if len(pair) > 1 and isinstance(pair[1], str) and pair[1]:
+                return f"{name}:{pair[1]}"
             return name
     return None

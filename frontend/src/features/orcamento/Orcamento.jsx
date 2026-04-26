@@ -3,6 +3,7 @@ import { useApi } from '../../api.js';
 import { color, radius, padding } from '../../theme/tokens';
 import Spinner from '../../components/Spinner.jsx';
 import ErrorBox from '../../components/ErrorBox.jsx';
+import { useMediaQuery } from '../../hooks/useMediaQuery.js';
 import { useMonth } from '../../contexts/MonthContext.jsx';
 import { t } from '../../i18n/index.js';
 import TotalHeroCard from './components/TotalHeroCard.jsx';
@@ -21,6 +22,7 @@ import CategoryRow from './components/CategoryRow.jsx';
  * months (matches the pattern other U-phase tabs follow).
  */
 function Orcamento() {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const { selectedMonth, refreshKey } = useMonth();
   const { data, error, loading } = useApi(
     `/api/budget?month=${selectedMonth}`,
@@ -72,16 +74,30 @@ function Orcamento() {
             {t('orcamento.empty')}
           </div>
         ) : (
-          categorias.map((c, i) => (
-            <CategoryRow
-              key={c.conta || c.nome || i}
-              nome={c.nome}
-              orcado={c.orcado}
-              realizado={c.realizado}
-              barColor={palette[i % (palette.length || 1)] || color.accent.primary}
-              isLast={i === categorias.length - 1}
-            />
-          ))
+          <div
+            style={
+              isDesktop
+                ? {
+                    display: 'grid',
+                    gridTemplateColumns: 'auto minmax(0, 1fr) auto auto auto 44px',
+                    rowGap: 24,
+                    columnGap: 12,
+                    alignItems: 'center',
+                  }
+                : {}
+            }
+          >
+            {categorias.map((c, i) => (
+              <CategoryRow
+                key={c.conta || c.nome || i}
+                nome={c.nome}
+                orcado={c.orcado}
+                realizado={c.realizado}
+                barColor={palette[i % (palette.length || 1)] || color.accent.primary}
+                isLast={i === categorias.length - 1}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>

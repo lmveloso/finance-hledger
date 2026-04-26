@@ -50,7 +50,6 @@ function AccountListCard({ title, totalLabel, accounts, total, emptyText, valueC
             <AccountRow
               key={conta.caminho}
               conta={conta}
-              valueColor={valueColor}
               onSelect={onSelect}
               isLast={i === accounts.length - 1}
             />

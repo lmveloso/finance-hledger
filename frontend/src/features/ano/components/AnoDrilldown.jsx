@@ -45,10 +45,12 @@ function AnoDrilldown({ kind, month }) {
           alignItems: 'baseline',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
+          flexDirection: 'column',
           gap: 8,
           marginBottom: 16,
         }}
       >
+        {formatMonthLong(month)}
         <div
           className="sans"
           style={{
@@ -59,15 +61,6 @@ function AnoDrilldown({ kind, month }) {
           }}
         >
           {t(titleKey)}
-          <span style={{ marginLeft: 8, color: color.text.secondary, textTransform: 'none', letterSpacing: 0 }}>
-            · {formatMonthLong(month)}
-          </span>
-        </div>
-        <div
-          className="sans"
-          style={{ fontSize: 11, color: color.text.disabled }}
-        >
-          {t('ano.drilldown.collapseHint')}
         </div>
       </div>
 

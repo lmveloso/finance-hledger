@@ -65,7 +65,7 @@ function AccountCards({ contas }) {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
               gap: 12,
             }}
           >
@@ -128,24 +128,22 @@ function AccountCard({ conta }) {
   const saldoInicial = conta.saldo_inicial ?? 0;
   const saldoFinal = conta.saldo_final ?? 0;
   const delta = saldoFinal - saldoInicial;
+  const isAtivo = conta.tipo === 'ativo';
 
-  // For a liability, a positive delta means debt grew → render as negative.
-  const direction =
-    conta.tipo === 'passivo' ? (delta >= 0 ? 'bad' : 'good') :
-    delta > 0 ? 'good' : delta < 0 ? 'bad' : 'neutral';
+  const direction = delta > 0 ? 'good' : delta < 0 ? 'bad' : 'neutral';
 
   const deltaColor =
     direction === 'good'
       ? color.feedback.positive
       : direction === 'bad'
-      ? color.feedback.negative
-      : color.text.muted;
+        ? color.feedback.negative
+        : color.text.muted;
 
   const entradas = (conta.entradas_externas ?? 0) + (conta.transfers_in ?? 0);
   const saidas = (conta.saidas_externas ?? 0) + (conta.transfers_out ?? 0);
 
   const tipoLabel =
-    conta.tipo === 'ativo'
+    isAtivo
       ? t('fluxo.contas.tipo_ativo')
       : t('fluxo.contas.tipo_passivo');
 
@@ -175,8 +173,6 @@ function AccountCard({ conta }) {
               color: color.text.primary,
               fontWeight: 500,
               overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
             }}
           >
             {conta.nome}
@@ -224,7 +220,7 @@ function AccountCard({ conta }) {
           </div>
           <div
             className="sans"
-            style={{ fontSize: 13, color: color.feedback.positive }}
+            style={{ fontSize: 13 }}
           >
             {BRL(entradas)}
           </div>
@@ -244,7 +240,7 @@ function AccountCard({ conta }) {
           </div>
           <div
             className="sans"
-            style={{ fontSize: 13, color: color.feedback.negative }}
+            style={{ fontSize: 13 }}
           >
             {BRL(saidas)}
           </div>

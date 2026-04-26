@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 from app.deps import get_current_user
 from app.hledger.helpers import month_bounds, months_back_bounds
 from app.hledger.parsers import networth_from_balancesheet, parse_period_report
+from app.formatting import format_account_name as _format_account_name
 
 router = APIRouter()
 
@@ -62,7 +63,7 @@ def accounts(user: Optional[str] = Depends(get_current_user)):
             balance = Amount.sum_list(row[3])
             if abs(balance) <= 0.01:
                 continue
-            nome = caminho.rsplit(":", 1)[-1] or caminho
+            nome = _format_account_name(caminho)
             contas.append({
                 "nome": nome,
                 "caminho": caminho,

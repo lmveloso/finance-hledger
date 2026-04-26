@@ -160,7 +160,11 @@ def transactions(
 
     if tag:
         for t in tag:
-            cmd_args.append(f"tag:{t}")
+            if ":" in t:
+                t_formatted = t.replace(":", "=", 1)
+                cmd_args.append(f"tag:{t_formatted}")
+            else:
+                cmd_args.append(f"tag:{t}")
 
     data = main.hledger(*cmd_args)
 

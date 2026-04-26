@@ -12,11 +12,11 @@ function TabFluxo() {
   let running = 0;
   const bars = waterfallItems.map(item => {
     const isResult = item.tipo === 'result';
-    const barWidth  = Math.abs(item.valor) / maxVal * 100;
-    const offset    = isResult ? 0 : (item.tipo === 'income' ? 0 : ((running + item.valor) / maxVal) * 100);
-    const barColor  = item.tipo === 'income'  ? t.feedback.positive
-                    : item.tipo === 'result'  ? t.accent.primary
-                    : t.feedback.negative;
+    const barWidth = Math.abs(item.valor) / maxVal * 100;
+    const offset = isResult ? 0 : (item.tipo === 'income' ? 0 : ((running + item.valor) / maxVal) * 100);
+    const barColor = item.tipo === 'income' ? t.feedback.positive
+      : item.tipo === 'result' ? t.accent.primary
+        : t.feedback.negative;
     const start = running;
     if (!isResult) running += item.valor;
     return { ...item, barWidth, offset: Math.max(offset, 0), barColor, start };
@@ -26,9 +26,9 @@ function TabFluxo() {
     <div style={{ display: 'grid', gap: 16 }}>
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
-        <window.KpiCard label="Economia contábil" value={d.economia}  color={t.accent.primary}    emphasized />
-        <window.KpiCard label="Sobrou em caixa"   value={d.caixaLiq} color={t.feedback.positive}  />
-        <window.KpiCard label="Total despesas"    value={window.MOCK.summary.despesas} color={t.feedback.negative} />
+        <window.KpiCard label="Economia contábil" value={d.economia} color={t.accent.primary} emphasized />
+        <window.KpiCard label="Sobrou em caixa" value={d.caixaLiq} color={t.feedback.positive} />
+        <window.KpiCard label="Total despesas" value={window.MOCK.summary.despesas} color={t.feedback.negative} />
       </div>
 
       {/* Waterfall */}
@@ -64,7 +64,7 @@ function TabFluxo() {
 
         {/* Connector line hint */}
         <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${t.border.subtle}`, fontFamily: f.body, fontSize: 11, color: t.text.muted, lineHeight: 1.6 }}>
-          Receitas <strong style={{ color: t.feedback.positive }}>{window.BRL(d.waterfall[0]?.valor)}</strong> menos despesas resultam em saldo de <strong style={{ color: t.accent.primary }}>{window.BRL(d.economia)}</strong>.
+          Receitas <strong style={{ color: t.feedback.positive }}>{window.BRL(d.waterfall[0]?.valor)}</strong> menos consumo resultam em saldo de <strong style={{ color: t.accent.primary }}>{window.BRL(d.economia)}</strong>.
         </div>
       </window.Card>
 

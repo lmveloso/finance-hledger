@@ -6,8 +6,8 @@ import { t } from '../../../i18n';
 // "Categoria × Mês". Matches the .tab styling used in App.jsx but rendered
 // as pill buttons so it nests comfortably inside the Ano header.
 const OPTIONS = [
-  { id: 'principio', labelKey: 'ano.view.principio' },
   { id: 'categoria', labelKey: 'ano.view.categoria' },
+  { id: 'principio', labelKey: 'ano.view.principio' },
 ];
 
 function ViewToggle({ value, onChange }) {
