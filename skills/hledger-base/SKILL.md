@@ -1,12 +1,6 @@
 ---
 name: hledger-base
 description: Referencia para gerenciamento de journals hledger — MCP tools, estrutura de journal, padroes de transacao, validacao e pitfalls. Base para os skills hledger-extrato e hledger-fatura.
-triggers:
-  - hledger
-  - journal
-  - balance report
-  - chart of accounts
-  - hledger-mcp
 ---
 
 # hledger — Referencia Base
@@ -190,7 +184,63 @@ bash skills/hledger-base/scripts/validate.sh "$LEDGER_FILE"
 
 ## Categorizacao
 
-O mapeamento payee→conta vive em `payee-categories.json` junto a este skill (`skills/hledger-base/payee-categories.json`). Ver skills hledger-extrato e hledger-fatura para instrucoes de uso.
+O mapeamento payee→conta vive em `payee-categories.json` junto a este skill (`skills/hledger-base/payee-categories.json`). Estrutura: lista `entries` com `patterns` (substrings, case-insensitive), `account`, `tag` (tipo orcamentario) e `notes`. Algumas entradas tem `ambiguous: true`. Ha tambem uma secao `rules` para regras contextuais (ex: Mercado Livre conserto vs item novo).
+
+### Algoritmo de classificacao
+
+Para cada lancamento parseado do extrato/fatura:
+
+1. Carregar `skills/hledger-base/payee-categories.json` uma vez por importacao.
+2. Buscar o primeiro `entry` cujo `patterns` casa (substring case-insensitive) com o nome/descricao do payee.
+3. Se nao houver match → status `unmatched`.
+4. Se houver match e `ambiguous: true` → status `ambiguous`.
+5. Caso contrario → status `auto`, com `account` e `tag` da entry.
+6. Aplicar `rules` quando o contexto exigir (ex: filtros por descricao adicional).
+
+`unmatched` e `ambiguous` precisam de decisao do usuario antes do passo seguinte.
+
+## Plano de Lancamentos (OBRIGATORIO antes de escrever no journal)
+
+Use este protocolo SEMPRE que estiver importando lancamentos em lote (extrato ou fatura). Ele garante que o usuario revise e confirme **todos** os lancamentos — inclusive os auto-classificados — antes de qualquer escrita.
+
+### Passos
+
+1. **Classificar** todos os itens via `payee-categories.json` (ver Algoritmo acima).
+2. **Resolver pendentes**: para cada item `unmatched` ou `ambiguous`, perguntar ao usuario em **um unico batch** (lista numerada de perguntas, agrupada por motivo). Aplicar as respostas e deixar todos os itens com `account` e `tag` definidos.
+3. **Apresentar o Plano de Lancamentos** — uma lista numerada com TODOS os itens (auto + resolvidos), no formato:
+
+   ```
+   Plano de Lancamentos — <arquivo destino>
+   ----------------------------------------
+    1. 2026-04-01  Supermercado Master           BRL    99.90
+        conta: expenses:alimentacao:supermercado   tipo: CUSTOS FIXOS
+        origem: auto                                obs: -
+    2. 2026-04-02  Mercado Livre — capa celular  BRL   149.00
+        conta: expenses:eletronicos                tipo: CONFORTO
+        origem: usuario (ambiguous)                obs: regra item-novo
+    3. 2026-04-03  Drogaria Sao Joao             BRL    35.40
+        conta: expenses:saude:farmacia             tipo: CUSTOS FIXOS
+        origem: auto                                obs: parcelamento 2/6
+   ...
+   Total despesas: BRL X.XXX,XX   Creditos: BRL Y.YYY,YY   Saldo esperado: BRL Z.ZZZ,ZZ
+   ```
+
+   Inclua: `#`, data, descricao/payee, valor, conta, tag de tipo, origem (`auto` | `usuario`), e `obs` para complementos relevantes (parcela, transferencia entre contas proprias, ajuste, etc).
+
+4. **Pedir confirmacao explicita** com instrucoes de edicao:
+
+   > Responda `OK` para confirmar e gravar, ou liste edicoes uma por linha no formato `<n>: <campo>=<valor>` (campos: `account`, `tag`, `desc`, `value`, `date`, `obs`, ou `skip` para descartar). Exemplo: `3: account=expenses:lazer`, `7: tag=PRAZERES`, `12: skip`.
+
+5. **Reaplicar edicoes** e **reapresentar** o plano se houver qualquer mudanca. Repetir ate o usuario responder `OK`.
+
+6. **Somente apos `OK` explicito**, escrever o arquivo journal e rodar o protocolo de validacao.
+
+### Regras
+
+- NUNCA escrever no journal sem `OK` explicito do usuario sobre o Plano de Lancamentos completo.
+- Auto-classificados NAO passam direto — precisam aparecer no plano para revisao.
+- Itens marcados `skip` na confirmacao **nao** entram no journal (registrar em comentario do arquivo apenas se relevante para reconciliacao).
+- Mantenha a numeracao estavel entre revisoes (renumerar so apos novas adicoes/remocoes que o usuario pediu).
 
 ## hledger 1.52 — JSON Format
 

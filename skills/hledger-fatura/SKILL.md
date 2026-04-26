@@ -1,28 +1,15 @@
 ---
 name: hledger-fatura
 description: Importar fatura de cartao de credito para journal hledger — padrao fatura anterior, classificacao de compras, validacao de saldo do cartao.
-triggers:
-  - fatura
-  - cartao de credito
-  - credit card
-  - invoice
-  - fatura XP
-  - fatura Caixa
 ---
 
 # Importar Fatura de Cartao de Credito
 
-Depende do skill **hledger-base** para padroes de transacao, validacao e pitfalls.
+Depende do skill **hledger-base** para inicializacao, padroes de transacao, classificacao, validacao e pitfalls.
 
-## Inicializacao (OBRIGATORIO — primeira acao)
+## Inicializacao
 
-Antes de QUALQUER chamada MCP ou escrita de arquivo:
-
-1. Executar no terminal: `echo $LEDGER_FILE`
-2. Se vazio, **PERGUNTAR ao usuario** o path do main.journal
-3. Usar o path absoluto resultante em todas as chamadas MCP
-
-MCP tools NAO expandem `~` nem variaveis — passar sempre o path literal.
+Seguir hledger-base §Inicializacao antes de qualquer outra acao.
 
 ## Padrao "Fatura Anterior" (CRITICO)
 
@@ -57,24 +44,14 @@ Toda fatura tem **tres entradas de abertura** para bootstrap correto do saldo:
 
 1. **Extrair** dados da fatura (PDF, CSV, imagem)
 2. **Verificar total**: somar todas as compras e confirmar com total declarado da fatura
-3. **Classificar** compras usando `skills/hledger-base/payee-categories.json`
-4. **Perguntar ao usuario** (em batch, antes de escrever):
-   - Comercios desconhecidos / ambiguos
+3. **Coletar contexto** (em batch, antes do plano de lancamentos):
    - Qual conta bancaria pagou a fatura?
    - Valor da fatura anterior (se primeira fatura no journal)
-   - Parcelamentos: qual numero da parcela?
+   - Parcelamentos detectados: confirmar NOME da serie e N/M
+4. **Classificar e confirmar** seguindo hledger-base §Categorizacao e §Plano de Lancamentos. O plano deve incluir as 3 entradas de abertura (saldo fatura anterior, pagamento, ajustes) e todas as compras com conta + tag + obs (parcela, retroativo). Exigir `OK` explicito antes de escrever.
 5. **Escrever** arquivo journal
 6. **Incluir** no main.journal (`include YYYY-MM-fatura-BANCO.journal`)
 7. **Validar** — rodar protocolo de validacao (ver hledger-base)
-
-## Classificacao
-
-1. Carregar `skills/hledger-base/payee-categories.json`
-2. Match case-insensitive do nome do comercio nos `patterns`
-3. Se match e nao `ambiguous` → usar `account` e `tag`
-4. Se `ambiguous: true` ou sem match → adicionar a lista de perguntas
-5. Adicionar `; tipo: TAG` em cada posting de despesa
-6. Para parcelas: ver seção "Parcelamentos" abaixo (workflow ADR-009)
 
 ## Parcelamentos (ADR-009)
 

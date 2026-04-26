@@ -1,39 +1,25 @@
 ---
 name: hledger-extrato
 description: Importar extrato de conta bancaria (corrente, poupanca) para journal hledger. Cobre parsing de JSON/PDF/CSV, classificacao automatica de payees e reconciliacao de saldo.
-triggers:
-  - extrato
-  - conta corrente
-  - poupanca
-  - saldo bancario
-  - bank statement
-  - conciliacao
 ---
 
 # Importar Extrato Bancario
 
-Depende do skill **hledger-base** para padroes de transacao, validacao e pitfalls.
+Depende do skill **hledger-base** para inicializacao, padroes de transacao, classificacao, validacao e pitfalls.
 
-## Inicializacao (OBRIGATORIO — primeira acao)
+## Inicializacao
 
-Antes de QUALQUER chamada MCP ou escrita de arquivo:
-
-1. Executar no terminal: `echo $LEDGER_FILE`
-2. Se vazio, **PERGUNTAR ao usuario** o path do main.journal
-3. Usar o path absoluto resultante em todas as chamadas MCP
-
-MCP tools NAO expandem `~` nem variaveis — passar sempre o path literal.
+Seguir hledger-base §Inicializacao antes de qualquer outra acao.
 
 ## Workflow
 
 1. **Ler** o extrato (JSON, PDF, CSV, imagem)
 2. **Parsear** transacoes (data, descricao, valor, sinal C/D)
 3. **Verificar** soma: saldo anterior + creditos - debitos = saldo final do banco
-4. **Classificar** cada transacao usando `skills/hledger-base/payee-categories.json`
-5. **Perguntar** todos os itens ambiguos ao usuario de uma vez (batch)
-6. **Escrever** arquivo journal
-7. **Incluir** no main.journal (`include YYYY-MM-banco-conta.journal`)
-8. **Validar** — rodar protocolo de validacao (ver hledger-base)
+4. **Classificar e confirmar** seguindo hledger-base §Categorizacao e §Plano de Lancamentos (apresentar lista numerada com auto + resolvidos, exigir `OK` explicito antes de qualquer escrita)
+5. **Escrever** arquivo journal
+6. **Incluir** no main.journal (`include YYYY-MM-banco-conta.journal`)
+7. **Validar** — rodar protocolo de validacao (ver hledger-base)
 
 ## Formatos de Input
 
@@ -85,16 +71,9 @@ pdftoppm -r 150 extrato.pdf /tmp/pfx
 
 Ler direto. Colunas tipicas: data, descricao, valor, saldo.
 
-## Classificacao
+## Classificacao e confirmacao
 
-1. Carregar `skills/hledger-base/payee-categories.json`
-2. Para cada transacao, buscar match case-insensitive do payee nos `patterns`
-3. Se match encontrado e `ambiguous` nao eh `true` → usar `account` e `tag` do JSON
-4. Se match encontrado e `ambiguous: true` → adicionar a lista de perguntas
-5. Se nenhum match → adicionar a lista de perguntas
-6. **Perguntar TODOS os itens ambiguos ao usuario de uma vez** antes de escrever
-
-Consultar tambem a secao `rules` do JSON para regras contextuais (ex: Mercado Livre conserto vs item novo).
+Ver hledger-base §Categorizacao e §Plano de Lancamentos. NAO escrever no journal sem `OK` explicito sobre a lista numerada completa (auto-classificados inclusos).
 
 ## Escrita do Arquivo Journal
 
@@ -159,15 +138,13 @@ Sempre categorizar como `income:rendimentos`:
 
 1. Calcular saldo esperado: saldo anterior + soma(creditos) - soma(debitos)
 2. Comparar com saldo final do banco
-3. Se diferenca existir e for pequena, adicionar ajuste:
+3. Se houver qualquer diferenca, **investigar antes de ajustar** (lancamentos faltantes, sinal trocado, transferencia duplicada). NUNCA criar ajuste automatico sem confirmacao do usuario. Se o usuario autorizar o ajuste:
 
 ```hledger
 2026-04-30 Ajuste de conciliacao
     equity:saldo-inicial                  BRL    XX.XX
     assets:banco:caixa:corrente           BRL   -XX.XX
 ```
-
-4. Se diferenca for grande, investigar transacoes faltantes antes de ajustar
 
 ### Saldo de abertura (mes sem journal anterior completo)
 
@@ -183,11 +160,11 @@ Calcular: `saldo_final_banco - movimentacoes_do_mes`.
 
 ## Validacao
 
-Rodar protocolo de validacao do hledger-base:
+Rodar protocolo canonico do hledger-base:
 
-```
-hledger_check(file="$LEDGER_FILE")
-hledger_balance(file="$LEDGER_FILE", query="assets:banco:caixa:corrente")
+```bash
+bash skills/hledger-base/scripts/validate.sh "$LEDGER_FILE"
+hledger -f "$LEDGER_FILE" balance "assets:banco:caixa:corrente"
 ```
 
 O saldo deve bater com o saldo final do extrato bancario.
