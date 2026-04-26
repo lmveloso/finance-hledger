@@ -6,9 +6,10 @@ import Spinner from '../../../components/Spinner.jsx';
 import ErrorBox from '../../../components/ErrorBox.jsx';
 import AccountTransactionsTable from './AccountTransactionsTable.jsx';
 import { t } from '../../../i18n';
+import { formatBRL } from '../../../lib/formatBRL';
 
 // Local formatters — same pattern used across features (see docs §6.2).
-const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const BRLc = (n) => formatBRL(n, { fractionDigits: 2 });
 
 function round2(n) { return Math.round(n * 100) / 100; }
 

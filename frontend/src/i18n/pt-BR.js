@@ -112,6 +112,10 @@ const dict = {
   'theme.light': 'Modo claro',
   'theme.dark': 'Modo escuro',
 
+  // ── Privacy toggle ─────────────────────────────────────────────────────
+  'privacy.hide': 'Ocultar valores',
+  'privacy.show': 'Mostrar valores',
+
   // ── Plano tab ──────────────────────────────────────────────────────────
   'plano.header': 'Planejamento',
   'plano.toggle.forecast': 'Próximos meses',

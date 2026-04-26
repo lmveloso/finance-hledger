@@ -1,8 +1,9 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import { color } from '../../../theme/tokens';
+import { formatBRL } from '../../../lib/formatBRL';
 
-const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const BRLc = (n) => formatBRL(n, { fractionDigits: 2 });
 
 // AccountListCard — compact account breakdown card (PR-U7).
 //

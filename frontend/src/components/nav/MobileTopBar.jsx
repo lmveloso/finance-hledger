@@ -2,6 +2,7 @@ import React from 'react';
 import { useNav } from '../../contexts/NavContext.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
 import MonthNavigator from './MonthNavigator.jsx';
+import PrivacyToggle from './PrivacyToggle.jsx';
 import { t } from '../../i18n';
 
 // NavContext keeps Portuguese-with-diacritics tab IDs. Mirror the slug map
@@ -53,7 +54,10 @@ export default function MobileTopBar() {
       >
         {t(`nav.${slug}`)}
       </span>
-      <MonthNavigator variant="compact" />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <PrivacyToggle variant="icon" />
+        <MonthNavigator variant="compact" />
+      </div>
     </header>
   );
 }

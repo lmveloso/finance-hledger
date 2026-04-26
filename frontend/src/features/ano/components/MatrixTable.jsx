@@ -1,6 +1,7 @@
 import React from 'react';
 import { color } from '../../../theme/tokens';
 import { t } from '../../../i18n';
+import { formatBRL } from '../../../lib/formatBRL';
 
 // Localised short month labels. Mirrors the convention already used in
 // features/previsao/Previsao.jsx, kept local to avoid premature sharing.
@@ -11,12 +12,8 @@ function monthLabel(ym) {
   return MONTH_LABELS[m - 1] || ym;
 }
 
-const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', {
-  style: 'currency', currency: 'BRL', maximumFractionDigits: 0,
-});
-const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', {
-  style: 'currency', currency: 'BRL',
-});
+const BRL = (n) => formatBRL(n, { fractionDigits: 0 });
+const BRLc = (n) => formatBRL(n, { fractionDigits: 2 });
 
 // Generic N × 12 matrix with:
 //   - left column: row labels (category or principle name)

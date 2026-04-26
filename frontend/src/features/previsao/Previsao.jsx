@@ -17,12 +17,10 @@ import { t } from '../../i18n';
 import Spinner from '../../components/Spinner.jsx';
 import ErrorBox from '../../components/ErrorBox.jsx';
 import { useMonth } from '../../contexts/MonthContext.jsx';
+import { formatBRL } from '../../lib/formatBRL';
 
-// Local formatters — duplicated from App.jsx so this feature stays
-// self-contained. A shared formatters module will likely land with the
-// i18n/currency decoupling noted in docs §6.2.
-const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
-const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const BRL = (n) => formatBRL(n, { fractionDigits: 0 });
+const BRLc = (n) => formatBRL(n, { fractionDigits: 2 });
 
 // Month label helpers — only used by Previsao for the forecast chart x-axis
 // and the seasonality heatmap column headers.

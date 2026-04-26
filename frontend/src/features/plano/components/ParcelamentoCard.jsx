@@ -1,10 +1,9 @@
 import React from 'react';
 import { color } from '../../../theme/tokens';
 import { t } from '../../../i18n';
+import { formatBRL } from '../../../lib/formatBRL';
 
-const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', {
-  style: 'currency', currency: 'BRL', maximumFractionDigits: 2,
-});
+const BRL = (n) => formatBRL(n, { fractionDigits: 2 });
 
 function formatEndDate(iso) {
   if (!iso) return '—';

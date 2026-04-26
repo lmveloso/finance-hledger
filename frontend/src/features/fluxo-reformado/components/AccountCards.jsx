@@ -1,13 +1,9 @@
 import React, { useMemo } from 'react';
 import { color, radius } from '../../../theme/tokens';
 import { t } from '../../../i18n/index.js';
+import { formatBRL } from '../../../lib/formatBRL';
 
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  });
+const BRL = (n) => formatBRL(n, { fractionDigits: 0 });
 
 /**
  * Per-account cards grid for the Fluxo tab.

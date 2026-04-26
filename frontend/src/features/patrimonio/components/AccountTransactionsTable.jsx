@@ -2,9 +2,10 @@ import React from 'react';
 import { color } from '../../../theme/tokens';
 import TipoChip from '../../../components/TipoChip.jsx';
 import { t } from '../../../i18n';
+import { formatBRL } from '../../../lib/formatBRL';
 
 // Local formatter — same pattern used across features (see docs §6.2).
-const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const BRLc = (n) => formatBRL(n, { fractionDigits: 2 });
 
 // AccountTransactionsTable — shared transaction list used by AccountDetail.
 // When `withBalance` is true, a running balance column is rendered; the

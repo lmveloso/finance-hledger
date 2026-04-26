@@ -4,6 +4,7 @@ import App from './App.jsx';
 import Login from './Login.jsx';
 import { isLoggedIn, fetchAuthMode } from './api.js';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext.jsx';
+import { PrivacyProvider, usePrivacy } from './contexts/PrivacyContext.jsx';
 import { color } from './theme/tokens';
 import { t } from './i18n';
 
@@ -85,13 +86,21 @@ function Root() {
 // fine; the endpoint is cheap and unauthenticated.
 function ThemedApp() {
   const { mode } = useTheme();
-  return <Root key={mode} />;
+  const { isPrivate } = usePrivacy();
+  // Privacy mode is part of the remount key for the same reason as theme:
+  // many BRL formatter calls run inside memoised closures (Recharts configs,
+  // feature-tab inline styles) that cache the formatted string. Flipping
+  // privacy must invalidate those caches, and the cheapest correct way is
+  // to remount the tree below the providers.
+  return <Root key={`${mode}:${isPrivate ? 'p' : 'o'}`} />;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider>
-      <ThemedApp />
+      <PrivacyProvider>
+        <ThemedApp />
+      </PrivacyProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

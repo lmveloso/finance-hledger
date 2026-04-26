@@ -2,14 +2,11 @@ import React from 'react';
 import { color, radius } from '../../../theme/tokens';
 import { t } from '../../../i18n/index.js';
 import { useMediaQuery } from '../../../hooks/useMediaQuery.js';
+import { formatBRL } from '../../../lib/formatBRL';
 
 // Per-category figures need 2 decimals for the "/ orçado" reading to line up
 // with journal amounts. Hero card uses 0 decimals.
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  });
+const BRL = (n) => formatBRL(n, { fractionDigits: 2 });
 
 const PCT = (n) => `${Math.round(n)}%`;
 

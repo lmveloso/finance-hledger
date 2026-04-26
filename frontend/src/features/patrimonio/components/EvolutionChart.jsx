@@ -3,10 +3,9 @@ import { color } from '../../../theme/tokens';
 import { useTheme } from '../../../contexts/ThemeContext.jsx';
 import { t } from '../../../i18n';
 import { EvolutionTooltip, LegendChip } from './EvolutionLegend.jsx';
+import { formatBRL } from '../../../lib/formatBRL';
 
-const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', {
-  style: 'currency', currency: 'BRL', maximumFractionDigits: 0,
-});
+const BRL = (n) => formatBRL(n, { fractionDigits: 0 });
 
 // Same short-month convention used across features.
 const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];

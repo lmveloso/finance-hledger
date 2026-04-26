@@ -9,13 +9,9 @@ import Spinner from '../../../components/Spinner.jsx';
 import ErrorBox from '../../../components/ErrorBox.jsx';
 import { useApi } from '../../../api.js';
 import { t } from '../../../i18n/index.js';
+import { formatBRL } from '../../../lib/formatBRL';
 
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  });
+const BRL = (n) => formatBRL(n, { fractionDigits: 0 });
 const pctLabel = (n) => `${Math.round(n)}%`;
 
 function CategoriaBar({ nome, pct, valor, dotColor }) {

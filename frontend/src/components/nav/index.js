@@ -8,3 +8,4 @@ export { default as BottomNav } from './BottomNav.jsx';
 export { default as MobileTopBar } from './MobileTopBar.jsx';
 export { default as MonthNavigator, formatMonthBR } from './MonthNavigator.jsx';
 export { default as ThemeToggle } from './ThemeToggle.jsx';
+export { default as PrivacyToggle } from './PrivacyToggle.jsx';

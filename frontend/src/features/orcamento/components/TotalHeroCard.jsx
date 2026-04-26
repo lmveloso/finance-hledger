@@ -2,15 +2,11 @@ import React from 'react';
 import { color, radius, padding } from '../../../theme/tokens';
 import { t } from '../../../i18n/index.js';
 import BudgetDonut from './BudgetDonut.jsx';
+import { formatBRL } from '../../../lib/formatBRL';
 
 // Format BRL with no fractional digits (hero figures read cleaner).
 // The per-category row intentionally shows 2 decimals (see CategoryRow).
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  });
+const BRL = (n) => formatBRL(n, { fractionDigits: 0 });
 
 const PCT = (n) => `${Math.round(n)}%`;
 

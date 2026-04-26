@@ -6,6 +6,7 @@ import { useCategoriaMes } from '../hooks/useCategoriaMes.js';
 import { monthLabel } from '../components/MatrixTable.jsx';
 import AnoDrilldown from '../components/AnoDrilldown.jsx';
 import { t } from '../../../i18n';
+import { formatBRL } from '../../../lib/formatBRL';
 
 // View 1 (PR-U4) — Categoria × Mês as a CSS-grid heatmap.
 //
@@ -18,7 +19,7 @@ import { t } from '../../../i18n';
 //
 // The monthly totals row summarises the 7 rendered rows only (not all
 // categories) so the mini-bars match what the user actually sees above.
-const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const BRL = (n) => formatBRL(n, { fractionDigits: 2 });
 const LEGEND_STOPS = [0.1, 0.3, 0.55, 0.8, 1.0];
 
 function cellBackground(value, rowMax, isDark) {

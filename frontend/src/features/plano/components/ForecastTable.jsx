@@ -1,6 +1,7 @@
 import React from 'react';
 import { color } from '../../../theme/tokens';
 import { t } from '../../../i18n';
+import { formatBRL } from '../../../lib/formatBRL';
 
 // Localised short month labels. Same convention used in features/ano and
 // features/previsao (PT-BR labels still inline — existing pattern).
@@ -13,9 +14,7 @@ function monthLabel(ym) {
   return `${MONTH_LABELS[idx] || ym} ${String(y).slice(-2)}`;
 }
 
-const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', {
-  style: 'currency', currency: 'BRL', maximumFractionDigits: 0,
-});
+const BRL = (n) => formatBRL(n, { fractionDigits: 0 });
 
 // ForecastTable — one column per forecast month, three data rows
 // (receitas, despesas, saldo) plus a cumulative saldo row so the user can

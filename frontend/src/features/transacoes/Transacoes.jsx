@@ -7,11 +7,12 @@ import Spinner from '../../components/Spinner.jsx';
 import ErrorBox from '../../components/ErrorBox.jsx';
 import { useMonth } from '../../contexts/MonthContext.jsx';
 import { useNav } from '../../contexts/NavContext.jsx';
+import { formatBRL } from '../../lib/formatBRL';
 
 // Local formatters — duplicated from App.jsx so this feature stays
 // self-contained. A shared formatters module will likely land with the
 // i18n/currency decoupling noted in docs §6.2.
-const BRLc = (n) => (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const BRLc = (n) => formatBRL(n, { fractionDigits: 2 });
 
 // ── Transações ──────────────────────────────────────────────────────────
 function Transacoes() {

@@ -1,13 +1,9 @@
 import React from 'react';
 import { color } from '../../../theme/tokens';
 import { t } from '../../../i18n/index.js';
+import { formatBRL } from '../../../lib/formatBRL';
 
-const BRL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  });
+const BRL = (n) => formatBRL(n, { fractionDigits: 0 });
 
 // Flat table with one row per account, showing initial balance, inflows,
 // outflows, transfers and the closing balance. Matches the data on the

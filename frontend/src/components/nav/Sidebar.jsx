@@ -3,6 +3,7 @@ import { useTheme } from '../../contexts/ThemeContext.jsx';
 import NavList from './NavList.jsx';
 import MonthNavigator from './MonthNavigator.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
+import PrivacyToggle from './PrivacyToggle.jsx';
 
 // Sidebar — fixed-width (208px) left rail used on desktop (≥768px).
 //
@@ -97,6 +98,15 @@ export default function Sidebar() {
         }}
       >
         <ThemeToggle />
+      </div>
+
+      {/* Privacy toggle */}
+      <div
+        style={{
+          padding: '0 10px 12px',
+        }}
+      >
+        <PrivacyToggle />
       </div>
 
       {/* Version stamp — footer-tone, no top border (the theme-toggle row

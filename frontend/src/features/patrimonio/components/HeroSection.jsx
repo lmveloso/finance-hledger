@@ -1,10 +1,9 @@
 import React from 'react';
 import { color, radius, padding } from '../../../theme/tokens';
 import { t } from '../../../i18n';
+import { formatBRL } from '../../../lib/formatBRL';
 
-const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', {
-  style: 'currency', currency: 'BRL', maximumFractionDigits: 0,
-});
+const BRL = (n) => formatBRL(n, { fractionDigits: 0 });
 
 // HeroSection — Patrimonio overview (PR-U7).
 //

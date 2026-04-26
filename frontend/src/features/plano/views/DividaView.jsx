@@ -5,10 +5,9 @@ import ErrorBox from '../../../components/ErrorBox.jsx';
 import ParcelamentoCard from '../components/ParcelamentoCard.jsx';
 import { useInstallments } from '../hooks/useInstallments.js';
 import { t } from '../../../i18n';
+import { formatBRL } from '../../../lib/formatBRL';
 
-const BRL = (n) => (n ?? 0).toLocaleString('pt-BR', {
-  style: 'currency', currency: 'BRL', maximumFractionDigits: 2,
-});
+const BRL = (n) => formatBRL(n, { fractionDigits: 2 });
 
 // Vista 2 (PRD §7) — active credit-card installments.
 // Shows a list of parcelamentos and the monthly/remaining totals.

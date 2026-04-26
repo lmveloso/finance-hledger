@@ -2,19 +2,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { color, radius } from '../../../theme/tokens';
 import { t } from '../../../i18n/index.js';
 import { useAccountTransactions } from '../hooks/useAccountTransactions.js';
+import { formatBRL } from '../../../lib/formatBRL';
 
-const BRL_FULL = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 2,
-  });
-const BRL_INT = (n) =>
-  (n ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  });
+const BRL_FULL = (n) => formatBRL(n, { fractionDigits: 2 });
+const BRL_INT = (n) => formatBRL(n, { fractionDigits: 0 });
 const dateBR = (iso) => {
   if (!iso || iso.length < 10) return iso || '';
   const [y, m, d] = iso.slice(0, 10).split('-');
