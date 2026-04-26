@@ -103,8 +103,9 @@ def test_alias_used_when_present(cards_client):
 
 def test_outstanding_debt_matches_balance(cards_client):
     by_acct = _by_account(cards_client.get("/api/credit-cards?month=2026-04").json())
-    # Nubank: 1800 (TV) + 900 (OLD) + 200 (super) - 50 (refund) = 2850
-    assert by_acct["liabilities:cartão:nubank"]["outstanding_debt"] == 2850.0
+    # Nubank historical balance (no forecast): TV one-off 300 + OLD 3 × 300 = 900
+    #   + April groceries 200 - refund 50 = 1350.
+    assert by_acct["liabilities:cartão:nubank"]["outstanding_debt"] == 1350.0
     # Visa: 150 (dining) - 100 (payment) = 50
     assert by_acct["liabilities:credit-card:visa"]["outstanding_debt"] == 50.0
 
@@ -119,7 +120,9 @@ def test_spend_this_month_nets_refund(cards_client):
 
 def test_installment_count_excludes_completed_schedules(cards_client):
     by_acct = _by_account(cards_client.get("/api/credit-cards?month=2026-04").json())
-    # TV (6x from 2025-11-01) → live; OLD (6x from 2024-04-01) → done.
+    # TV: past one-off + ~ monthly produces forecast occurrence on 2026-05-01
+    #   (after today=2026-04-15) → series LIVE.
+    # OLD: only past one-offs, no future occurrence → done.
     assert by_acct["liabilities:cartão:nubank"]["live_installments"] == 1
     assert by_acct["liabilities:credit-card:visa"]["live_installments"] == 0
 

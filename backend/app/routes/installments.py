@@ -1,15 +1,15 @@
 """Installments endpoint — active credit-card parcelamentos.
 
 Feeds the "Decaimento de dívida" view of the Plano tab (PR-D5). Relies on
-periodic transactions declared per ADR-009:
+periodic transactions declared per ADR-011 (restores ADR-009):
 
     ~ monthly from 2026-05-01 to 2026-12-01
         expenses:moradia:equipamentos-novos   371.79  ; parcelamento: ELECTROLUX 3/10
         liabilities:cartão:nubank
 
 Each such declaration expands to one posting per month; this endpoint groups
-them by the first token after ``parcelamento:`` (the installment name) and
-reports one aggregated row per active installment.
+them by the NAME captured before ``N/M`` in the tag value, and reports one
+aggregated row per active installment.
 """
 
 from __future__ import annotations

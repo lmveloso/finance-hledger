@@ -1,10 +1,12 @@
 # ADR-010: Compras parceladas lançadas como transação única na data da compra
 
-**Status:** Accepted
+**Status:** Superseded by ADR-011
 **Date:** 2026-04
 **Phase origin:** Fase D (Dashboard 2.0), refina Fase 1 (Magic Import)
 **Supersedes:** ADR-009
-**Superseded by:** —
+**Superseded by:** ADR-011
+
+> **Nota (2026-04-26):** este ADR foi revertido após uso prático. O modelo mental do usuário e a necessidade de provisão visível das parcelas em meses futuros levaram à restauração do modelo do ADR-009. Ver ADR-011 para a decisão atual.
 
 ## Context
 

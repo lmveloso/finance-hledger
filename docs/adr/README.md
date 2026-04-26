@@ -20,8 +20,9 @@ Cada ADR documenta uma decisão arquitetural do projeto — contexto, decisão t
 | [006](./006-multi-moeda-simples.md) | Multi-moeda simples no MVP | Accepted | Fase 1 |
 | [007](./007-git-auto-commit.md) | Git commit automático após cada lote aprovado | Accepted | Fase 1 |
 | [008](./008-principio-via-mapping.md) | Princípio sugerido via mapping categoria → princípio | Accepted | Fase D / Fase 1 |
-| [009](./009-parcelamento-monthly.md) | Parcelamentos detectados geram `~ monthly` no journal | Superseded by ADR-010 | Fase 1 |
-| [010](./010-parcelamento-transacao-unica.md) | Compras parceladas lançadas como transação única na data da compra | Accepted | Fase D / Fase 1 |
+| [009](./009-parcelamento-monthly.md) | Parcelamentos detectados geram `~ monthly` no journal | Superseded by ADR-010, restored by ADR-011 | Fase 1 |
+| [010](./010-parcelamento-transacao-unica.md) | Compras parceladas lançadas como transação única na data da compra | Superseded by ADR-011 | Fase D / Fase 1 |
+| [011](./011-parcelamento-monthly-restaurado.md) | Parcelamentos voltam ao modelo `~ monthly` (restaura ADR-009) | Accepted | Fase 1 |
 
 ## Formato de novos ADRs
 

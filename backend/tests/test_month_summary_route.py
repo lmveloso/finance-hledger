@@ -3,8 +3,8 @@
 Uses a dedicated fixture journal at ``tests/data/month_summary.journal``
 that exercises every bucketing path: salary income, debit-card expense,
 credit-card expense under all three accepted prefixes (``cartão``,
-``cartao``, ``credit-card``), an ADR-010 installment recorded as a
-single full-amount transaction, and a card payment.
+``cartao``, ``credit-card``), an ADR-011 installment line on a fatura
+(one parcel = one transaction in the month it falls), and a card payment.
 """
 
 from __future__ import annotations
@@ -109,14 +109,18 @@ def test_debt_start_and_end_match_balance_command(month_summary_client):
     assert abs(body["debt_end_of_month"] - 929.80) < 0.01
 
 
-def test_installment_full_amount_lands_in_expense_via_credit_card(
+def test_installment_parcel_lands_in_expense_via_credit_card(
     month_summary_client,
 ):
-    """ADR-010 anti-regression: installment must be counted at full amount."""
+    """ADR-011: an installment parcel is a normal expense in its month.
+
+    The fixture's April installment line carries a R$1200 expense
+    (the parcel for that month) tagged ``parcelamento:``. The tag is
+    metadata only — the bucketing is the same as for any other card
+    expense. If aggregation regressed and started filtering out
+    parcelamento postings, this drops to ~R$229.80 instead of ~R$1429.80.
+    """
     body = _get(month_summary_client).json()
-    # The R$1200 installment is the dominant card expense in the fixture.
-    # If ADR-010 regressed (e.g. only 1/10 = R$120 booked), this drops to
-    # ~R$349.80 instead of R$1429.80.
     assert body["expense_via_credit_card"] > 1400.0
 
 

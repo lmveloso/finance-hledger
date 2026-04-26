@@ -47,7 +47,7 @@ All major decisions are documented in `docs/adr/`. Before proposing any architec
 Key active ADRs to be aware of:
 - **ADR-004**: hledger access via internal Python module `app/hledger/client.py`. NOT via MCP, NOT via direct file write outside the module.
 - **ADR-008**: Principle is derived deterministically from category mapping. LLM does not infer Principle.
-- **ADR-010** (supersedes ADR-009): Installments from credit card invoices are recorded as a single transaction on the original purchase date — full amount as expense and as credit-card liability — with a `parcelamento:` tag. Subsequent invoice lines for that purchase are skipped on import.
+- **ADR-011** (supersedes ADR-010, restores ADR-009): Each credit-card installment is recorded as a transaction in the month it falls on the invoice. Past installments live as one-offs in the corresponding fatura journal; future installments live as `~ monthly from X to Y` declarations in `parcelamentos.journal`. Tag format: `parcelamento: NAME N/M`. Backend uses `print --forecast tag:parcelamento` to project upcoming installments.
 
 See `docs/adr/README.md` for the full index.
 

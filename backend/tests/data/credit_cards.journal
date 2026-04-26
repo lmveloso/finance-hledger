@@ -2,17 +2,18 @@
 ; Designed to exercise:
 ;   - two card accounts under DIFFERENT prefix forms (cartão and credit-card)
 ;   - one card with `; alias:` directive (Q4 path c) and one without (path b)
-;   - one active installment from 5 months ago (TV 6x → 1 month live)
-;   - one finished installment from ~2 years ago (OLD 6x → completed)
+;   - one active installment series with future occurrences (TV → LIVE)
+;   - one finished series with past one-offs only (OLD → done)
 ;   - one refund on the credit-card side (Q3: positive expense-side reduces)
 ;   - a normal purchase on each card
 ;   - a card payment (assets → liability) that must NOT count as spend
 ;   - a dormant card (zero balance + zero monthly spend) → excluded
 ;
-; "Today" for tests is fixed via dependency injection; the dates here are
-; chosen so a today around 2026-04-15 hits all the desired states:
-;   - TV purchased 2025-11-01 + 6 months = 2026-05-01 ≥ 2026-04-15 → LIVE
-;   - OLD purchased 2024-04-01 + 6 months = 2024-10-01 < 2026-04-15 → done
+; "Today" for tests is fixed via dependency injection (~2026-04-15). The
+; ADR-011 model:
+;   - TV: past one-off + `~ monthly` declaration that generates forecast
+;     occurrences AFTER today → series is LIVE
+;   - OLD: only past one-offs in 2024, no `~ monthly` → no future → done
 ;
 ; Account directives WITH and WITHOUT alias on purpose.
 
@@ -30,14 +31,26 @@ account expenses:other
     assets:bank                         5000.00
     equity:opening
 
-; ── Active installment (5 months ago, 6x → still 1 month live).
+; ── Active installment series TV (6x). Past one-off + future periodic.
 2025-11-01 * ELECTROLUX TV
-    expenses:moradia:equipamentos       1800.00  ; parcelamento: TV 6x
+    expenses:moradia:equipamentos        300.00  ; parcelamento: TV 1/6
     liabilities:cartão:nubank
 
-; ── Completed installment (April 2024, 6x → done by Oct 2024).
+~ monthly from 2025-12-01 to 2026-06-01
+    expenses:moradia:equipamentos        300.00  ; parcelamento: TV 2/6
+    liabilities:cartão:nubank
+
+; ── Completed series OLD (3x): all past, no periodic → done.
+2024-02-01 * Old fridge
+    expenses:moradia:equipamentos        300.00  ; parcelamento: OLD 1/3
+    liabilities:cartão:nubank
+
+2024-03-01 * Old fridge
+    expenses:moradia:equipamentos        300.00  ; parcelamento: OLD 2/3
+    liabilities:cartão:nubank
+
 2024-04-01 * Old fridge
-    expenses:moradia:equipamentos        900.00  ; parcelamento: OLD 6x
+    expenses:moradia:equipamentos        300.00  ; parcelamento: OLD 3/3
     liabilities:cartão:nubank
 
 ; ── Normal April purchases on each card.

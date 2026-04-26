@@ -33,7 +33,7 @@ class CreditCardsService:
 
     # PR-F1-1 Open Q1 (RESOLVED): support all three liability prefixes
     # simultaneously. Journals can mix any combination of:
-    #   - liabilities:cartão:*  (matches ADR-010 verbatim)
+    #   - liabilities:cartão:*  (matches ADR-011 verbatim)
     #   - liabilities:cartao:*  (no accent, file-system friendly)
     #   - liabilities:credit-card:*  (full English, future-friendly)
     # The frontend MUST NOT re-introduce a client-side filter — this
@@ -147,8 +147,14 @@ class CreditCardsService:
         return total
 
     def _live_installments(self, account: str, today: date) -> int:
-        """Count parcelamentos contributing to this card."""
-        raw = self._client.run("print", "tag:parcelamento")
+        """Count distinct parcelamento series with future occurrences on this card.
+
+        Forecast is required so series whose remaining installments live
+        in ``parcelamentos.journal`` (`~ monthly`) are visible. Without
+        ``--forecast`` we'd only see past one-offs and undercount live
+        commitments to zero in many cases.
+        """
+        raw = self._client.run("print", "--forecast", "tag:parcelamento")
         if not isinstance(raw, list):
             return 0
         return count_live_for_card(raw, account, today=today)

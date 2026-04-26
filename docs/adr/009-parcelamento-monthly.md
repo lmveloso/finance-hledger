@@ -1,10 +1,12 @@
 # ADR-009: Parcelamentos detectados geram `~ monthly from X to Y` no journal
 
-**Status:** Superseded by ADR-010
+**Status:** Superseded by ADR-010, restored by ADR-011
 **Date:** 2026-04
 **Phase origin:** Fase 1 (Magic Import), alimenta Fase D (Dashboard 2.0)
 **Supersedes:** —
-**Superseded by:** ADR-010
+**Superseded by:** ADR-010 (revertido posteriormente — ver ADR-011)
+
+> **Nota (2026-04-26):** ADR-010 substituiu este ADR brevemente, mas o uso real do journal e o modelo mental do usuário levaram à reversão. Ver ADR-011 para a decisão final, que restaura o modelo descrito aqui.
 
 ## Context
 

@@ -37,7 +37,7 @@ class MonthSummaryService:
     # docs/plans/PR-F1-1-month-summary-endpoint.md).
     # Support all THREE forms simultaneously so the journal can mix any
     # combination and PR-F1-2/PR-F1-3 reuse the same constant. Listed in
-    # priority order: ADR-010 verbatim spelling first, file-system friendly
+    # priority order: ADR-011 verbatim spelling first, file-system friendly
     # ASCII second, future-friendly English third.
     CARD_PREFIXES: tuple[str, ...] = (
         "liabilities:cartão:",

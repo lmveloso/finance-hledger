@@ -4,7 +4,8 @@
 ;   - Expense paid via debit (assets contra)
 ;   - Expense paid via credit card (liability contra)
 ;   - Card payment (asset -> liability, no expense)
-;   - Installment per ADR-010 — single tx with full amount + parcelamento: tag
+;   - Installment per ADR-011 — one parcel = one tx in the month it falls,
+;     carrying ``parcelamento: NAME N/M`` on the expense posting
 ;   - One card under each of the three accepted spellings
 ;     (cartão, cartao, credit-card) so the aggregate sums them all.
 
@@ -35,12 +36,11 @@
     expenses:services                 49.90
     liabilities:credit-card:amex
 
-; ADR-010: an installment is recorded as ONE transaction on the original
-; purchase date with the FULL amount as expense and as card-liability,
-; tagged with `parcelamento:`. Subsequent invoice lines for that same
-; purchase are skipped on import.
-2026-04-20 * Eletrodomestico parcelado  ; parcelamento: ELECTROLUX 1/10
-    expenses:moradia:equipamentos    1200.00
+; ADR-011: each installment parcel is its own transaction in the month
+; it falls on the invoice. The tag on the expense posting identifies
+; the series.
+2026-04-20 * Eletrodomestico parcelado
+    expenses:moradia:equipamentos    1200.00  ; parcelamento: ELECTROLUX 1/10
     liabilities:cartão:nubank
 
 ; Card payment — settles previous-month balance. Must NOT count as expense.

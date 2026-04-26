@@ -81,7 +81,7 @@ def _build(extras: dict[tuple[str, ...], Any]) -> _StubClient:
         ("accounts", "liabilities:cartao"): _accounts(),
         ("accounts", "liabilities:credit-card"): _accounts(),
         APRIL_BOUNDS: [],
-        ("print", "tag:parcelamento"): [],
+        ("print", "--forecast", "tag:parcelamento"): [],
     }
     base.update(extras)
     return _StubClient(base)
@@ -147,23 +147,41 @@ def test_sort_by_debt_desc():
 
 
 def test_live_installments_active_and_completed():
+    """ADR-011: a series is live when at least one occurrence is in the future."""
     nubank = "liabilities:cartão:nubank"
     parcelamento_txs = [
-        # Active: 2026-02-01 + 6 months = 2026-08-01 >= today
+        # Active: past one-off + future forecast occurrence — counts once
         {
-            "tdate": "2026-02-01",
-            "ttags": [["parcelamento", "TV 6x"]],
+            "tdate": "2026-04-09",
             "tpostings": [
-                {"paccount": "expenses:moradia", "pamount": [_amount(600.0)]},
+                {
+                    "paccount": "expenses:moradia",
+                    "pamount": [_amount(600.0)],
+                    "ptags": [["parcelamento", "TV 2/6"]],
+                },
                 {"paccount": nubank, "pamount": [_amount(-600.0)]},
             ],
         },
-        # Completed: 2024-01-01 + 3 months = 2024-04-01 < today
+        {
+            "tdate": "2026-05-01",
+            "tpostings": [
+                {
+                    "paccount": "expenses:moradia",
+                    "pamount": [_amount(600.0)],
+                    "ptags": [["parcelamento", "TV 3/6"]],
+                },
+                {"paccount": nubank, "pamount": [_amount(-600.0)]},
+            ],
+        },
+        # Completed: only past one-offs, no future occurrence — NOT live
         {
             "tdate": "2024-01-01",
-            "ttags": [["parcelamento", "OLD 3x"]],
             "tpostings": [
-                {"paccount": "expenses:outros", "pamount": [_amount(150.0)]},
+                {
+                    "paccount": "expenses:outros",
+                    "pamount": [_amount(150.0)],
+                    "ptags": [["parcelamento", "OLD 3/3"]],
+                },
                 {"paccount": nubank, "pamount": [_amount(-150.0)]},
             ],
         },
@@ -172,7 +190,7 @@ def test_live_installments_active_and_completed():
         {
             ("accounts", "liabilities:cartão"): _accounts(nubank),
             ("balance", nubank, "--historical"): _balance(-1000.0),
-            ("print", "tag:parcelamento"): parcelamento_txs,
+            ("print", "--forecast", "tag:parcelamento"): parcelamento_txs,
         }
     )
     response = _service(client).for_month("2026-04")

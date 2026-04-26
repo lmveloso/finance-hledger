@@ -1,6 +1,7 @@
-"""Unit tests for ``parse_parcelamento_tag`` and friends.
+"""Unit tests for ``parse_parcelamento_tag`` and ``count_live_for_card``.
 
-Pure functions, no hledger involvement.
+Pure functions, no hledger involvement. Models the ADR-011 tag format
+(``NAME N/M``) and the live-by-future-occurrence definition.
 """
 
 from __future__ import annotations
@@ -11,9 +12,7 @@ from datetime import date
 import pytest
 
 from app.credit_cards.installments import (
-    add_months,
     count_live_for_card,
-    is_live,
     parse_parcelamento_tag,
 )
 
@@ -22,30 +21,36 @@ from app.credit_cards.installments import (
 
 
 def test_parse_simple():
-    assert parse_parcelamento_tag("ELECTROLUX 10x") == ("ELECTROLUX", 10)
-
-
-def test_parse_uppercase_x():
-    assert parse_parcelamento_tag("VIAGEM 5X") == ("VIAGEM", 5)
-
-
-def test_parse_whitespace():
-    assert parse_parcelamento_tag("  IPHONE  12 x  ") == ("IPHONE", 12)
+    assert parse_parcelamento_tag("Decathlon 2/4") == ("Decathlon", 2, 4)
 
 
 def test_parse_multiword_name():
-    assert parse_parcelamento_tag("GEL FRONTAL 6x") == ("GEL FRONTAL", 6)
+    assert parse_parcelamento_tag("Anuidade Caixa titular 6/12") == (
+        "Anuidade Caixa titular",
+        6,
+        12,
+    )
+
+
+def test_parse_whitespace():
+    assert parse_parcelamento_tag("  Havan Campo Mourao  3/4  ") == (
+        "Havan Campo Mourao",
+        3,
+        4,
+    )
 
 
 @pytest.mark.parametrize(
     "value",
     [
         "only-a-name",
-        "NAME 0x",
+        "NAME 0/3",
+        "NAME 3/0",
         "",
         "    ",
-        "10x",  # no name
-        "NAME ABCx",
+        "3/4",  # no name
+        "NAME ABC/3",
+        "NAME 5x",  # ADR-010 legacy format — must NOT parse
     ],
 )
 def test_parse_malformed_returns_none(value, caplog):
@@ -59,114 +64,111 @@ def test_parse_non_string_returns_none(caplog):
     assert parse_parcelamento_tag(None) is None  # type: ignore[arg-type]
 
 
-# ── add_months / is_live ─────────────────────────────────────────
-
-
-def test_add_months_simple():
-    assert add_months(date(2026, 1, 15), 3) == date(2026, 4, 15)
-
-
-def test_add_months_year_rollover():
-    assert add_months(date(2026, 11, 10), 4) == date(2027, 3, 10)
-
-
-def test_add_months_clamps_to_short_month():
-    """Jan 31 + 1 month → Feb 28 (not Mar 3)."""
-    assert add_months(date(2026, 1, 31), 1) == date(2026, 2, 28)
-
-
-def test_add_months_clamps_to_leap():
-    assert add_months(date(2024, 1, 30), 1) == date(2024, 2, 29)
-
-
-def test_is_live_completed_in_past():
-    assert is_live(date(2024, 1, 1), 6, today=date(2025, 1, 1)) is False
-
-
-def test_is_live_still_active():
-    # 2026-01-01 + 6 months = 2026-07-01; today = 2026-04-01 → live.
-    assert is_live(date(2026, 1, 1), 6, today=date(2026, 4, 1)) is True
-
-
-def test_is_live_exactly_today():
-    """Boundary: completion == today still counts as live (>= today)."""
-    assert is_live(date(2026, 1, 1), 3, today=date(2026, 4, 1)) is True
-
-
 # ── count_live_for_card ──────────────────────────────────────────
 
 
-def _tx(tdate: str, account: str, name: str, n: int):
+def _tx(tdate: str, account: str, name: str, n: int, m: int):
+    """Build a transaction matching the ADR-011 shape (tag on expense posting)."""
     return {
         "tdate": tdate,
-        "ttags": [["parcelamento", f"{name} {n}x"]],
         "tpostings": [
-            {"paccount": "expenses:moradia:equipamentos", "pamount": []},
+            {
+                "paccount": "expenses:moradia:equipamentos",
+                "pamount": [],
+                "ptags": [["parcelamento", f"{name} {n}/{m}"]],
+            },
             {"paccount": account, "pamount": []},
         ],
     }
 
 
-def test_count_live_only_for_named_card():
-    today = date(2026, 5, 1)
+def test_count_live_only_counts_future_occurrences():
+    """A series is live when at least one occurrence is strictly after today."""
+    today = date(2026, 4, 26)
     txs = [
-        # active for nubank: 2026-02-01 + 6m = 2026-08-01 >= today
-        _tx("2026-02-01", "liabilities:cartão:nubank", "TV", 6),
-        # finished for nubank: 2025-01-01 + 3m = 2025-04-01 < today
-        _tx("2025-01-01", "liabilities:cartão:nubank", "OLD", 3),
-        # active for visa, not nubank
-        _tx("2026-03-01", "liabilities:credit-card:visa", "PHONE", 12),
+        # past one-off — does NOT make the series live by itself
+        _tx("2026-04-09", "liabilities:cartao:bb-visa", "Decathlon", 2, 4),
+        # future occurrence (forecast) — makes the series live
+        _tx("2026-05-01", "liabilities:cartao:bb-visa", "Decathlon", 3, 4),
+        _tx("2026-06-01", "liabilities:cartao:bb-visa", "Decathlon", 3, 4),
     ]
-    assert count_live_for_card(txs, "liabilities:cartão:nubank", today) == 1
-    assert count_live_for_card(txs, "liabilities:credit-card:visa", today) == 1
+    assert count_live_for_card(txs, "liabilities:cartao:bb-visa", today) == 1
+
+
+def test_count_live_with_only_past_returns_zero():
+    today = date(2026, 4, 26)
+    txs = [
+        _tx("2026-03-09", "liabilities:cartao:bb-visa", "Farmacia", 1, 2),
+        _tx("2026-04-09", "liabilities:cartao:bb-visa", "Farmacia", 2, 2),
+    ]
+    assert count_live_for_card(txs, "liabilities:cartao:bb-visa", today) == 0
+
+
+def test_count_live_distinct_series():
+    today = date(2026, 4, 26)
+    txs = [
+        _tx("2026-05-01", "liabilities:cartao:bb-visa", "Decathlon", 3, 4),
+        _tx("2026-05-01", "liabilities:cartao:bb-visa", "Auto Escola", 2, 3),
+        _tx("2026-06-01", "liabilities:cartao:bb-visa", "Auto Escola", 2, 3),
+    ]
+    assert count_live_for_card(txs, "liabilities:cartao:bb-visa", today) == 2
+
+
+def test_count_live_isolates_card():
+    today = date(2026, 4, 26)
+    txs = [
+        _tx("2026-05-01", "liabilities:cartao:bb-visa", "Decathlon", 3, 4),
+        _tx("2026-05-01", "liabilities:cartao:xp-visa", "Orto Life Mateus", 2, 3),
+    ]
+    assert count_live_for_card(txs, "liabilities:cartao:bb-visa", today) == 1
+    assert count_live_for_card(txs, "liabilities:cartao:xp-visa", today) == 1
 
 
 def test_count_live_skips_untagged_transactions():
-    today = date(2026, 5, 1)
+    today = date(2026, 4, 26)
     txs = [
         {
-            "tdate": "2026-04-01",
-            "ttags": [],
+            "tdate": "2026-05-01",
             "tpostings": [
                 {"paccount": "expenses:groceries", "pamount": []},
-                {"paccount": "liabilities:cartão:nubank", "pamount": []},
+                {"paccount": "liabilities:cartao:bb-visa", "pamount": []},
             ],
         }
     ]
-    assert count_live_for_card(txs, "liabilities:cartão:nubank", today) == 0
+    assert count_live_for_card(txs, "liabilities:cartao:bb-visa", today) == 0
 
 
-def test_count_live_accepts_posting_level_tag():
-    today = date(2026, 5, 1)
+def test_count_live_accepts_transaction_level_tag():
+    """Fallback path: tag on the transaction header rather than posting."""
+    today = date(2026, 4, 26)
     tx = {
-        "tdate": "2026-02-01",
-        "ttags": [],
+        "tdate": "2026-05-01",
+        "ttags": [["parcelamento", "Fridge 3/6"]],
         "tpostings": [
-            {
-                "paccount": "expenses:moradia",
-                "pamount": [],
-                "ptags": [["parcelamento", "FRIDGE 6x"]],
-            },
-            {"paccount": "liabilities:cartão:nubank", "pamount": []},
+            {"paccount": "expenses:moradia", "pamount": []},
+            {"paccount": "liabilities:cartao:bb-visa", "pamount": []},
         ],
     }
-    assert count_live_for_card([tx], "liabilities:cartão:nubank", today) == 1
+    assert count_live_for_card([tx], "liabilities:cartao:bb-visa", today) == 1
 
 
 def test_count_live_skips_transactions_not_touching_card():
-    today = date(2026, 5, 1)
-    txs = [_tx("2026-02-01", "liabilities:cartão:other", "TV", 6)]
-    assert count_live_for_card(txs, "liabilities:cartão:nubank", today) == 0
+    today = date(2026, 4, 26)
+    txs = [_tx("2026-05-01", "liabilities:cartao:other", "TV", 3, 6)]
+    assert count_live_for_card(txs, "liabilities:cartao:bb-visa", today) == 0
 
 
-def test_count_live_handles_invalid_tx_date(caplog):
-    today = date(2026, 5, 1)
+def test_count_live_handles_missing_tx_date():
+    today = date(2026, 4, 26)
     tx = {
-        "tdate": "not-a-date",
-        "ttags": [["parcelamento", "FOO 5x"]],
+        "tdate": "",
         "tpostings": [
-            {"paccount": "expenses:x", "pamount": []},
-            {"paccount": "liabilities:cartão:nubank", "pamount": []},
+            {
+                "paccount": "expenses:x",
+                "pamount": [],
+                "ptags": [["parcelamento", "Foo 2/5"]],
+            },
+            {"paccount": "liabilities:cartao:bb-visa", "pamount": []},
         ],
     }
-    assert count_live_for_card([tx], "liabilities:cartão:nubank", today) == 0
+    assert count_live_for_card([tx], "liabilities:cartao:bb-visa", today) == 0

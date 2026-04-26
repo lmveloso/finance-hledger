@@ -5,6 +5,8 @@
 **Autor:** Lucas
 **Escopo:** Adição ao design do dashboard financeiro familiar. Trata do problema de modelagem e visualização do cartão de crédito e dos compromissos financeiros pendentes. Não cobre o redesenho geral do dashboard (documentado separadamente).
 
+> **Errata (2026-04-26):** §2.2 e §3.3 deste PRD argumentaram pelo modelo de "compra única na data" (ADR-010). Após uso prático e revisão do modelo mental do usuário, restauramos o modelo de "uma parcela por mês" (ADR-009). Decisão atual: **ADR-011** (`docs/adr/011-parcelamento-monthly-restaurado.md`). A motivação para a reversão: o usuário precisa **ver as parcelas futuras provisionadas mês a mês** no Plano e na Previsão, e parcela é tratada como despesa do mês em que cai na fatura. Os argumentos originais aqui ficam preservados como contexto histórico.
+
 ---
 
 ## 1. Contexto

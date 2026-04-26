@@ -53,7 +53,7 @@ Toda fatura tem **tres entradas de abertura** para bootstrap correto do saldo:
 6. **Incluir** no main.journal (`include YYYY-MM-fatura-BANCO.journal`)
 7. **Validar** — rodar protocolo de validacao (ver hledger-base)
 
-## Parcelamentos (ADR-009)
+## Parcelamentos (ADR-011 — restaura ADR-009)
 
 Compras parceladas (`PARC N/M`, `parcela N/M`, `N de M`) seguem regra propria.
 
