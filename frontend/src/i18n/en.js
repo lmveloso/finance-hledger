@@ -23,6 +23,8 @@ const dict = {
   'mes.anchor.expand.viaCard': '↳ on credit card',
   'mes.anchor.expand.cardPayment': '↳ card invoice payments this month',
   'mes.anchor.expand.label': 'Leftover Money',
+  'mes.anchor.expand.cashFlow': 'By Cash Flow',
+  'mes.anchor.expand.accrual': 'By Accrual',
   // Subordinate row labels.
   'mes.row.income.label': 'Revenue',
   'mes.row.expense.label': 'Expense',

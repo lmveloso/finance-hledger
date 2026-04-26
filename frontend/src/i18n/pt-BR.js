@@ -18,13 +18,15 @@ const dict = {
   'mes.kpi.result': 'Saldo',
 
   // PR-F1-3 — vertical four-card rebuild (Sobrou anchor → Receita → Despesa → Cartões).
-  'mes.anchor.label': 'Sobrou no mês',
+  'mes.anchor.label': 'Sobra por Competência',
   'mes.anchor.expand.income': 'Receita',
   'mes.anchor.expand.expense': 'Despesa',
   'mes.anchor.expand.viaAssets': '↳ saiu da conta',
   'mes.anchor.expand.viaCard': '↳ foi pro cartão',
   'mes.anchor.expand.cardPayment': '↳ pagamento faturas cartão',
   'mes.anchor.expand.label': 'Sobrou no Caixa',
+  'mes.anchor.expand.cashFlow': 'Por Fluxo de Caixa',
+  'mes.anchor.expand.accrual': 'Por competência',
   'mes.row.income.label': 'Receita',
   'mes.row.expense.label': 'Despesa',
   'mes.row.cards.label': 'Cartões',

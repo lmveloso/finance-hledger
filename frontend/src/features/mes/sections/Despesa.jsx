@@ -24,6 +24,7 @@ import { color, padding } from '../../../theme/tokens';
 import { useNav } from '../../../contexts/NavContext.jsx';
 import { formatBRL } from '../../../lib/formatBRL';
 import { t } from '../../../i18n/index.js';
+import SectionSubtitle from '../../../components/SectionSubtitle.jsx';
 import CategoriasSection from './CategoriasSection.jsx';
 import MaioresGastosSection from './MaioresGastosSection.jsx';
 
@@ -46,20 +47,9 @@ function Despesa({ summary, summaryLoading }) {
         padding: padding.rounded.card,
       }}
     >
-      <h2
-        className="sans"
-        style={{
-          fontSize: 11,
-          letterSpacing: '0.15em',
-          color: color.text.muted,
-          textTransform: 'uppercase',
-          fontWeight: 500,
-          margin: 0,
-          marginBottom: 10,
-        }}
-      >
+      <SectionSubtitle style={{ marginBottom: 10 }}>
         {t('mes.row.expense.label')}
-      </h2>
+      </SectionSubtitle>
       <div
         className="serif"
         style={{

@@ -12,6 +12,7 @@ import ErrorBox from '../../../components/ErrorBox.jsx';
 import { formatBRL } from '../../../lib/formatBRL';
 import { t } from '../../../i18n/index.js';
 import ExpandableCard from '../components/ExpandableCard.jsx';
+import SectionSubtitle from '../../../components/SectionSubtitle.jsx';
 import { useReceitas } from '../hooks/useReceitas.js';
 import { groupReceitas } from '../lib/groupReceitas.js';
 
@@ -23,20 +24,9 @@ function Receita({ summary, summaryLoading, open, onToggle }) {
 
   const header = (
     <>
-      <h2
-        className="sans"
-        style={{
-          fontSize: 11,
-          letterSpacing: '0.15em',
-          color: color.text.muted,
-          textTransform: 'uppercase',
-          fontWeight: 500,
-          margin: 0,
-          marginBottom: 10,
-        }}
-      >
+      <SectionSubtitle style={{ marginBottom: 10 }}>
         {t('mes.row.income.label')}
-      </h2>
+      </SectionSubtitle>
       <div
         className="serif"
         style={{

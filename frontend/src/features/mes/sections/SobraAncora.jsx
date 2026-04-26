@@ -17,6 +17,7 @@ import { color } from '../../../theme/tokens';
 import { formatBRL } from '../../../lib/formatBRL';
 import { t } from '../../../i18n/index.js';
 import ExpandableCard from '../components/ExpandableCard.jsx';
+import SectionSubtitle from '../../../components/SectionSubtitle.jsx';
 
 const PANEL_ID = 'mes-anchor-panel';
 
@@ -66,26 +67,16 @@ function SobraAncora({ summary, loading, open, onToggle }) {
   const isPositive = (leftover ?? 0) >= 0;
   const numberColor = isPositive ? color.accent.primary : color.feedback.negative;
 
-  const leftoverCaixa = summary?.income - summary?.expense_via_assets - summary?.credit_card_payment;
+  const expanseCaixa = summary?.expense_via_assets + summary?.credit_card_payment;
+  const leftoverCaixa = summary?.income - expanseCaixa;
   const isPositiveCaixa = (leftoverCaixa ?? 0) >= 0;
   const numberColorCaixa = isPositiveCaixa ? color.accent.primary : color.feedback.negative;
 
   const header = (
     <>
-      <h2
-        className="sans"
-        style={{
-          fontSize: 11,
-          letterSpacing: '0.15em',
-          color: color.text.muted,
-          textTransform: 'uppercase',
-          fontWeight: 500,
-          margin: 0,
-          marginBottom: 12,
-        }}
-      >
-        {t('mes.anchor.label')}
-      </h2>
+      <SectionSubtitle>
+        {t('mes.anchor.expand.label')}
+      </SectionSubtitle>
       <div
         className="serif"
         style={{
@@ -93,11 +84,11 @@ function SobraAncora({ summary, loading, open, onToggle }) {
           fontWeight: 600,
           lineHeight: 1,
           letterSpacing: '-0.02em',
-          color: numberColor,
+          color: numberColorCaixa,
           fontVariantNumeric: 'tabular-nums',
         }}
       >
-        {loading || leftover == null ? '···' : formatBRL(leftover)}
+        {loading || leftoverCaixa == null ? '···' : formatBRL(leftoverCaixa)}
       </div>
     </>
   );
@@ -118,6 +109,42 @@ function SobraAncora({ summary, loading, open, onToggle }) {
         </div>
       ) : (
         <>
+          <SectionSubtitle>{t('mes.anchor.expand.cashFlow')}</SectionSubtitle>
+          <AnchorRow
+            label={t('mes.anchor.expand.income')}
+            value={formatBRL(summary.income ?? 0)}
+          />
+          <AnchorRow
+            label={t('mes.anchor.expand.expense')}
+            value={formatBRL(expanseCaixa ?? 0)}
+          />
+          <AnchorRow
+            label={t('mes.anchor.expand.viaAssets')}
+            value={formatBRL(summary.expense_via_assets ?? 0)}
+            indent
+            muted
+          />
+          <AnchorRow
+            label={t('mes.anchor.expand.cardPayment')}
+            value={formatBRL(summary.credit_card_payment ?? 0)}
+            indent
+            muted
+          />
+          <AnchorRow
+            label={t('mes.anchor.expand.label')}
+            value={formatBRL(leftoverCaixa ?? 0)}
+            valueColor={numberColor}
+          />
+
+          <div
+            style={{
+              borderTop: `1px solid ${color.border.subtle}`,
+              marginTop: 10,
+              paddingTop: 4,
+              marginBottom: 20
+            }}
+          />
+          <SectionSubtitle>{t('mes.anchor.expand.accrual')}</SectionSubtitle>
           <AnchorRow
             label={t('mes.anchor.expand.income')}
             value={formatBRL(summary.income ?? 0)}
@@ -138,29 +165,10 @@ function SobraAncora({ summary, loading, open, onToggle }) {
             indent
             muted
           />
-          <div
-            style={{
-              borderTop: `1px solid ${color.border.subtle}`,
-              marginTop: 10,
-              paddingTop: 4,
-            }}
-          />
           <AnchorRow
-            label={t('mes.anchor.expand.label')}
-            value={formatBRL(leftoverCaixa ?? 0)}
-            valueColor={numberColorCaixa}
-          />
-          <AnchorRow
-            label={t('mes.anchor.expand.viaAssets')}
-            value={formatBRL(summary.expense_via_assets ?? 0)}
-            indent
-            muted
-          />
-          <AnchorRow
-            label={t('mes.anchor.expand.cardPayment')}
-            value={formatBRL(summary.credit_card_payment ?? 0)}
-            indent
-            muted
+            label={t('mes.anchor.label')}
+            value={formatBRL(leftover ?? 0)}
+            valueColor={numberColor}
           />
 
 
