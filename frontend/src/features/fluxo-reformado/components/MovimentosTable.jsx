@@ -12,17 +12,26 @@ const BRL = (n) =>
 // Flat table with one row per account, showing initial balance, inflows,
 // outflows, transfers and the closing balance. Matches the data on the
 // node cards but gives a quick overview side by side.
-function MovimentosTable({ contas }) {
+function MovimentosTable({ contas, onSelect, selectedAccountId }) {
   if (!contas || contas.length === 0) return null;
 
   const ativos = contas.filter((c) => c.tipo === 'ativo');
   const passivos = contas.filter((c) => c.tipo === 'passivo');
+  const interactive = typeof onSelect === 'function';
 
   const renderRow = (c) => {
     const delta = (c.saldo_final ?? 0) - (c.saldo_inicial ?? 0);
     const deltaColor = (delta >= 0 ? color.feedback.positive : color.feedback.negative);
+    const isSelected = interactive && selectedAccountId === c.conta;
     return (
-      <tr key={c.conta}>
+      <tr
+        key={c.conta}
+        onClick={interactive ? () => onSelect(c) : undefined}
+        style={{
+          cursor: interactive ? 'pointer' : 'default',
+          background: isSelected ? color.bg.cardAlt : 'transparent',
+        }}
+      >
         <td style={{ ...td('left'), color: color.text.primary }}>
           {c.nome}
         </td>

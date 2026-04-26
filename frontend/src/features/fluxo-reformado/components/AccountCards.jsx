@@ -24,7 +24,7 @@ const BRL = (n) =>
  * Order: ativos first (desc saldo_final), then passivos (desc |delta|).
  * Uses CSS Grid `repeat(auto-fit, minmax(220px, 1fr))` for responsive wrap.
  */
-function AccountCards({ contas }) {
+function AccountCards({ contas, onSelect, selectedAccountId }) {
   const { ativos, passivos } = useMemo(
     () => partitionAccounts(contas || []),
     [contas],
@@ -70,7 +70,12 @@ function AccountCards({ contas }) {
             }}
           >
             {ativos.map((c) => (
-              <AccountCard key={c.conta} conta={c} />
+              <AccountCard
+                key={c.conta}
+                conta={c}
+                onSelect={onSelect}
+                selected={selectedAccountId === c.conta}
+              />
             ))}
           </div>
         </div>
@@ -99,7 +104,12 @@ function AccountCards({ contas }) {
             }}
           >
             {passivos.map((c) => (
-              <AccountCard key={c.conta} conta={c} />
+              <AccountCard
+                key={c.conta}
+                conta={c}
+                onSelect={onSelect}
+                selected={selectedAccountId === c.conta}
+              />
             ))}
           </div>
         </div>
@@ -124,7 +134,7 @@ function partitionAccounts(contas) {
   return { ativos, passivos };
 }
 
-function AccountCard({ conta }) {
+function AccountCard({ conta, onSelect, selected }) {
   const saldoInicial = conta.saldo_inicial ?? 0;
   const saldoFinal = conta.saldo_final ?? 0;
   const delta = saldoFinal - saldoInicial;
@@ -147,13 +157,33 @@ function AccountCard({ conta }) {
       ? t('fluxo.contas.tipo_ativo')
       : t('fluxo.contas.tipo_passivo');
 
+  const interactive = typeof onSelect === 'function';
+  const handleClick = interactive ? () => onSelect(conta) : undefined;
+
   return (
     <div
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-pressed={interactive ? selected : undefined}
+      onClick={handleClick}
+      onKeyDown={
+        interactive
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleClick();
+              }
+            }
+          : undefined
+      }
       style={{
         background: color.bg.card,
-        border: `1px solid ${color.border.default}`,
+        border: `1px solid ${selected ? color.accent.primary : color.border.default}`,
         borderRadius: radius.rounded.md,
         padding: 18,
+        cursor: interactive ? 'pointer' : 'default',
+        outline: 'none',
+        transition: 'border-color 160ms ease, transform 120ms ease',
       }}
     >
       <div

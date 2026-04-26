@@ -168,6 +168,16 @@ const dict = {
   'fluxo.contas.saidas': 'Saídas',
   'fluxo.contas.saldo_final': 'Saldo final',
   'fluxo.contas.delta': 'Variação no mês',
+  'fluxo.accountDetail.aria': 'Detalhes da conta',
+  'fluxo.accountDetail.close': 'Fechar painel',
+  'fluxo.accountDetail.saldoInicial': 'Saldo inicial',
+  'fluxo.accountDetail.delta': 'Variação',
+  'fluxo.accountDetail.lancamentos': 'Lançamentos do mês',
+  'fluxo.accountDetail.loading': 'Carregando lançamentos…',
+  'fluxo.accountDetail.empty': 'Nenhum lançamento neste mês.',
+  'fluxo.accountDetail.forecastNote': '(inclui parcelas futuras)',
+  'fluxo.accountDetail.forecastTag': 'futuro',
+  'fluxo.accountDetail.footerCount': '{n} lançamentos',
 
   // ── Orçamento tab ──────────────────────────────────────────────────────
   'orcamento.total.title': 'Total · orçamento vs realizado',

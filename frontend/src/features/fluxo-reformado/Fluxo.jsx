@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { color } from '../../theme/tokens';
 import Spinner from '../../components/Spinner.jsx';
 import ErrorBox from '../../components/ErrorBox.jsx';
@@ -9,6 +9,7 @@ import FlowKpiCards from './components/FlowKpiCards.jsx';
 import WaterfallView from './views/WaterfallView.jsx';
 import AccountCards from './components/AccountCards.jsx';
 import MovimentosTable from './components/MovimentosTable.jsx';
+import AccountDetailPanel from './components/AccountDetailPanel.jsx';
 
 // Fluxo — reformed tab (PR-U5).
 // Stack top-to-bottom: KPI row → waterfall (receita → categorias → saldo) →
@@ -20,10 +21,23 @@ function Fluxo() {
   const { flow, categories, loading, error } =
     useFlowWithCategories(selectedMonth);
 
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
+
+  const handleSelect = useCallback((conta) => {
+    setSelectedAccountId((current) =>
+      current === conta.conta ? null : conta.conta,
+    );
+  }, []);
+  const handleClose = useCallback(() => setSelectedAccountId(null), []);
+
   if (loading) return <Spinner />;
   if (error) return <ErrorBox msg={error} />;
 
   const contas = flow?.contas || [];
+  const selectedAccount = contas.find((c) => c.conta === selectedAccountId) || null;
+
+  // If the month changes and the previously selected account is gone, drop it.
+  // Effect-free: derived from current render — handled by the find above.
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0, width: '100%' }}>
@@ -58,7 +72,11 @@ function Fluxo() {
 
       {contas.length > 0 && (
         <>
-          <AccountCards contas={contas} />
+          <AccountCards
+            contas={contas}
+            onSelect={handleSelect}
+            selectedAccountId={selectedAccountId}
+          />
 
           <div className="card" style={{ padding: 18 }}>
             <div
@@ -73,10 +91,20 @@ function Fluxo() {
             >
               {t('fluxo.movimentos.title')}
             </div>
-            <MovimentosTable contas={contas} />
+            <MovimentosTable
+              contas={contas}
+              onSelect={handleSelect}
+              selectedAccountId={selectedAccountId}
+            />
           </div>
         </>
       )}
+
+      <AccountDetailPanel
+        conta={selectedAccount}
+        month={selectedMonth}
+        onClose={handleClose}
+      />
     </div>
   );
 }

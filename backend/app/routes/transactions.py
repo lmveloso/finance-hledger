@@ -53,11 +53,23 @@ def top_expenses(
     return {"month": month or date.today().strftime("%Y-%m"), "transacoes": txs[:limit]}
 
 
-def _transactions_for_account(account: str, begin: str, end: str) -> list[dict]:
-    """Lista transações tocando uma conta específica com contra-posting."""
+def _transactions_for_account(
+    account: str, begin: str, end: str, forecast: bool = False
+) -> list[dict]:
+    """Lista transações tocando uma conta específica com contra-posting.
+
+    Quando ``forecast`` é True, ``hledger print --forecast`` é usado para
+    incluir ocorrências projetadas (parcelamentos futuros, periódicas).
+    Útil para passivos de cartão de crédito, onde o usuário quer ver as
+    parcelas de meses adiante já provisionadas (ADR-011).
+    """
     import main
 
-    data = main.hledger("print", f"acct:^{account}$", "-b", begin, "-e", end)
+    args = ["print"]
+    if forecast:
+        args.append("--forecast")
+    args.extend([f"acct:^{account}$", "-b", begin, "-e", end])
+    data = main.hledger(*args)
     txs = []
     if not isinstance(data, list):
         return txs
@@ -121,9 +133,16 @@ def transactions(
     offset: int = Query(0, ge=0),
     sort: str = "date",
     order: str = "desc",
+    forecast: bool = False,
     user: Optional[str] = Depends(get_current_user),
 ):
-    """Lista paginada de transações com filtros por categoria, conta, busca, tag e range."""
+    """Lista paginada de transações com filtros por categoria, conta, busca, tag e range.
+
+    ``forecast=true`` (apenas em conjunto com ``account=``) inclui
+    ocorrências projetadas via ``hledger print --forecast``. Usado pelo
+    painel de detalhes de conta no Fluxo para mostrar parcelas futuras
+    de cartões de crédito.
+    """
     import main
 
     if start and end:
@@ -134,7 +153,9 @@ def transactions(
         begin, period_end = month_bounds()
 
     if account:
-        txs = _transactions_for_account(account, begin, period_end)
+        txs = _transactions_for_account(
+            account, begin, period_end, forecast=forecast
+        )
         if search:
             txs = [tx for tx in txs if search.lower() in tx["descricao"].lower()]
         reverse = order.lower() == "desc"

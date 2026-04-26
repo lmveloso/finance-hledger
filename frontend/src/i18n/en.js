@@ -173,6 +173,16 @@ const dict = {
   'fluxo.contas.saidas': 'Outflow',
   'fluxo.contas.saldo_final': 'Closing balance',
   'fluxo.contas.delta': 'Monthly change',
+  'fluxo.accountDetail.aria': 'Account details',
+  'fluxo.accountDetail.close': 'Close panel',
+  'fluxo.accountDetail.saldoInicial': 'Opening balance',
+  'fluxo.accountDetail.delta': 'Change',
+  'fluxo.accountDetail.lancamentos': 'Transactions in month',
+  'fluxo.accountDetail.loading': 'Loading transactions…',
+  'fluxo.accountDetail.empty': 'No transactions in this month.',
+  'fluxo.accountDetail.forecastNote': '(includes future installments)',
+  'fluxo.accountDetail.forecastTag': 'future',
+  'fluxo.accountDetail.footerCount': '{n} transactions',
 
   // ── Orçamento tab ──────────────────────────────────────────────────────
   'orcamento.total.title': 'Total · budget vs actual',
