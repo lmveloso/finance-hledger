@@ -35,12 +35,12 @@ def test_accounts_saldo_is_numeric(client):
 
 
 def test_accounts_has_at_least_one_ativo_with_matching_nome(client):
-    """The fixture journal posts to assets:Banco:Nubank, so at least one
-    ativo row must surface and its ``nome`` must equal the last colon segment
-    of its ``caminho``."""
+    """`nome` follows the display formatter contract used by `/api/accounts`."""
+    from app.formatting import format_account_name
+
     r = client.get("/api/accounts")
     data = r.json()
     ativos = [c for c in data["contas"] if c["tipo"] == "ativo"]
     assert ativos, "expected at least one ativo row from fixture journal"
     for c in ativos:
-        assert c["nome"] == c["caminho"].rsplit(":", 1)[-1]
+        assert c["nome"] == format_account_name(c["caminho"])
