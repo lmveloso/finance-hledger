@@ -1,15 +1,6 @@
----
-name: hledger-fatura
-description: Importar fatura de cartao de credito para journal hledger — padrao fatura anterior, classificacao de compras, validacao de saldo do cartao.
----
-
 # Importar Fatura de Cartao de Credito
 
-Depende do skill **hledger-base** para inicializacao, padroes de transacao, classificacao, validacao e pitfalls.
-
-## Inicializacao
-
-Seguir hledger-base §Inicializacao antes de qualquer outra acao.
+Carregue depois de ler o `SKILL.md` base. Reaproveita: inicializacao, MCP tools, padroes de transacao, categorizacao, plano de lancamentos e validacao definidos la.
 
 ## Padrao "Fatura Anterior" (CRITICO)
 
@@ -48,10 +39,10 @@ Toda fatura tem **tres entradas de abertura** para bootstrap correto do saldo:
    - Qual conta bancaria pagou a fatura?
    - Valor da fatura anterior (se primeira fatura no journal)
    - Parcelamentos detectados: confirmar NOME da serie e N/M
-4. **Classificar e confirmar** seguindo hledger-base §Categorizacao e §Plano de Lancamentos. O plano deve incluir as 3 entradas de abertura (saldo fatura anterior, pagamento, ajustes) e todas as compras com conta + tag + obs (parcela, retroativo). Exigir `OK` explicito antes de escrever.
+4. **Classificar e confirmar** seguindo SKILL.md §Categorizacao e §Plano de Lancamentos. O plano deve incluir as 3 entradas de abertura (saldo fatura anterior, pagamento, ajustes) e todas as compras com conta + tag + obs (parcela, retroativo). Exigir `OK` explicito antes de escrever.
 5. **Escrever** arquivo journal
 6. **Incluir** no main.journal (`include YYYY-MM-fatura-BANCO.journal`)
-7. **Validar** — rodar protocolo de validacao (ver hledger-base)
+7. **Validar** — rodar protocolo de validacao (ver SKILL.md)
 
 ## Parcelamentos (ADR-011 — restaura ADR-009)
 
@@ -115,7 +106,7 @@ Para parcelas com ocorrencias **futuras**:
 
 ## Lançamentos retroativos (não parcelas)
 
-Algumas faturas trazem lançamentos com data anterior ao período do arquivo (não parcelas, apenas atrasados). Manter a data **real** do evento — sortear o arquivo cronologicamente apos importar (ver hledger-base, seção "Ordem cronologica"). Não rebatizar para a data do fechamento da fatura.
+Algumas faturas trazem lançamentos com data anterior ao período do arquivo (não parcelas, apenas atrasados). Manter a data **real** do evento — sortear o arquivo cronologicamente apos importar (ver SKILL.md, seção "Ordem cronologica"). Não rebatizar para a data do fechamento da fatura.
 
 ## Detalhes por Cartao
 
@@ -188,14 +179,14 @@ Faturas tipicamente tem 20-60 transacoes → escrever arquivo diretamente, segui
 
 ## Cobertura Equity
 
-Se o pagamento da fatura anterior ocorreu ANTES da data de corte dos saldos iniciais do journal, adicionar entrada de cobertura (ver padrao completo no skill hledger-base).
+Se o pagamento da fatura anterior ocorreu ANTES da data de corte dos saldos iniciais do journal, adicionar entrada de cobertura (ver padrao completo no SKILL.md).
 
 ## Validacao
 
-Use o protocolo completo do skill hledger-base — nao basta `hledger_check` simples:
+Use o protocolo completo do SKILL.md — nao basta `hledger_check` simples:
 
 ```bash
-bash skills/hledger-base/scripts/validate.sh "$LEDGER_FILE"
+bash skills/hledger/scripts/validate.sh "$LEDGER_FILE"
 hledger -f "$LEDGER_FILE" balance "liabilities:cartao:xp-visa"
 ```
 

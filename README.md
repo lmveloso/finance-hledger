@@ -103,10 +103,10 @@ finance-hledger/
 │   ├── package.json
 │   └── vite.config.js
 ├── skills/           # Skills para agentes de IA
-│   ├── hledger-base/
-│   ├── hledger-extrato/
-│   ├── hledger-fatura/
-│   └── hledger-base/payee-categories.json
+│   └── hledger/
+│       ├── SKILL.md
+│       ├── reference/{extrato,fatura}.md
+│       └── payee-categories.json
 ├── docs/
 │   └── onboarding.md
 ├── docker-compose.yml (opcional)

@@ -137,14 +137,14 @@ Budgets live in the `.journal` file as hledger `~ monthly` periodic transactions
 
 ## AI Agent Skills (different from subagents)
 
-This repo also includes **skills** (separate from the Claude Code subagents above) for AI agents to manage hledger journals in `skills/`:
-- `hledger-base` — MCP tools, journal structure, validation protocol, pitfalls
-- `hledger-extrato` — Import bank statements (extrato de conta corrente/poupanca)
-- `hledger-fatura` — Import credit card invoices (fatura de cartao)
+This repo also includes a **skill** (separate from the Claude Code subagents above) for AI agents to manage hledger journals in `skills/hledger/`:
+- `SKILL.md` — base context: MCP tools, journal structure, validation protocol, classification, plano de lancamentos, pitfalls
+- `reference/extrato.md` — Import bank statements (extrato de conta corrente/poupanca)
+- `reference/fatura.md` — Import credit card invoices (fatura de cartao)
 
-These skills use `hledger-mcp` via Claude Code for **manual categorization work** — they are separate from the production backend (which uses `app/hledger/client.py` per ADR-004).
+The skill uses `hledger-mcp` via Claude Code for **manual categorization work** — it is separate from the production backend (which uses `app/hledger/client.py` per ADR-004).
 
-Payee-to-account categorization data: `skills/hledger-base/payee-categories.json`
+Payee-to-account categorization data: `skills/hledger/payee-categories.json`
 
 Full setup guide: `docs/onboarding.md`
 

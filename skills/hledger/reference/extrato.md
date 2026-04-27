@@ -1,25 +1,16 @@
----
-name: hledger-extrato
-description: Importar extrato de conta bancaria (corrente, poupanca) para journal hledger. Cobre parsing de JSON/PDF/CSV, classificacao automatica de payees e reconciliacao de saldo.
----
-
 # Importar Extrato Bancario
 
-Depende do skill **hledger-base** para inicializacao, padroes de transacao, classificacao, validacao e pitfalls.
-
-## Inicializacao
-
-Seguir hledger-base §Inicializacao antes de qualquer outra acao.
+Carregue depois de ler o `SKILL.md` base. Reaproveita: inicializacao, MCP tools, padroes de transacao, categorizacao, plano de lancamentos e validacao definidos la.
 
 ## Workflow
 
 1. **Ler** o extrato (JSON, PDF, CSV, imagem)
 2. **Parsear** transacoes (data, descricao, valor, sinal C/D)
 3. **Verificar** soma: saldo anterior + creditos - debitos = saldo final do banco
-4. **Classificar e confirmar** seguindo hledger-base §Categorizacao e §Plano de Lancamentos (apresentar lista numerada com auto + resolvidos, exigir `OK` explicito antes de qualquer escrita)
+4. **Classificar e confirmar** seguindo SKILL.md §Categorizacao e §Plano de Lancamentos (apresentar lista numerada com auto + resolvidos, exigir `OK` explicito antes de qualquer escrita)
 5. **Escrever** arquivo journal
 6. **Incluir** no main.journal (`include YYYY-MM-banco-conta.journal`)
-7. **Validar** — rodar protocolo de validacao (ver hledger-base)
+7. **Validar** — rodar protocolo de validacao (ver SKILL.md)
 
 ## Formatos de Input
 
@@ -73,7 +64,7 @@ Ler direto. Colunas tipicas: data, descricao, valor, saldo.
 
 ## Classificacao e confirmacao
 
-Ver hledger-base §Categorizacao e §Plano de Lancamentos. NAO escrever no journal sem `OK` explicito sobre a lista numerada completa (auto-classificados inclusos).
+Ver SKILL.md §Categorizacao e §Plano de Lancamentos. NAO escrever no journal sem `OK` explicito sobre a lista numerada completa (auto-classificados inclusos).
 
 ## Escrita do Arquivo Journal
 
@@ -160,10 +151,10 @@ Calcular: `saldo_final_banco - movimentacoes_do_mes`.
 
 ## Validacao
 
-Rodar protocolo canonico do hledger-base:
+Rodar protocolo canonico do SKILL.md:
 
 ```bash
-bash skills/hledger-base/scripts/validate.sh "$LEDGER_FILE"
+bash skills/hledger/scripts/validate.sh "$LEDGER_FILE"
 hledger -f "$LEDGER_FILE" balance "assets:banco:caixa:corrente"
 ```
 

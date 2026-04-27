@@ -169,15 +169,15 @@ O projeto inclui skills para agentes de IA no diretorio `skills/`:
 
 | Skill | Descricao |
 |---|---|
-| `hledger-base` | Referencia: MCP tools, estrutura de journal, validacao, pitfalls |
-| `hledger-extrato` | Importar extratos bancarios (conta corrente, poupanca) |
-| `hledger-fatura` | Importar faturas de cartao de credito |
+| `hledger` (SKILL.md) | Referencia base: MCP tools, estrutura de journal, validacao, pitfalls |
+| `hledger/reference/extrato.md` | Importar extratos bancarios (conta corrente, poupanca) |
+| `hledger/reference/fatura.md` | Importar faturas de cartao de credito |
 
 ### Como funciona
 
 Os skills ensinam o agente de IA a:
 - Parsear extratos em multiplos formatos (JSON, PDF, CSV, imagem)
-- Classificar transacoes automaticamente usando `skills/hledger-base/payee-categories.json`
+- Classificar transacoes automaticamente usando `skills/hledger/payee-categories.json`
 - Perguntar sobre itens ambiguos antes de registrar
 - Escrever transacoes no journal via hledger MCP ou arquivo direto
 - Validar integridade apos cada importacao
@@ -195,7 +195,7 @@ Copiar o conteudo dos SKILL.md para a configuracao de skills/prompts do seu agen
 
 ## 6. Personalizando Categorias
 
-O arquivo `skills/hledger-base/payee-categories.json` contem o mapeamento de payees para contas hledger. Para personalizar:
+O arquivo `skills/hledger/payee-categories.json` contem o mapeamento de payees para contas hledger. Para personalizar:
 
 1. Editar o JSON adicionando seus payees recorrentes
 2. Cada entrada tem: `patterns` (substrings para match), `account` (conta hledger), `tag` (tipo orcamentario)

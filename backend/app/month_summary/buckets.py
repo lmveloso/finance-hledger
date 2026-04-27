@@ -70,7 +70,7 @@ def is_card_payment(
 ) -> bool:
     """Detect an asset -> card-liability transaction (no expense leg).
 
-    The two-leg shape is what skills/hledger-fatura emits for invoice
+    The two-leg shape is what skills/hledger (reference/fatura.md) emits for invoice
     payments. Mixed transactions (asset + card + expense) are NOT counted
     here so we don't double-book accruals.
     """

@@ -68,7 +68,7 @@ Nothing in the codebase calls `load_dotenv()`. If you run `uvicorn main:app` wit
 If `accounts.journal` declares `commodity BRL 1000.00` (dot decimal) but a fatura file has `BRL 333,00` (Brazilian comma decimal), hledger reads the comma as a thousands separator and the amount becomes `33300`. API endpoints will return suspiciously-round-but-100x values.
 
 - Not a server-startup issue, but if you see broken API output it's usually this.
-- `bash skills/hledger-base/scripts/validate.sh` catches the resulting balance mismatches; conversion recipe is in `skills/hledger-base/SKILL.md` under "Commodity (CRITICO)".
+- `bash skills/hledger/scripts/validate.sh` catches the resulting balance mismatches; conversion recipe is in `skills/hledger/SKILL.md` under "Commodity (CRITICO)".
 
 ### 4. `hledger` not on PATH
 

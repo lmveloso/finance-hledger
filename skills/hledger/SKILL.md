@@ -1,9 +1,11 @@
 ---
-name: hledger-base
-description: Referencia para gerenciamento de journals hledger — MCP tools, estrutura de journal, padroes de transacao, validacao e pitfalls. Base para os skills hledger-extrato e hledger-fatura.
+name: hledger
+description: Use when reading, editing, or importing into hledger journals in this repo — bank statements (extrato de conta corrente/poupanca), credit card invoices (fatura de cartao), payee classification, parcelamentos, validacao strict, ou qualquer escrita em arquivos `.journal`. Cobre MCP tools (hledger-mcp), estrutura main/accounts/parcelamentos, padrao "fatura anterior", plano de lancamentos com confirmacao explicita, formato JSON do hledger 1.52, e pitfalls de commodity/ordereddates/duplicacao. Roteia para reference/extrato.md (extratos bancarios) e reference/fatura.md (faturas de cartao). Apenas para trabalho manual de manutencao do journal — nao usar para alterar o backend de producao em `app/hledger/`.
 ---
 
-# hledger — Referencia Base
+# hledger
+
+Skill base para qualquer trabalho em journals hledger neste repo. O conteudo abaixo (inicializacao, MCP tools, estrutura, padroes, validacao, classificacao, plano de lancamentos, pitfalls) aplica-se a TODA tarefa. Para fluxos de importacao especificos, carregue o reference correspondente.
 
 ## Inicializacao (OBRIGATORIO — primeira acao)
 
@@ -15,6 +17,14 @@ Antes de QUALQUER chamada MCP ou escrita de arquivo, resolver o path do journal:
 
 **NUNCA** assumir, adivinhar ou usar paths relativos.
 MCP tools NAO expandem `~` nem variaveis de ambiente — passar sempre o path absoluto literal.
+
+## Roteamento
+
+| Tarefa | Carregar |
+|---|---|
+| Importar extrato de conta corrente/poupanca | [reference/extrato.md](reference/extrato.md) |
+| Importar fatura de cartao de credito | [reference/fatura.md](reference/fatura.md) |
+| Outras consultas/edicoes pontuais | apenas este SKILL.md |
 
 ## Visao geral
 
@@ -74,7 +84,7 @@ include 2026-03-fatura-xp.journal
     equity:saldo-inicial
 ```
 
-**NAO colocar saldos de cartao de credito nos Saldos iniciais.** Cartoes usam o padrao "fatura anterior" no proprio journal da fatura (ver skill hledger-fatura).
+**NAO colocar saldos de cartao de credito nos Saldos iniciais.** Cartoes usam o padrao "fatura anterior" no proprio journal da fatura (ver `reference/fatura.md`).
 
 ### Transacoes periodicas (budget)
 
@@ -179,18 +189,18 @@ Se o saldo nao bater, investigar antes de adicionar ajuste.
 Existe um script canonico que roda toda a suite acima:
 
 ```bash
-bash skills/hledger-base/scripts/validate.sh "$LEDGER_FILE"
+bash skills/hledger/scripts/validate.sh "$LEDGER_FILE"
 ```
 
 ## Categorizacao
 
-O mapeamento payee→conta vive em `payee-categories.json` junto a este skill (`skills/hledger-base/payee-categories.json`). Estrutura: lista `entries` com `patterns` (substrings, case-insensitive), `account`, `tag` (tipo orcamentario) e `notes`. Algumas entradas tem `ambiguous: true`. Ha tambem uma secao `rules` para regras contextuais (ex: Mercado Livre conserto vs item novo).
+O mapeamento payee→conta vive em `payee-categories.json` junto a este skill (`skills/hledger/payee-categories.json`). Estrutura: lista `entries` com `patterns` (substrings, case-insensitive), `account`, `tag` (tipo orcamentario) e `notes`. Algumas entradas tem `ambiguous: true`. Ha tambem uma secao `rules` para regras contextuais (ex: Mercado Livre conserto vs item novo).
 
 ### Algoritmo de classificacao
 
 Para cada lancamento parseado do extrato/fatura:
 
-1. Carregar `skills/hledger-base/payee-categories.json` uma vez por importacao.
+1. Carregar `skills/hledger/payee-categories.json` uma vez por importacao.
 2. Buscar o primeiro `entry` cujo `patterns` casa (substring case-insensitive) com o nome/descricao do payee.
 3. Se nao houver match → status `unmatched`.
 4. Se houver match e `ambiguous: true` → status `ambiguous`.
