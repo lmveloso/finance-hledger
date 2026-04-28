@@ -8,11 +8,55 @@ import { PrivacyProvider, usePrivacy } from './contexts/PrivacyContext.jsx';
 import { color } from './theme/tokens';
 import { t } from './i18n';
 
-// Register service worker for PWA offline support
+// Register service worker for PWA offline support.
+//
+// Update flow:
+//   1. SW.js install detected via `updatefound` on the existing registration.
+//   2. New worker reaches state 'installed' while another SW already controls
+//      the page → fire `sw:update-ready` so the in-page banner appears.
+//   3. User clicks "atualizar" → banner posts {type:'SKIP_WAITING'} to the
+//      waiting worker → worker calls skipWaiting() → controllerchange fires
+//      here → we reload once.
+//
+// We deliberately drop the previous skipWaiting() in the worker itself: that
+// version flipped tabs to a new SW mid-session, and combined with the old
+// cache-first-everything strategy could mix a stale shell with new chunks.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
-      console.warn('SW registration failed:', err);
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((registration) => {
+        function notifyIfWaiting(worker) {
+          if (
+            worker &&
+            worker.state === 'installed' &&
+            navigator.serviceWorker.controller
+          ) {
+            window.dispatchEvent(
+              new CustomEvent('sw:update-ready', { detail: { registration } }),
+            );
+          }
+        }
+
+        if (registration.waiting) notifyIfWaiting(registration.waiting);
+
+        registration.addEventListener('updatefound', () => {
+          const installing = registration.installing;
+          if (!installing) return;
+          installing.addEventListener('statechange', () => {
+            notifyIfWaiting(installing);
+          });
+        });
+      })
+      .catch((err) => {
+        console.warn('SW registration failed:', err);
+      });
+
+    let reloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloading) return;
+      reloading = true;
+      window.location.reload();
     });
   });
 }

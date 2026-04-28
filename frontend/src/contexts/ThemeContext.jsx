@@ -66,6 +66,17 @@ export function ThemeProvider({ children }) {
     _setActiveMode(mode);
   }, [mode]);
 
+  // Sync the PWA address-bar / splash colour with the active mode. The
+  // manifest carries a single `theme_color` (used at install + cold boot),
+  // and the live `<meta name="theme-color">` is what the OS reads after
+  // boot. Without this effect, flipping dark→light leaves the chrome stuck
+  // on the boot colour, which is jarring on iOS Safari.
+  useEffect(() => {
+    const tokens = getModeTokens(mode);
+    const tag = document.querySelector('meta[name="theme-color"]');
+    if (tag) tag.setAttribute('content', tokens.bg.page);
+  }, [mode]);
+
   const value = useMemo(() => ({
     mode,
     tokens: getModeTokens(mode),

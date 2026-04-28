@@ -329,6 +329,13 @@ const dict = {
   'previsao.legend.forecast': 'Forecast',
   'previsao.seasonality.title': 'Seasonality · Expenses by category',
   'previsao.seasonality.header.category': 'Category',
+
+  // ── PWA banners ────────────────────────────────────────────────────────
+  'pwa.update.message': 'A new version is available.',
+  'pwa.update.action': 'Reload',
+  'pwa.insecure.message':
+    'Connection is not secure (http). Offline support and home-screen install are disabled by the browser. Configure HTTPS on the homelab (e.g. `tailscale serve --https=443`) to enable PWA features.',
+  'pwa.insecure.dismiss': 'Dismiss',
 };
 
 export default dict;

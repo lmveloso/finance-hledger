@@ -237,12 +237,23 @@ uvicorn main:app --host 0.0.0.0 --port 8080
 # Acesse via http://<ip-da-maquina>:8080
 ```
 
-Com Tailscale:
+Com Tailscale (HTTPS obrigatório para PWA):
 
 ```bash
-tailscale serve --bg 8080
+# Termina HTTPS na porta 443 e proxia para o uvicorn local. Substitua
+# 8080 pela porta que o uvicorn está escutando (ex.: 5199 no homelab).
+# A flag --https é o que habilita o certificado *.ts.net e, com ele,
+# o secure context que o browser exige para Service Worker, Cache API
+# e instalação como PWA.
+tailscale serve --bg --https=443 http://localhost:8080
 # Acesse via https://<hostname>.tailnet-name.ts.net
 ```
+
+> **Por que `--https` importa:** sem ele a app fica em `http://...` e o
+> Chrome/Firefox desativam silenciosamente Service Worker, Cache API e
+> "instalar app". A PWA fica visualmente correta mas os recursos offline
+> e o ícone na tela inicial **não funcionam**. Verifique no DevTools:
+> `self.isSecureContext` deve ser `true`.
 
 ### Docker
 

@@ -113,7 +113,15 @@ if FRONTEND_DIST.exists():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
 
     # PWA files served explicitly before the catch-all so they don't return index.html
-    for _pwa_file in ("sw.js", "manifest.json", "icon-192.png", "icon-512.png", "favicon.ico"):
+    for _pwa_file in (
+        "sw.js",
+        "manifest.json",
+        "icon-192.png",
+        "icon-512.png",
+        "icon-maskable-192.png",
+        "icon-maskable-512.png",
+        "favicon.ico",
+    ):
         _path = FRONTEND_DIST / _pwa_file
         if _path.exists():
             app.add_api_route(

@@ -8,6 +8,7 @@ import { MonthProvider } from './contexts/MonthContext.jsx';
 import { NavProvider, useNav } from './contexts/NavContext.jsx';
 import { useTheme } from './contexts/ThemeContext.jsx';
 import { Sidebar, MobileTopBar, BottomNav } from './components/nav';
+import { UpdateBanner, InsecureContextBanner } from './components/PWABanners.jsx';
 import Mes from './features/mes';
 import Ano from './features/ano';
 import Plano from './features/plano';
@@ -84,6 +85,8 @@ export default function App() {
     <MonthProvider refreshKey={refreshKey}>
       <NavProvider>
         <PullIndicator pullState={pullState} pullDistance={pullDistance} />
+        <UpdateBanner />
+        <InsecureContextBanner />
         <AppInner />
       </NavProvider>
     </MonthProvider>
