@@ -35,6 +35,7 @@
 
 import { useEffect, useState } from 'react';
 import { useMonth } from '../../../contexts/MonthContext.jsx';
+import { useInstallments } from '../../../hooks/useInstallments.js';
 import { color } from '../../../theme/tokens';
 
 const API = import.meta.env.VITE_API_URL || '';
@@ -159,17 +160,34 @@ export function aggregateCard(conta, nome, txResponse, palette) {
 // aggregateCard) into the unified list. Exported for unit testing.
 //
 // Inputs:
-//   - flowContas:  array of rows from /api/flow response (shape from backend)
-//   - accounts:    array of rows from /api/accounts response (shape: caminho,
-//                  nome, tipo, saldo)
-//   - aggregates:  Map<conta, { total, categories, transactions }> produced by
-//                  aggregateCard for every card that was present in flow.
+//   - flowContas:               array of rows from /api/flow response.
+//   - accounts:                 array of rows from /api/accounts response
+//                               (shape: caminho, nome, tipo, saldo).
+//   - aggregates:               Map<conta, { total, categories, transactions }>
+//                               produced by aggregateCard for every card that
+//                               was present in flow.
+//   - installmentsByAccount:    Map<account, Installment[]> from
+//                               useInstallments() (defaults to empty).
+//   - totalRemainingByAccount:  Map<account, number> from useInstallments()
+//                               (defaults to empty).
+//
+// Each output row carries `installments` (array, possibly empty) and
+// `installmentsRemainingValue` (sum of remaining values for that card; 0 when
+// no parcelamento touches it).
 //
 // Output: array of unified card entries, sorted per the rules in the hook
 // docblock.
-export function buildCardList({ flowContas, accounts, aggregates }) {
+export function buildCardList({
+  flowContas,
+  accounts,
+  aggregates,
+  installmentsByAccount,
+  totalRemainingByAccount,
+}) {
   const flowCards = (flowContas || []).filter(isFlowCardAccount);
   const accountsCards = (accounts || []).filter(isAccountsCardRow);
+  const byAcct = installmentsByAccount || new Map();
+  const totalsByAcct = totalRemainingByAccount || new Map();
 
   // Index /api/accounts rows by path for O(1) outstanding lookups.
   const accountsByPath = new Map();
@@ -199,6 +217,8 @@ export function buildCardList({ flowContas, accounts, aggregates }) {
       hasMonthlyActivity: agg.total > 0,
       categories: agg.categories,
       transactions: agg.transactions,
+      installments: byAcct.get(c.conta) || [],
+      installmentsRemainingValue: totalsByAcct.get(c.conta) || 0,
     });
   }
 
@@ -216,6 +236,8 @@ export function buildCardList({ flowContas, accounts, aggregates }) {
       hasMonthlyActivity: false,
       categories: [],
       transactions: [],
+      installments: byAcct.get(row.caminho) || [],
+      installmentsRemainingValue: totalsByAcct.get(row.caminho) || 0,
     });
   }
 
@@ -235,15 +257,24 @@ export function buildCardList({ flowContas, accounts, aggregates }) {
 
 export function useCreditCards() {
   const { selectedMonth, refreshKey } = useMonth();
-  const [cards, setCards] = useState([]);
+  const [base, setBase] = useState({ flowContas: null, accounts: null, aggregates: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Parcelamentos comprometidos (ADR-011). Surfaces in the Mês card detail
+  // until the Plano tab is reactivated. The hook fetches once per refreshKey;
+  // we merge into the per-card row in the second effect below.
+  const {
+    byAccount: installmentsByAccount,
+    totalRemainingByAccount,
+    error: instError,
+  } = useInstallments();
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    setCards([]);
+    setBase({ flowContas: null, accounts: null, aggregates: null });
 
     (async () => {
       try {
@@ -278,8 +309,7 @@ export function useCreditCards() {
           for (const r of results) aggregates.set(r.conta, r);
         }
 
-        const unified = buildCardList({ flowContas, accounts, aggregates });
-        setCards(unified);
+        if (!cancelled) setBase({ flowContas, accounts, aggregates });
       } catch (e) {
         if (!cancelled) setError(e.message);
       } finally {
@@ -293,7 +323,29 @@ export function useCreditCards() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMonth, refreshKey]);
 
-  return { cards, loading, error };
+  // Merge installments into the per-card rows. We treat installment loading
+  // as non-blocking: if the call fails or is still loading, show the cards
+  // without comprometido (the breakdown line and PARCELAS FUTURAS section
+  // hide automatically when the values are 0/empty).
+  const cards =
+    base.flowContas == null
+      ? []
+      : buildCardList({
+          flowContas: base.flowContas,
+          accounts: base.accounts,
+          aggregates: base.aggregates,
+          installmentsByAccount,
+          totalRemainingByAccount,
+        });
+
+  // Surface installments errors only when the primary data already resolved
+  // — otherwise the primary error is the more useful message. Installment
+  // loading is non-blocking: cards render once primary data is in; the
+  // comprometido breakdown line and PARCELAS FUTURAS section appear as the
+  // installments hook resolves (their visibility gates on > 0 / non-empty).
+  const compoundError = error || (base.flowContas != null ? instError : null);
+
+  return { cards, loading, error: compoundError };
 }
 
 export default useCreditCards;

@@ -32,8 +32,10 @@ import { formatBRL } from '../../../lib/formatBRL';
 import { useNav } from '../../../contexts/NavContext.jsx';
 import { t } from '../../../i18n/index.js';
 import { ArrowLeft } from 'lucide-react';
+import InstallmentRow from '../../../components/InstallmentRow.jsx';
+import PurchaseRow from './PurchaseRow.jsx';
 
-function MetricTile({ label, value, valueColor, alignItems }) {
+function MetricTile({ label, value, valueColor, alignItems, breakdown }) {
   return (
     <div
       style={{
@@ -72,6 +74,18 @@ function MetricTile({ label, value, valueColor, alignItems }) {
       >
         {value}
       </span>
+      {breakdown && (
+        <span
+          className="sans"
+          style={{
+            fontSize: 11,
+            color: color.text.muted,
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {breakdown}
+        </span>
+      )}
     </div>
   );
 }
@@ -149,48 +163,19 @@ function CategoryRow({ nome, valor, pct, hue, isLast }) {
   );
 }
 
-function PurchaseRow({ data, descricao, categoria, valor, isLast }) {
+function SectionLabel({ children }) {
   return (
     <div
+      className="sans"
       style={{
-        padding: '12px 0',
-        borderBottom: isLast ? 'none' : `1px solid ${color.border.subtle}`,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'baseline',
-        gap: 12,
+        fontSize: 10,
+        letterSpacing: '0.15em',
+        color: color.text.muted,
+        textTransform: 'uppercase',
+        marginBottom: 4,
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-        <span
-          className="sans"
-          style={{
-            fontSize: 14,
-            color: color.text.primary,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {descricao || '—'}
-        </span>
-        <span
-          className="sans"
-          style={{ fontSize: 11, color: color.text.muted }}
-        >
-          {categoria ? `${categoria} · ${data}` : data}
-        </span>
-      </div>
-      <span
-        className="serif"
-        style={{
-          fontSize: 14,
-          color: color.text.primary,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {formatBRL(Math.abs(valor || 0))}
-      </span>
+      {children}
     </div>
   );
 }
@@ -199,6 +184,17 @@ function CreditCardDetail({ card, onBack }) {
   const { goToTransactions } = useNav();
   const cats = (card.categories || []).slice(0, 5);
   const purchases = (card.transactions || []).slice(0, 5);
+  const installments = card.installments || [];
+  const installmentsRemainingValue = card.installmentsRemainingValue || 0;
+  const outstandingBalance = card.outstandingBalance || 0;
+  const totalDebt = outstandingBalance + installmentsRemainingValue;
+  const breakdown =
+    installmentsRemainingValue > 0
+      ? t('mes.creditCards.detail.debtBreakdown', {
+          invoice: formatBRL(outstandingBalance),
+          committed: formatBRL(installmentsRemainingValue),
+        })
+      : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -247,7 +243,8 @@ function CreditCardDetail({ card, onBack }) {
         </button>
       </div>
 
-      {/* Two metric tiles. */}
+      {/* Two metric tiles. Dívida Total = fatura + comprometido (ADR-011);
+          breakdown line shows only when comprometido > 0. */}
       <div
         style={{
           display: 'flex',
@@ -256,8 +253,9 @@ function CreditCardDetail({ card, onBack }) {
         }}
       >
         <MetricTile
-          label={t('mes.creditCards.detail.owingTile')}
-          value={formatBRL(card.outstandingBalance || 0)}
+          label={t('mes.creditCards.detail.totalDebtTile')}
+          value={formatBRL(totalDebt)}
+          breakdown={breakdown}
         />
         <MetricTile
           label={t('mes.creditCards.detail.spentTile')}
@@ -269,18 +267,9 @@ function CreditCardDetail({ card, onBack }) {
       {/* CATEGORIAS DO MÊS. */}
       {cats.length > 0 && (
         <div>
-          <div
-            className="sans"
-            style={{
-              fontSize: 10,
-              letterSpacing: '0.15em',
-              color: color.text.muted,
-              textTransform: 'uppercase',
-              marginBottom: 4,
-            }}
-          >
+          <SectionLabel>
             {t('mes.creditCards.detail.categoriesTitle')}
-          </div>
+          </SectionLabel>
           {cats.map((c, i) => (
             <CategoryRow
               key={c.raw}
@@ -294,20 +283,27 @@ function CreditCardDetail({ card, onBack }) {
         </div>
       )}
 
+      {/* PARCELAS FUTURAS. Hidden when no active series for this card. */}
+      {installments.length > 0 && (
+        <div>
+          <SectionLabel>
+            {t('mes.creditCards.detail.installmentsTitle')}
+          </SectionLabel>
+          {installments.map((inst, i) => (
+            <InstallmentRow
+              key={inst.name}
+              installment={inst}
+              isLast={i === installments.length - 1}
+            />
+          ))}
+        </div>
+      )}
+
       {/* MAIORES COMPRAS. */}
       <div>
-        <div
-          className="sans"
-          style={{
-            fontSize: 10,
-            letterSpacing: '0.15em',
-            color: color.text.muted,
-            textTransform: 'uppercase',
-            marginBottom: 4,
-          }}
-        >
+        <SectionLabel>
           {t('mes.creditCards.detail.purchasesTitle')}
-        </div>
+        </SectionLabel>
         {purchases.length === 0 ? (
           <div
             className="sans"
@@ -323,6 +319,7 @@ function CreditCardDetail({ card, onBack }) {
               descricao={tx.descricao}
               categoria={tx.categoria}
               valor={tx.valor}
+              tags={tx.tags}
               isLast={i === purchases.length - 1}
             />
           ))

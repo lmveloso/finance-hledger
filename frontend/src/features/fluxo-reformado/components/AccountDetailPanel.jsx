@@ -2,7 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { color, radius } from '../../../theme/tokens';
 import { t } from '../../../i18n/index.js';
 import { useAccountTransactions } from '../hooks/useAccountTransactions.js';
+import { useInstallments } from '../../../hooks/useInstallments.js';
 import { formatBRL } from '../../../lib/formatBRL';
+import {
+  InstallmentPill,
+  parcelamentoFromTags,
+} from '../../../components/InstallmentPill.jsx';
+import InstallmentRow from '../../../components/InstallmentRow.jsx';
 
 const BRL_FULL = (n) => formatBRL(n, { fractionDigits: 2 });
 const BRL_INT = (n) => formatBRL(n, { fractionDigits: 0 });
@@ -61,6 +67,21 @@ function AccountDetailPanel({ conta, month, onClose }) {
     { forecast: isPassivo },
   );
 
+  // Compromisso futuro (ADR-011) — surfaced as a separate section above the
+  // monthly transaction list when the user is inspecting a credit-card
+  // liability. Filtered server-side to the conta in question via the hook's
+  // accountFilter; the section is omitted entirely when there are no rows.
+  // The unfiltered `totalRemainingByAccount` map is also consumed by Kpis to
+  // render the Comprometido / Dívida Total line for passivos.
+  const { installments: commitments, totalRemainingByAccount } = useInstallments({
+    accountFilter: isPassivo ? conta?.conta : undefined,
+  });
+  const comprometido = isPassivo
+    ? totalRemainingByAccount.get(conta?.conta) || 0
+    : 0;
+  const fatura = isPassivo ? Math.abs(conta?.saldo_final ?? 0) : 0;
+  const dividaTotal = fatura + comprometido;
+
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const baseStyle = {
@@ -116,7 +137,14 @@ function AccountDetailPanel({ conta, month, onClose }) {
         />
       )}
       <Header conta={conta} onClose={onClose} closeBtnRef={closeBtnRef} />
-      {conta && <Kpis conta={conta} />}
+      {conta && (
+        <Kpis
+          conta={conta}
+          isPassivo={isPassivo}
+          comprometido={comprometido}
+          dividaTotal={dividaTotal}
+        />
+      )}
       <div
         style={{
           flex: 1,
@@ -125,14 +153,26 @@ function AccountDetailPanel({ conta, month, onClose }) {
           minHeight: 0,
         }}
       >
-        <SectionLabel>
-          {t('fluxo.accountDetail.lancamentos')}
-          {isPassivo && (
-            <span style={{ marginLeft: 8, color: color.text.muted, fontSize: 9 }}>
-              {t('fluxo.accountDetail.forecastNote')}
-            </span>
-          )}
-        </SectionLabel>
+        {/* COMPROMISSO FUTURO comes BEFORE the monthly list: the user looking
+            at a credit-card liability cares first about what is locked-in
+            beyond this month. Section omitted entirely when there are no
+            matching rows — no zero-state copy, mirroring the Mês card-detail
+            "Parcelas futuras" treatment. */}
+        {isPassivo && commitments.length > 0 && (
+          <div>
+            <SectionLabel>
+              {t('fluxo.accountDetail.commitmentsTitle')}
+            </SectionLabel>
+            {commitments.map((inst, i) => (
+              <InstallmentRow
+                key={inst.name}
+                installment={inst}
+                isLast={i === commitments.length - 1}
+              />
+            ))}
+          </div>
+        )}
+        <SectionLabel>{t('fluxo.accountDetail.lancamentos')}</SectionLabel>
         {loading && (
           <div style={{ color: color.text.muted, fontSize: 12, padding: '12px 0' }}>
             {t('fluxo.accountDetail.loading')}
@@ -221,7 +261,7 @@ function Header({ conta, onClose, closeBtnRef }) {
   );
 }
 
-function Kpis({ conta }) {
+function Kpis({ conta, isPassivo, comprometido, dividaTotal }) {
   const saldoInicial = conta.saldo_inicial ?? 0;
   const saldoFinal = conta.saldo_final ?? 0;
   const delta = saldoFinal - saldoInicial;
@@ -234,6 +274,15 @@ function Kpis({ conta }) {
         ? color.feedback.negative
         : color.text.primary;
   const deltaText = `${delta > 0 ? '+' : delta < 0 ? '−' : ''}${BRL_INT(Math.abs(delta))}`;
+  const showDebtLine = isPassivo === true && (comprometido ?? 0) > 0;
+  const rowStyle = {
+    fontSize: 12,
+    fontVariantNumeric: 'tabular-nums',
+    color: color.text.secondary,
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: 12,
+  };
 
   return (
     <div
@@ -246,18 +295,7 @@ function Kpis({ conta }) {
         flexShrink: 0,
       }}
     >
-      <div
-        className="sans"
-        style={{
-          fontSize: 12,
-          fontVariantNumeric: 'tabular-nums',
-          color: color.text.secondary,
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: 6,
-          flexWrap: 'wrap',
-        }}
-      >
+      <div className="sans" style={{ ...rowStyle, gap: 6, flexWrap: 'wrap' }}>
         <KpiInline label={t('fluxo.accountDetail.saldoInicial')} value={BRL_INT(saldoInicial)} />
         <span style={{ color: color.text.muted }}>→</span>
         <KpiInline
@@ -266,27 +304,11 @@ function Kpis({ conta }) {
           valueColor={color.text.primary}
           strong
         />
-        <span
-          style={{
-            color: deltaColor,
-            fontWeight: 600,
-            marginLeft: 'auto',
-          }}
-        >
+        <span style={{ color: deltaColor, fontWeight: 600, marginLeft: 'auto' }}>
           {deltaText}
         </span>
       </div>
-      <div
-        className="sans"
-        style={{
-          fontSize: 12,
-          fontVariantNumeric: 'tabular-nums',
-          color: color.text.secondary,
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: 12,
-        }}
-      >
+      <div className="sans" style={rowStyle}>
         <KpiInline
           label={t('fluxo.contas.entradas')}
           value={BRL_INT(entradas)}
@@ -294,6 +316,25 @@ function Kpis({ conta }) {
         />
         <KpiInline label={t('fluxo.contas.saidas')} value={BRL_INT(saidas)} />
       </div>
+      {/* COMPROMETIDO · DÍVIDA TOTAL — credit-card passivos with live
+          parcelamentos. Mirrors the Mês "Dívida Total = fatura + comprometido"
+          semantics; primary-coloured Dívida Total matches the saldo_final
+          styling above. */}
+      {showDebtLine && (
+        <div className="sans" style={rowStyle}>
+          <KpiInline
+            label={t('fluxo.accountDetail.comprometidoLabel')}
+            value={BRL_INT(comprometido)}
+          />
+          <span style={{ color: color.text.muted }}>·</span>
+          <KpiInline
+            label={t('fluxo.accountDetail.dividaTotalLabel')}
+            value={BRL_INT(dividaTotal)}
+            valueColor={color.text.primary}
+            strong
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -365,6 +406,7 @@ function TransactionRow({ tx, todayISO }) {
   const isDebit = tx.tipo_movimento === 'debito';
   const isTransfer = tx.tipo_movimento === 'transferencia';
   const isOpening = tx.tipo_movimento === 'saldo_inicial';
+  const parcel = parcelamentoFromTags(tx.tags);
 
   const valorColor = isCredit
     ? color.feedback.positive
@@ -406,20 +448,32 @@ function TransactionRow({ tx, todayISO }) {
           style={{
             fontSize: 13,
             color: color.text.primary,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            minWidth: 0,
           }}
         >
-          {tx.descricao || (isOpening ? t('fluxo.accountDetail.saldoInicial') : '—')}
+          <span
+            style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              minWidth: 0,
+            }}
+          >
+            {tx.descricao || (isOpening ? t('fluxo.accountDetail.saldoInicial') : '—')}
+          </span>
+          {parcel && <InstallmentPill n={parcel.n} total={parcel.m} />}
           {isFuture && (
             <span
               className="sans"
               style={{
-                marginLeft: 6,
                 fontSize: 9,
                 color: color.text.muted,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
+                whiteSpace: 'nowrap',
               }}
             >
               {t('fluxo.accountDetail.forecastTag')}

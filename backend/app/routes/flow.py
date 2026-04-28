@@ -104,6 +104,15 @@ def flow(
                         bucket(ra)["transfers_in"] += amount
                         remaining -= amount
 
+    # Accounts with non-zero opening balance but no movement this month must
+    # still surface — a credit card carrying an unpaid fatura, or a savings
+    # account that simply sat idle, is still part of the user's finances.
+    # Bucket them with zero movement; saldo_final will collapse to saldo_inicial.
+    EPS = 0.005
+    for acct, opening_value in opening.items():
+        if abs(opening_value) > EPS and acct not in per_account:
+            bucket(acct)
+
     contas = []
     for acct, b in per_account.items():
         entradas = round(b["entradas_externas"], 2)

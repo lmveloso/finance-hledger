@@ -14,12 +14,17 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
+from app.credit_cards import CARD_PREFIXES as _CARD_PREFIXES
 from app.credit_cards.aliases import (
     display_name,
     parse_account_aliases,
     safe_mtime_iso,
 )
-from app.credit_cards.installments import count_live_for_card
+from app.credit_cards.forecast import forecast_parcelamento_transactions
+from app.credit_cards.installments import (
+    count_live_for_card,
+    sum_remaining_value_for_card,
+)
 from app.credit_cards.models import CreditCard, CreditCardsResponse
 from app.hledger.client import HledgerClient
 from app.hledger.helpers import month_bounds
@@ -32,17 +37,12 @@ class CreditCardsService:
     """Per-card aggregator for the Mes tab Cartões expansion."""
 
     # PR-F1-1 Open Q1 (RESOLVED): support all three liability prefixes
-    # simultaneously. Journals can mix any combination of:
-    #   - liabilities:cartão:*  (matches ADR-011 verbatim)
-    #   - liabilities:cartao:*  (no accent, file-system friendly)
-    #   - liabilities:credit-card:*  (full English, future-friendly)
-    # The frontend MUST NOT re-introduce a client-side filter — this
-    # constant is canonical (PR-F1-3 ``useCartoesMes``).
-    CARD_PREFIXES = (
-        "liabilities:cartão:",
-        "liabilities:cartao:",
-        "liabilities:credit-card:",
-    )
+    # simultaneously. Canonical tuple lives at the package root
+    # (``app.credit_cards.CARD_PREFIXES``) so both this service and the
+    # ``installments`` route share the same definition. The frontend MUST
+    # NOT re-introduce a client-side filter — the package-level constant
+    # is canonical.
+    CARD_PREFIXES = _CARD_PREFIXES
 
     def __init__(
         self,
@@ -69,7 +69,7 @@ class CreditCardsService:
         for acct in sorted(accounts):
             outstanding = self._outstanding_debt(acct)
             spend = self._spend_this_month(acct, begin, end)
-            live = self._live_installments(acct, today)
+            live, remaining_value = self._installments_aggregate(acct, today)
             if outstanding == 0 and spend == 0:
                 continue
             cards.append(
@@ -79,6 +79,7 @@ class CreditCardsService:
                     outstanding_debt=round(outstanding, 2),
                     spend_this_month=round(max(spend, 0.0), 2),
                     live_installments=live,
+                    installments_remaining_value=round(remaining_value, 2),
                 )
             )
 
@@ -146,18 +147,23 @@ class CreditCardsService:
                 total += Amount.sum_list(posting.get("pamount", []))
         return total
 
-    def _live_installments(self, account: str, today: date) -> int:
-        """Count distinct parcelamento series with future occurrences on this card.
+    def _installments_aggregate(
+        self, account: str, today: date
+    ) -> tuple[int, float]:
+        """Return ``(live_count, remaining_value_sum)`` for ``account``.
 
-        Forecast is required so series whose remaining installments live
-        in ``parcelamentos.journal`` (`~ monthly`) are visible. Without
-        ``--forecast`` we'd only see past one-offs and undercount live
-        commitments to zero in many cases.
+        Delegates the forecast query to
+        :func:`app.credit_cards.forecast.forecast_parcelamento_transactions`
+        so the route and the service share an identical horizon (24
+        months ahead) and aren't subject to hledger's narrower default
+        forecast window. Forecast is required so series whose remaining
+        installments live in ``parcelamentos.journal`` (`~ monthly`) are
+        visible.
         """
-        raw = self._client.run("print", "--forecast", "tag:parcelamento")
-        if not isinstance(raw, list):
-            return 0
-        return count_live_for_card(raw, account, today=today)
+        raw = forecast_parcelamento_transactions(self._client, today=today)
+        live = count_live_for_card(raw, account, today=today)
+        remaining = sum_remaining_value_for_card(raw, account, today=today)
+        return live, remaining
 
     def _load_aliases(self) -> dict[str, str]:
         if self._journal_path is None:

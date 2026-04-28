@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 import re
 from datetime import date
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Iterator, Optional
 
 logger = logging.getLogger("finance-hledger")
 
@@ -81,10 +81,53 @@ def count_live_for_card(
 
     Pure function. ``today`` defaults to ``date.today()``.
     """
-    if today is None:
-        today = date.today()
-    today_iso = today.isoformat()
+    today_iso = (today or date.today()).isoformat()
     series_with_future: set[str] = set()
+    for name, _amount, _total, dates in _iter_series(transactions, card_account):
+        if any(d > today_iso for d in dates):
+            series_with_future.add(name)
+    return len(series_with_future)
+
+
+def sum_remaining_value_for_card(
+    transactions: Iterable[dict[str, Any]],
+    card_account: str,
+    today: Optional[date] = None,
+) -> float:
+    """Sum ``remaining * monthly_value`` across live series on ``card_account``.
+
+    Mirrors the parsing in :func:`count_live_for_card`. A series is
+    considered when at least one of its forecast occurrences is strictly
+    after ``today``; ``remaining`` for that series is the count of those
+    future occurrences (capped at the total ``M`` from the tag).
+
+    Pure function. ``today`` defaults to ``date.today()``.
+    """
+    today_iso = (today or date.today()).isoformat()
+    total = 0.0
+    for _name, monthly, m_total, dates in _iter_series(transactions, card_account):
+        future_count = sum(1 for d in dates if d > today_iso)
+        if future_count == 0:
+            continue
+        remaining = min(future_count, m_total)
+        total += remaining * monthly
+    return total
+
+
+def _iter_series(
+    transactions: Iterable[dict[str, Any]],
+    card_account: str,
+) -> Iterator[tuple[str, float, int, list[str]]]:
+    """Yield ``(name, monthly_value, total, dates)`` per parcelamento series on ``card_account``.
+
+    Aggregates forecast-enabled ``hledger print`` output by tag NAME.
+    First seen amount/total per NAME wins (later occurrences only
+    contribute their dates); having the same NAME with different totals
+    would imply two separate declarations — rare, but we keep the first
+    seen to avoid silent data collisions, mirroring the route-level
+    behavior.
+    """
+    series: dict[str, dict[str, Any]] = {}
     for tx in transactions:
         if not isinstance(tx, dict):
             continue
@@ -93,11 +136,66 @@ def count_live_for_card(
         parsed = _extract_parcelamento(tx)
         if parsed is None:
             continue
-        name, _n, _m = parsed
+        name, _n, m = parsed
         tx_date = tx.get("tdate") or ""
-        if tx_date > today_iso:
-            series_with_future.add(name)
-    return len(series_with_future)
+        amount = _own_card_amount(tx, card_account)
+        entry = series.setdefault(
+            name,
+            {"monthly": amount, "total": m, "dates": []},
+        )
+        # Keep the first non-zero amount we saw — forecast occurrences
+        # may carry the same value, but a stray zero must not overwrite
+        # a real one.
+        if entry["monthly"] == 0.0 and amount != 0.0:
+            entry["monthly"] = amount
+        if tx_date:
+            entry["dates"].append(tx_date)
+    for name, entry in series.items():
+        yield name, entry["monthly"], entry["total"], entry["dates"]
+
+
+def _own_card_amount(tx: dict[str, Any], card_account: str) -> float:
+    """Return the absolute monthly amount for the parcelamento posting on this card.
+
+    The expense leg carries the parcelamento tag; its absolute amount is
+    the per-installment value. Falls back to the absolute amount on the
+    card leg if no tagged expense leg can be found (defensive — should
+    not happen in well-formed ADR-011 entries).
+    """
+    for posting in tx.get("tpostings") or []:
+        if not isinstance(posting, dict):
+            continue
+        if not _posting_has_parcelamento_tag(posting):
+            continue
+        return abs(_posting_amount(posting))
+    # Defensive fallback: amount on the card leg.
+    for posting in tx.get("tpostings") or []:
+        if isinstance(posting, dict) and posting.get("paccount") == card_account:
+            return abs(_posting_amount(posting))
+    return 0.0
+
+
+def _posting_has_parcelamento_tag(posting: dict[str, Any]) -> bool:
+    for entry in posting.get("ptags") or []:
+        if isinstance(entry, (list, tuple)) and len(entry) >= 1 and entry[0] == "parcelamento":
+            return True
+    return False
+
+
+def _posting_amount(posting: dict[str, Any]) -> float:
+    pamount = posting.get("pamount")
+    if not isinstance(pamount, list) or not pamount:
+        return 0.0
+    first = pamount[0]
+    if not isinstance(first, dict):
+        return 0.0
+    qty = first.get("aquantity")
+    if not isinstance(qty, dict):
+        return 0.0
+    try:
+        return float(qty.get("floatingPoint", 0))
+    except (TypeError, ValueError):
+        return 0.0
 
 
 def _touches_account(tx: dict[str, Any], account: str) -> bool:

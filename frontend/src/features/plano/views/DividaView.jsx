@@ -3,7 +3,7 @@ import { color } from '../../../theme/tokens';
 import Spinner from '../../../components/Spinner.jsx';
 import ErrorBox from '../../../components/ErrorBox.jsx';
 import ParcelamentoCard from '../components/ParcelamentoCard.jsx';
-import { useInstallments } from '../hooks/useInstallments.js';
+import { useInstallments } from '../../../hooks/useInstallments.js';
 import { t } from '../../../i18n';
 import { formatBRL } from '../../../lib/formatBRL';
 

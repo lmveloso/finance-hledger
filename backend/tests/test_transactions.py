@@ -192,3 +192,209 @@ def test_transactions_tag_and_search_combined(client):
     data = r.json()
     assert data["total"] == 1
     assert "hotel" in data["transactions"][0]["descricao"].lower()
+
+
+# ── account branch: tags surface from OWN posting's ptags ────────
+
+
+import importlib  # noqa: E402
+import os  # noqa: E402
+import tempfile  # noqa: E402
+
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+
+
+_PTAGS_JOURNAL = """\
+2026-04-10 * Compra com tag de posting
+    expenses:Moradia:Equipamentos  300.00  ; parcelamento: TV 1/6
+    liabilities:Cartao:Visa
+
+2026-04-12 * Compra simples sem tags
+    expenses:Alimentacao:Supermercado  85.00
+    liabilities:Cartao:Visa
+
+2026-04-14 * Multi tag posting
+    expenses:Lazer:Streaming   55.90  ; categoria: streaming, parcelamento: NETFLIX 2/12
+    liabilities:Cartao:Visa
+
+2026-04-16 * Hotel viagem  ; viagem-floripa:
+    expenses:Lazer:Viagens  1200.00
+    liabilities:Cartao:Visa
+
+2026-04-18 * Compra Orto Life
+    expenses:Saude:Ortodontia  450.00  ; parcelamento: Orto Life Mateus 2/3
+    liabilities:cartao:xp-visa
+
+2026-04-20 * Tag duplicada nas duas pernas
+    expenses:Outros  100.00  ; categoria: shared
+    liabilities:Cartao:Visa  ; categoria: shared
+"""
+
+
+@pytest.fixture(scope="module")
+def ptags_client():
+    """Dedicated TestClient over a tiny journal with posting-level tags."""
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".journal", delete=False
+    ) as f:
+        f.write(_PTAGS_JOURNAL)
+        f.flush()
+        path = f.name
+
+    old_ledger = os.environ.get("LEDGER_FILE")
+    os.environ["LEDGER_FILE"] = path
+
+    from app.config import reset_settings
+
+    reset_settings()
+    import main as main_mod
+
+    importlib.reload(main_mod)
+    main_mod.LEDGER_FILE = path
+
+    yield TestClient(main_mod.app)
+
+    if old_ledger is not None:
+        os.environ["LEDGER_FILE"] = old_ledger
+    else:
+        os.environ.pop("LEDGER_FILE", None)
+    reset_settings()
+    importlib.reload(main_mod)
+    os.unlink(path)
+
+
+def test_transactions_for_account_exposes_tags(ptags_client):
+    """OWN posting's ``ptags`` surface as a list of [key, value] pairs."""
+    r = ptags_client.get(
+        "/api/transactions?month=2026-04&account=expenses:Moradia:Equipamentos"
+    )
+    assert r.status_code == 200
+    data = r.json()
+    matches = [
+        tx for tx in data["transactions"] if "tag de posting" in tx["descricao"]
+    ]
+    assert matches, "expected the parcelamento tx to be returned"
+    tx = matches[0]
+    assert "tags" in tx
+    assert tx["tags"] == [["parcelamento", "TV 1/6"]]
+
+
+def test_transactions_for_account_tags_empty_when_absent(ptags_client):
+    """Transactions whose OWN posting has no ptags surface ``tags: []``."""
+    r = ptags_client.get(
+        "/api/transactions?month=2026-04&account=expenses:Alimentacao:Supermercado"
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert data["transactions"], "expected the simple tx to be returned"
+    for tx in data["transactions"]:
+        assert tx["tags"] == []
+
+
+def test_transactions_for_account_tags_multiple(ptags_client):
+    """Multi-tag postings surface every (key, value) pair, ordered as written."""
+    r = ptags_client.get(
+        "/api/transactions?month=2026-04&account=expenses:Lazer:Streaming"
+    )
+    assert r.status_code == 200
+    data = r.json()
+    matches = [
+        tx for tx in data["transactions"] if "Multi tag" in tx["descricao"]
+    ]
+    assert matches, "expected the multi-tag tx to be returned"
+    tx = matches[0]
+    pairs = {tuple(t) for t in tx["tags"]}
+    assert ("categoria", "streaming") in pairs
+    assert ("parcelamento", "NETFLIX 2/12") in pairs
+
+
+def test_transactions_for_account_tags_surface_from_other_postings(ptags_client):
+    """Tag on the expense leg surfaces when querying the CARD leg.
+
+    Decision (overrides original Open Q4): ``tags`` is the union of
+    ``ttags`` + every posting's ``ptags``. ADR-011 places the
+    ``parcelamento:`` tag on the expense leg; the Fluxo passive panel
+    needs the ``N/M`` pill on card-account queries, so the union is
+    required.
+    """
+    r = ptags_client.get(
+        "/api/transactions?month=2026-04&account=liabilities:Cartao:Visa"
+    )
+    assert r.status_code == 200
+    data = r.json()
+    matches = [
+        tx for tx in data["transactions"] if "tag de posting" in tx["descricao"]
+    ]
+    assert matches, "expected the parcelamento tx on the card leg"
+    tx = matches[0]
+    assert ["parcelamento", "TV 1/6"] in tx["tags"]
+
+
+def test_transactions_for_account_orto_life_pill_on_card_leg(ptags_client):
+    """User-acceptance scenario: Orto Life parcelamento on xp-visa card.
+
+    Querying the card leg returns the ``parcelamento`` tag from the
+    expense leg, so the frontend can render the ``2/3`` pill.
+    """
+    r = ptags_client.get(
+        "/api/transactions?month=2026-04&account=liabilities:cartao:xp-visa"
+    )
+    assert r.status_code == 200
+    data = r.json()
+    matches = [
+        tx for tx in data["transactions"] if "Orto Life" in tx["descricao"]
+    ]
+    assert matches, "expected Orto Life tx on xp-visa card"
+    tx = matches[0]
+    assert ["parcelamento", "Orto Life Mateus 2/3"] in tx["tags"]
+
+
+def test_transactions_for_account_tags_include_transaction_level(ptags_client):
+    """Transaction-level ``ttags`` surface alongside posting-level tags.
+
+    The ``viagem-floripa`` tag lives on the transaction header (not on
+    any posting); querying the card leg must still see it.
+    """
+    r = ptags_client.get(
+        "/api/transactions?month=2026-04&account=liabilities:Cartao:Visa"
+    )
+    assert r.status_code == 200
+    data = r.json()
+    matches = [
+        tx for tx in data["transactions"] if "Hotel viagem" in tx["descricao"]
+    ]
+    assert matches, "expected Hotel viagem tx on the card leg"
+    tx = matches[0]
+    assert ["viagem-floripa", ""] in tx["tags"]
+
+
+def test_transactions_for_account_tags_dedup_across_postings(ptags_client):
+    """Same ``(key, value)`` on two postings appears only once."""
+    r = ptags_client.get(
+        "/api/transactions?month=2026-04&account=liabilities:Cartao:Visa"
+    )
+    assert r.status_code == 200
+    data = r.json()
+    matches = [
+        tx for tx in data["transactions"] if "Tag duplicada" in tx["descricao"]
+    ]
+    assert matches, "expected the duplicate-tag tx"
+    tx = matches[0]
+    occurrences = [pair for pair in tx["tags"] if pair == ["categoria", "shared"]]
+    assert len(occurrences) == 1, (
+        f"categoria=shared should appear once, got {tx['tags']!r}"
+    )
+
+
+def test_transactions_global_branch_does_not_expose_tags(client):
+    """Open Q4 (preserved): tags are added on the ``account=…`` branch only.
+
+    The global ``register expenses`` branch (Transações tab) must NOT
+    grow a ``tags`` field — that is out of scope for this PR.
+    """
+    r = client.get("/api/transactions?month=2026-03")
+    assert r.status_code == 200
+    data = r.json()
+    for tx in data["transactions"]:
+        assert "tags" not in tx
