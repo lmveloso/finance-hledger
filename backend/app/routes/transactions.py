@@ -116,8 +116,50 @@ def _transactions_for_account(
             "contra_conta": contra_acct,
             "categoria": format_category(contra_acct) if contra_acct else "",
             "tipo_movimento": tipo,
+            "tags": _collect_tx_tags(t),
         })
     return txs
+
+
+def _collect_tx_tags(tx: dict) -> list[list[str]]:
+    """Return the union of transaction tags + every posting's ``ptags``.
+
+    Sources, in order:
+      1. ``ttags`` (transaction-level tags, e.g. ``viagem-floripa``).
+      2. ``ptags`` of each posting in ``tpostings``, in posting order.
+
+    Deduplicated by ``(key, value)`` preserving order of first
+    appearance. Shape mirrors hledger's native ``ptags``:
+    ``[[key, value], ...]``.
+
+    Why the union: ADR-011 puts ``parcelamento:`` on the expense leg,
+    so an account-filtered query on the card leg would otherwise see
+    ``ptags == []`` and the frontend's ``N/M`` pill would never render.
+    The whole transaction is the parcelamento, not just one posting.
+    """
+    seen: set[tuple[str, str]] = set()
+    out: list[list[str]] = []
+
+    def _ingest(raw) -> None:
+        if not isinstance(raw, list):
+            return
+        for entry in raw:
+            if not isinstance(entry, (list, tuple)) or len(entry) < 2:
+                continue
+            key, value = entry[0], entry[1]
+            if not isinstance(key, str) or not isinstance(value, str):
+                continue
+            pair = (key, value)
+            if pair in seen:
+                continue
+            seen.add(pair)
+            out.append([key, value])
+
+    _ingest(tx.get("ttags"))
+    for posting in tx.get("tpostings") or []:
+        if isinstance(posting, dict):
+            _ingest(posting.get("ptags"))
+    return out
 
 
 @router.get("/api/transactions")

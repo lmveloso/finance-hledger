@@ -165,4 +165,127 @@ describe('buildCardList', () => {
 
     expect(rows).toEqual([]);
   });
+
+  // ── installments enrichment (PR-mes-fluxo-installments-visibility) ──────
+  describe('installment enrichment (ADR-011)', () => {
+    function inst(account, name, remaining_value) {
+      return { name, account, remaining_value, monthly_value: 100, paid: 1, total: 3, end_date: '2026-06-30' };
+    }
+
+    it('attaches installments and remaining value for a flow card', () => {
+      const flowContas = [flowRow('liabilities:cartao:nubank', 'Nubank')];
+      const accounts = [accountsRow('liabilities:cartao:nubank', 'Nubank', -500)];
+      const aggregates = new Map([
+        ['liabilities:cartao:nubank', agg('liabilities:cartao:nubank', 200)],
+      ]);
+      const installmentsByAccount = new Map([
+        [
+          'liabilities:cartao:nubank',
+          [
+            inst('liabilities:cartao:nubank', 'Orto Life', 700),
+            inst('liabilities:cartao:nubank', 'Decathlon', 200),
+          ],
+        ],
+      ]);
+      const totalRemainingByAccount = new Map([
+        ['liabilities:cartao:nubank', 900],
+      ]);
+
+      const rows = buildCardList({
+        flowContas,
+        accounts,
+        aggregates,
+        installmentsByAccount,
+        totalRemainingByAccount,
+      });
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0].installmentsRemainingValue).toBe(900);
+      expect(rows[0].installments).toHaveLength(2);
+      expect(rows[0].installments[0].name).toBe('Orto Life');
+    });
+
+    it('attaches installments to outstanding-only cards too', () => {
+      // BB Visa with an open installment but no monthly postings: the card
+      // is dormant on /api/flow but still surfaces from /api/accounts and
+      // must show its comprometido.
+      const flowContas = [];
+      const accounts = [
+        accountsRow('liabilities:cartao:bb-visa', 'BB Visa', -3000),
+      ];
+      const installmentsByAccount = new Map([
+        [
+          'liabilities:cartao:bb-visa',
+          [inst('liabilities:cartao:bb-visa', 'Havan', 712.41)],
+        ],
+      ]);
+      const totalRemainingByAccount = new Map([
+        ['liabilities:cartao:bb-visa', 712.41],
+      ]);
+
+      const rows = buildCardList({
+        flowContas,
+        accounts,
+        aggregates: new Map(),
+        installmentsByAccount,
+        totalRemainingByAccount,
+      });
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0].installments).toHaveLength(1);
+      expect(rows[0].installmentsRemainingValue).toBeCloseTo(712.41, 2);
+    });
+
+    it('does not bleed installments across cards', () => {
+      const flowContas = [
+        flowRow('liabilities:cartao:nubank', 'Nubank'),
+        flowRow('liabilities:cartao:itau', 'Itaú'),
+      ];
+      const accounts = [
+        accountsRow('liabilities:cartao:nubank', 'Nubank', -100),
+        accountsRow('liabilities:cartao:itau', 'Itaú', -100),
+      ];
+      const aggregates = new Map([
+        ['liabilities:cartao:nubank', agg('liabilities:cartao:nubank', 50)],
+        ['liabilities:cartao:itau', agg('liabilities:cartao:itau', 50)],
+      ]);
+      const installmentsByAccount = new Map([
+        [
+          'liabilities:cartao:nubank',
+          [inst('liabilities:cartao:nubank', 'Series A', 300)],
+        ],
+      ]);
+      const totalRemainingByAccount = new Map([
+        ['liabilities:cartao:nubank', 300],
+      ]);
+
+      const rows = buildCardList({
+        flowContas,
+        accounts,
+        aggregates,
+        installmentsByAccount,
+        totalRemainingByAccount,
+      });
+
+      const nubank = rows.find((r) => r.conta === 'liabilities:cartao:nubank');
+      const itau = rows.find((r) => r.conta === 'liabilities:cartao:itau');
+      expect(nubank.installmentsRemainingValue).toBe(300);
+      expect(nubank.installments).toHaveLength(1);
+      expect(itau.installmentsRemainingValue).toBe(0);
+      expect(itau.installments).toEqual([]);
+    });
+
+    it('defaults to empty installments and 0 remaining when maps are omitted', () => {
+      const flowContas = [flowRow('liabilities:cartao:nubank', 'Nubank')];
+      const accounts = [accountsRow('liabilities:cartao:nubank', 'Nubank', -100)];
+      const aggregates = new Map([
+        ['liabilities:cartao:nubank', agg('liabilities:cartao:nubank', 50)],
+      ]);
+
+      const rows = buildCardList({ flowContas, accounts, aggregates });
+
+      expect(rows[0].installments).toEqual([]);
+      expect(rows[0].installmentsRemainingValue).toBe(0);
+    });
+  });
 });

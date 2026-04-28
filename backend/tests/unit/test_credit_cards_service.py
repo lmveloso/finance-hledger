@@ -114,6 +114,7 @@ def test_basic_month_one_card():
     assert card.outstanding_debt == 500.0
     assert card.spend_this_month == 300.0
     assert card.live_installments == 0
+    assert card.installments_remaining_value == 0.0
 
 
 def test_excludes_dormant_cards():
@@ -194,7 +195,81 @@ def test_live_installments_active_and_completed():
         }
     )
     response = _service(client).for_month("2026-04")
-    assert response.cards[0].live_installments == 1
+    card = response.cards[0]
+    assert card.live_installments == 1
+    # TV: 1 future occurrence × 600.00 monthly capped at total=6 → 600.00.
+    # OLD has no future occurrences and contributes 0.
+    assert card.installments_remaining_value == 600.0
+
+
+def test_credit_cards_response_includes_installments_remaining_value():
+    """Service exposes the new field; 0 when no parcelamento touches the card."""
+    nubank = "liabilities:cartão:nubank"
+    client = _build(
+        {
+            ("accounts", "liabilities:cartão"): _accounts(nubank),
+            ("balance", nubank, "--historical"): _balance(-500.0),
+        }
+    )
+    response = _service(client).for_month("2026-04")
+    card = response.cards[0]
+    assert card.installments_remaining_value == 0.0
+
+
+def test_credit_cards_installments_remaining_excludes_other_cards():
+    """A live parcelamento on one card does not bleed into others."""
+    nubank = "liabilities:cartão:nubank"
+    visa = "liabilities:credit-card:visa"
+    parcelamento_txs = [
+        # Live on nubank — 1 future occurrence × 200 = 200.
+        {
+            "tdate": "2026-05-01",
+            "tpostings": [
+                {
+                    "paccount": "expenses:moradia",
+                    "pamount": [_amount(200.0)],
+                    "ptags": [["parcelamento", "TV 2/3"]],
+                },
+                {"paccount": nubank, "pamount": [_amount(-200.0)]},
+            ],
+        },
+        # Live on visa — different series, 2 future occurrences × 80 = 160.
+        {
+            "tdate": "2026-05-01",
+            "tpostings": [
+                {
+                    "paccount": "expenses:lazer",
+                    "pamount": [_amount(80.0)],
+                    "ptags": [["parcelamento", "Gym 1/3"]],
+                },
+                {"paccount": visa, "pamount": [_amount(-80.0)]},
+            ],
+        },
+        {
+            "tdate": "2026-06-01",
+            "tpostings": [
+                {
+                    "paccount": "expenses:lazer",
+                    "pamount": [_amount(80.0)],
+                    "ptags": [["parcelamento", "Gym 2/3"]],
+                },
+                {"paccount": visa, "pamount": [_amount(-80.0)]},
+            ],
+        },
+    ]
+    client = _build(
+        {
+            ("accounts", "liabilities:cartão"): _accounts(nubank),
+            ("accounts", "liabilities:credit-card"): _accounts(visa),
+            ("balance", nubank, "--historical"): _balance(-200.0),
+            ("balance", visa, "--historical"): _balance(-100.0),
+            ("print", "--forecast", "tag:parcelamento"): parcelamento_txs,
+        }
+    )
+    response = _service(client).for_month("2026-04")
+    by_acct = {c.account: c for c in response.cards}
+    assert by_acct[nubank].installments_remaining_value == 200.0
+    assert by_acct[visa].installments_remaining_value == 160.0
 
 
 def test_card_prefix_all_three_forms_unified():

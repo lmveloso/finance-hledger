@@ -44,6 +44,16 @@ class CreditCard(BaseModel):
             "months`` is greater than or equal to today."
         ),
     )
+    installments_remaining_value: float = Field(
+        default=0.0,
+        ge=0.0,
+        description=(
+            "Sum across live parcelamento series on this card of "
+            "``remaining * monthly_value`` — the future commitment "
+            "(``comprometido``) projected from ``~ monthly`` declarations "
+            "(ADR-011). 0 when no parcelamento touches the card."
+        ),
+    )
 
 
 class CreditCardsResponse(BaseModel):

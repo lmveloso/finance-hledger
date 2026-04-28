@@ -14,20 +14,25 @@ aggregated row per active installment.
 
 from __future__ import annotations
 
+import logging
 import re
 from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, Depends
 
+from app.credit_cards import CARD_PREFIXES
+from app.credit_cards.forecast import forecast_parcelamento_transactions
 from app.deps import get_current_user
-from app.hledger.helpers import months_forward_bounds
+
+logger = logging.getLogger("finance-hledger")
 
 router = APIRouter()
 
-# Forecast window: 24 months ahead is enough to cover any reasonable
-# credit-card installment plan (cards typically cap at 12x-18x).
-FORECAST_MONTHS_AHEAD = 24
+# Account paths that must NEVER be picked as the card leg even if no
+# canonical-prefix posting is present. Expense and equity legs are the
+# parcelamento's "what" and "opening", not the credit-card commitment.
+_NON_CARD_PREFIXES: tuple[str, ...] = ("expenses:", "equity:")
 
 # Matches "NAME N/M" where N and M are positive integers. Accepts additional
 # whitespace-separated tokens in the NAME portion (e.g. "GEL FRONTAL 2/6").
@@ -38,32 +43,32 @@ _TAG_RE = re.compile(r"^(?P<name>.+?)\s+(?P<n>\d+)/(?P<m>\d+)\s*$")
 def installments(user: Optional[str] = Depends(get_current_user)):
     """Return active installments declared as periodic parcelamentos.
 
-    An installment is "active" when today falls between its first and last
-    scheduled occurrence — equivalently, ``paid < total``.
+    An installment is "active" iff it has at least one forecast occurrence
+    strictly after today. Series whose only forecast rows are in the past
+    are considered finished and excluded — even if ``paid < total`` (the
+    "isolated past tail" edge case from ADR-011 §Errata 2026-04-28).
+
+    ``remaining`` is the count of forecast occurrences with
+    ``date > today``. ``remaining_value = remaining * monthly_value``. This
+    matches the credit-card service semantics so per-card sums agree
+    across endpoints (ADR-011 §Errata 2026-04-28 followup).
     """
     import main
 
-    # Forecast window: from the earliest reasonable start up to N months ahead.
-    # We use a far-past begin (journal epoch) so we count historical occurrences
-    # too; the ``to`` clause in each periodic declaration bounds the top end.
-    _, end_forward = months_forward_bounds(FORECAST_MONTHS_AHEAD)
-    begin = "1900-01-01"
+    today = date.today()
+    today_iso = today.isoformat()
 
-    data = main.hledger(
-        "print", "--forecast", "tag:parcelamento", "-b", begin, "-e", end_forward
-    )
+    data = forecast_parcelamento_transactions(main._hledger_client, today=today)
 
-    today_iso = date.today().isoformat()
     groups: dict[str, dict] = {}
-
-    if isinstance(data, list):
-        for tx in data:
-            if not isinstance(tx, dict):
-                continue
-            _ingest_transaction(tx, groups)
+    for tx in data:
+        if not isinstance(tx, dict):
+            continue
+        _ingest_transaction(tx, groups)
 
     rows = [_finalize(group, today_iso) for group in groups.values()]
-    active = [row for row in rows if row["paid"] < row["total"]]
+    # Active iff at least one forecast occurrence is strictly after today.
+    active = [row for row in rows if row.pop("_has_future", False)]
     active.sort(key=lambda row: row["name"])
 
     total_monthly = round(sum(row["monthly_value"] for row in active), 2)
@@ -79,7 +84,9 @@ def installments(user: Optional[str] = Depends(get_current_user)):
 def _ingest_transaction(tx: dict, groups: dict[str, dict]) -> None:
     """Aggregate a single forecast transaction into the groups dict."""
     tx_date = tx.get("tdate") or ""
-    for posting in tx.get("tpostings", []) or []:
+    postings = tx.get("tpostings", []) or []
+    account = _pick_card_account(postings)
+    for posting in postings:
         if not isinstance(posting, dict):
             continue
         parsed = _extract_parcelamento_tag(posting)
@@ -98,14 +105,50 @@ def _ingest_transaction(tx: dict, groups: dict[str, dict]) -> None:
                 "monthly_value": amount,
                 "total": total,
                 "dates": [],
+                "account": account,
             },
         )
-        # First occurrence wins for description/value/total; later forecast
-        # postings just contribute their dates. Having the same NAME with
-        # different totals would imply two separate declarations — rare, but
-        # we keep the first seen to avoid silent data collisions.
+        # First occurrence wins for description/value/total/account; later
+        # forecast postings just contribute their dates. Having the same
+        # NAME with different totals would imply two separate declarations
+        # — rare, but we keep the first seen to avoid silent data
+        # collisions.
         if tx_date:
             group["dates"].append(tx_date)
+        if not group.get("account") and account:
+            group["account"] = account
+
+
+def _pick_card_account(postings: list) -> str:
+    """Return the card-leg account for a parcelamento transaction.
+
+    Decision rule (PR-mes-fluxo-installments-visibility):
+    1. Prefer the leg whose ``paccount`` starts with one of
+       :data:`app.credit_cards.CARD_PREFIXES`.
+    2. Fall back to the first non-expense, non-equity leg and emit a
+       WARNING — non-canonical card prefixes are tolerated so the row
+       still carries an account, but the warning surfaces them.
+
+    Returns ``""`` if no eligible posting is found.
+    """
+    fallback = ""
+    for posting in postings:
+        if not isinstance(posting, dict):
+            continue
+        acct = posting.get("paccount") or ""
+        if not acct:
+            continue
+        if any(acct.startswith(prefix) for prefix in CARD_PREFIXES):
+            return acct
+        if not fallback and not any(
+            acct.startswith(prefix) for prefix in _NON_CARD_PREFIXES
+        ):
+            fallback = acct
+    if fallback:
+        logger.warning(
+            "installments.non_canonical_card_prefix account=%s", fallback
+        )
+    return fallback
 
 
 def _extract_parcelamento_tag(posting: dict) -> Optional[tuple[str, int, str]]:
@@ -149,15 +192,26 @@ def _posting_amount(posting: dict) -> float:
 
 
 def _finalize(group: dict, today_iso: str) -> dict:
-    """Return the public row for one group."""
+    """Return the public row for one group.
+
+    Semantics (ADR-011 §Errata 2026-04-28 followup):
+    ``remaining`` = forecast occurrences strictly after today (NOT
+    ``total - paid`` — pre-journal parcels would inflate that). ``paid``
+    keeps display context. ``next_parcel`` = ``total - remaining + 1``;
+    for ended series we return ``total + 1`` as a sentinel (filtered out
+    by the caller, never rendered). ``_has_future`` is internal-only;
+    the caller filters by it and pops it before serialising.
+    """
     dates = sorted(group["dates"])
     total = group["total"]
-    # paid = forecast occurrences up to and including today, capped at total.
+    future_count = sum(1 for d in dates if d > today_iso)
     paid = min(sum(1 for d in dates if d <= today_iso), total)
-    remaining = max(total - paid, 0)
+    remaining = future_count
     monthly = round(group["monthly_value"], 2)
     remaining_value = round(remaining * monthly, 2)
     end_date = dates[-1] if dates else ""
+    has_future = future_count > 0
+    next_parcel = total - future_count + 1 if has_future else total + 1
 
     return {
         "name": group["name"],
@@ -167,5 +221,8 @@ def _finalize(group: dict, today_iso: str) -> dict:
         "total": total,
         "remaining": remaining,
         "remaining_value": remaining_value,
+        "next_parcel": next_parcel,
         "end_date": end_date,
+        "account": group.get("account", ""),
+        "_has_future": has_future,
     }

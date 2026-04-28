@@ -3,6 +3,12 @@
 ;   - one active installment (FOO) overlapping today
 ;   - one fully-paid installment (OLDIE) that finished before today
 ;   - one future-only installment (FUTURO) starting after today
+;   - two-card stress test: BB-VISA on a different card than the others
+;   - isolated tail (HAVAN 4/4): single forecast occurrence, ADR-011 §Negativas
+;   - ended-today series (TAILEND): last forecast occurrence == today
+;   - pre-journal series (ESCOLA): tag M=10 but only parcel 4 (past one-off)
+;     + parcels 9..10 (`~ monthly`) — exercises the §Errata 2026-04-28
+;     followup: remaining = future_count, NOT total - paid
 ;   - ordinary transactions without parcelamento tag (ignored)
 
 2026-01-01 * Opening
@@ -25,6 +31,36 @@
 ~ monthly from 2100-01-01 to 2100-04-01
     expenses:outros                         30.00  ; parcelamento: FUTURO 1/3
     liabilities:cartao:nubank
+
+; Active parcelamento on a SECOND card — exercises card isolation.
+; BB-VISA-LIVE: 4 occurrences, spanning 2026-04 .. 2026-07.
+~ monthly from 2026-04-01 to 2026-08-01
+    expenses:lazer:assinaturas              80.00  ; parcelamento: BB-VISA-LIVE 1/4
+    liabilities:cartao:bb-visa
+
+; Isolated tail — only the last installment of a 4-month series exists
+; as a forecast row dated in the past (≤ today). Per ADR-011 §Errata
+; 2026-04-28 this series is now EXCLUDED from /api/installments because
+; it has no future occurrences. The §Negativas trade-off was reversed
+; after real-world journals showed phantom comprometido for finished
+; series. Past 1..3 were paid on fatura journals not present here.
+~ monthly from 2026-04-01 to 2026-05-01
+    expenses:moradia:equipamentos          150.00  ; parcelamento: HAVAN 4/4
+    liabilities:cartao:nubank
+
+; Pre-journal series — tag M=10 but only one past one-off (parcel 4)
+; was lançada and a `~ monthly` covers parcels 9..10. Parcels 5..8 were
+; never lançadas in this journal (they happened pre-journal). Per the
+; ADR-011 §Errata 2026-04-28 followup, ``remaining`` is the count of
+; forecast occurrences strictly after today (= 2), NOT ``total - paid``
+; (= 9). ``next_parcel`` is 9 (the next future occurrence's index).
+2025-08-15 * Escola Up Goioere parc 4/10
+    expenses:educação:filhos              237.50  ; parcelamento: ESCOLA 4/10
+    liabilities:cartao:bb-visa
+
+~ monthly from 2026-09-01 to 2026-11-01
+    expenses:educação:filhos              237.50  ; parcelamento: ESCOLA 9/10
+    liabilities:cartao:bb-visa
 
 ; Ordinary transaction (no parcelamento tag) — should be ignored.
 2026-01-15 * Supermercado

@@ -119,6 +119,12 @@ Quando uma fatura traz `PARC N/M` ou similar:
 - 2 séries encerradas (Dr Tales, Porto Rico Aqua Park) — mover para `parcelamentos-arquivados.journal` quando conveniente.
 - 1 edge case (Havan Umuarama 4/4 isolada) — aceitar reporte aproximado ou backfill manual.
 
+**Surface placement during Fase 1.** The Plano tab remains hidden in Fase U/Fase 1 (see `docs/04-PRD-ui-ux.md` §4.1). Until Plano is reactivated, the comprometido summary surfaces in two places: (1) the Mês card-detail tile shows `Dívida Total = fatura + comprometido` with a "PARCELAS FUTURAS" section listing the active series for that card, and (2) the Fluxo passivo detail panel exposes a "COMPROMISSO FUTURO" section listing upcoming installments per card. The data source remains `/api/installments`; ADR remains structurally accurate. When Plano is reactivated, these surfaces continue to work — they are additive views, not the canonical home.
+
+**Errata 2026-04-28.** The §Negativas "edge case parcela final isolada" trade-off (accepting that series with only an isolated past one-off would be reported as active) is reversed. After deployment, real-world journal data showed phantom series locking comprometido that didn't exist (e.g. `Havan Umuarama 4/4` in 2025-12, no forward declaration). The active filter now requires at least one forecast occurrence with `date > today` — series with only past dates are excluded regardless of `paid < total`. The §Negativas paragraph stands as historical context but is no longer the active behaviour.
+
+**Errata 2026-04-28 (followup).** The §Negativas "parcelas pré-journal podem inflar `remaining`" trade-off is also reversed. The active-series semantic now treats `remaining` as the count of forecast occurrences with `date > today`, identical to the credit-card service. Pre-journal parcels declared in the tag `M` but never lançadas as one-offs no longer inflate `remaining_value` or push the chip's `next_parcel` off-by-N. The route and service are now backed by the same `forecast_parcelamento_transactions` helper to guarantee semantic alignment.
+
 ## Related
 
 - `docs/adr/009-parcelamento-monthly.md` — modelo original, agora restaurado por este ADR
