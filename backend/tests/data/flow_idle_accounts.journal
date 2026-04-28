@@ -1,0 +1,46 @@
+; Fixture journal for /api/flow regression: accounts with non-zero opening
+; balance but zero movement in the queried month must still surface.
+;
+; Setup for month=2026-04:
+;   - liabilities:cartão:bb-visa   → outstanding fatura from March, NO April
+;     activity. Must appear with saldo_inicial != 0, all movement zero, and
+;     saldo_final == saldo_inicial.
+;   - liabilities:cartão:nubank    → has April activity. Sanity check that
+;     the existing "active" path still works.
+;   - assets:bank                  → has activity (pays the Nubank fatura
+;     and receives salary). Sanity check.
+;   - assets:savings               → opened with 1000 in January, NEVER
+;     touched again. Must still appear in April with saldo 1000 and zero
+;     movement.
+
+account assets:bank
+account assets:savings
+account income:salary
+account expenses:groceries
+account liabilities:cartão:bb-visa
+account liabilities:cartão:nubank
+
+2026-01-01 * Opening
+    assets:bank                          5000.00
+    assets:savings                       1000.00
+    equity:opening
+
+; ── March: spend on BB Visa, leave fatura unpaid into April.
+2026-03-10 * Mercado on BB
+    expenses:groceries                    400.00
+    liabilities:cartão:bb-visa
+
+; ── March: salary so the user has something to spend with.
+2026-03-25 * Salary
+    assets:bank                          3000.00
+    income:salary
+
+; ── April: only Nubank activity, plus a transfer/payment from bank.
+;     BB Visa is intentionally untouched.
+2026-04-05 * Supermarket on Nubank
+    expenses:groceries                    200.00
+    liabilities:cartão:nubank
+
+2026-04-20 * Pagamento Nubank
+    assets:bank                          -100.00
+    liabilities:cartão:nubank
