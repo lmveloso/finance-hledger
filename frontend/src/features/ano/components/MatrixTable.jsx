@@ -49,6 +49,25 @@ function MatrixTable({
     fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
   });
 
+  // First column pins to the left while the user scrolls the matrix
+  // horizontally. Backgrounds are required because sticky cells overlap
+  // moving cells.
+  const stickyFirstHeadStyle = {
+    ...headCellStyle('left'),
+    position: 'sticky',
+    left: 0,
+    zIndex: 2,
+    background: color.bg.card,
+  };
+
+  const stickyFirstCellStyle = (extra = {}) => ({
+    position: 'sticky',
+    left: 0,
+    zIndex: 1,
+    background: color.bg.card,
+    ...extra,
+  });
+
   const monthHeaderStyle = (month) => {
     const base = headCellStyle('right');
     if (!interactive) return base;
@@ -102,11 +121,11 @@ function MatrixTable({
   };
 
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
         <thead>
           <tr>
-            <th style={headCellStyle('left')}>&nbsp;</th>
+            <th style={stickyFirstHeadStyle}>&nbsp;</th>
             {months.map(m => {
               const isSelected = interactive && selectedMonth === m;
               return (
@@ -128,7 +147,7 @@ function MatrixTable({
         <tbody>
           {rows.map(row => (
             <tr key={row.key}>
-              <td style={rowLabelStyle} className="sans">{row.label}</td>
+              <td style={stickyFirstCellStyle(rowLabelStyle)} className="sans">{row.label}</td>
               {months.map(m => {
                 const cell = row.cells?.[m];
                 const isSelectedCol = interactive && selectedMonth === m;
@@ -157,7 +176,19 @@ function MatrixTable({
           ))}
           {totals && (
             <tr>
-              <td style={{ ...rowLabelStyle, ...totalsCellStyle }} className="sans">{t('ano.totals')}</td>
+              <td
+                style={stickyFirstCellStyle({
+                  ...rowLabelStyle,
+                  ...totalsCellStyle,
+                  // Totals row keeps its own emphasised hover background
+                  // even when sticky — the base hover token reads well
+                  // against the surrounding moving cells.
+                  background: color.bg.hover,
+                })}
+                className="sans"
+              >
+                {t('ano.totals')}
+              </td>
               {months.map(m => {
                 const isSelectedCol = interactive && selectedMonth === m;
                 const cellStyle = isSelectedCol

@@ -163,7 +163,14 @@ function AppInner() {
   }
 
   return (
-    <div style={{ ...pageBase, display: 'flex', flexDirection: 'column' }}>
+    <div
+      style={{
+        ...pageBase,
+        display: 'flex',
+        flexDirection: 'column',
+        overflowX: 'hidden',
+      }}
+    >
       <style>{globalStyles}</style>
       <MobileTopBar />
       <main
@@ -172,6 +179,10 @@ function AppInner() {
           minWidth: 0,
           padding: '16px 16px 0',
           paddingBottom: 'calc(58px + env(safe-area-inset-bottom, 0px) + 16px)',
+          // Safety net: any descendant that breaks responsive layout (e.g.
+          // a long display-font number, a wide table) clips here instead of
+          // forcing the whole page to scroll horizontally.
+          overflowX: 'hidden',
         }}
       >
         <TabRoutes />

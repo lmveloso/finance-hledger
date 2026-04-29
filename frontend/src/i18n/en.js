@@ -266,6 +266,15 @@ const dict = {
   'auth.error.connection': 'Connection error',
   'auth.loading': 'Loading...',
 
+  // ── PIN gate (local "curious people" lock) ────────────────────────────
+  // The PIN is the device's current local time formatted as HHMM. We don't
+  // surface that hint here on purpose — anyone who needs to know it already
+  // does. See PinGate.jsx.
+  'pin.title': 'Enter PIN',
+  'pin.subtitle': 'Four digits.',
+  'pin.error.wrong': 'Wrong PIN',
+  'pin.aria.digit': 'PIN digit',
+
   // ── Month stepper (MonthNavigator) ─────────────────────────────────────
   'month.prev': 'Previous month',
   'month.next': 'Next month',
@@ -298,6 +307,10 @@ const dict = {
   'transacoes.pagination.zero': '0 results',
   'transacoes.tags.label': 'Tags',
   'transacoes.tags.clear': 'Clear filters',
+  'transacoes.tags.search.placeholder': 'Filter tags…',
+  'transacoes.tags.showMore': 'Show more ({count})',
+  'transacoes.tags.showLess': 'Show less',
+  'transacoes.tags.group.other': 'Other',
 
   // ── Ano tab ────────────────────────────────────────────────────────────
   'ano.header': 'Year overview',

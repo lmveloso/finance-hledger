@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import Login from './Login.jsx';
+import PinGate from './PinGate.jsx';
 import { isLoggedIn, fetchAuthMode } from './api.js';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext.jsx';
 import { PrivacyProvider, usePrivacy } from './contexts/PrivacyContext.jsx';
@@ -136,7 +137,16 @@ function ThemedApp() {
   // feature-tab inline styles) that cache the formatted string. Flipping
   // privacy must invalidate those caches, and the cheapest correct way is
   // to remount the tree below the providers.
-  return <Root key={`${mode}:${isPrivate ? 'p' : 'o'}`} />;
+  //
+  // PinGate sits *outside* the keyed remount: unlocking should survive
+  // theme/privacy toggles. Its own state is also persisted in
+  // sessionStorage, so even a forced unmount keeps the user unlocked
+  // until the 30-min idle window expires.
+  return (
+    <PinGate>
+      <Root key={`${mode}:${isPrivate ? 'p' : 'o'}`} />
+    </PinGate>
+  );
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

@@ -39,7 +39,6 @@ function MetricTile({ label, value, valueColor, alignItems, breakdown }) {
   return (
     <div
       style={{
-        flex: 1,
         minWidth: 0,
         background: color.bg.cardAlt,
         border: `1px solid ${color.border.subtle}`,
@@ -48,7 +47,7 @@ function MetricTile({ label, value, valueColor, alignItems, breakdown }) {
         display: 'flex',
         flexDirection: 'column',
         gap: 6,
-        alignItems
+        alignItems,
       }}
     >
       <span
@@ -65,11 +64,18 @@ function MetricTile({ label, value, valueColor, alignItems, breakdown }) {
       <span
         className="serif"
         style={{
-          fontSize: 22,
+          // Amount font-size shrinks on narrow viewports so tiles never
+          // collide on phones (the original 22px overflowed into the
+          // neighbour tile at <380px).
+          fontSize: 'clamp(18px, 5.5vw, 22px)',
           fontWeight: 600,
           letterSpacing: '-0.02em',
           color: valueColor || color.text.primary,
           fontVariantNumeric: 'tabular-nums',
+          // Final guard: allow a wrap if even the floor font-size doesn't fit.
+          overflowWrap: 'break-word',
+          wordBreak: 'break-word',
+          maxWidth: '100%',
         }}
       >
         {value}
@@ -244,12 +250,14 @@ function CreditCardDetail({ card, onBack }) {
       </div>
 
       {/* Two metric tiles. Dívida Total = fatura + comprometido (ADR-011);
-          breakdown line shows only when comprometido > 0. */}
+          breakdown line shows only when comprometido > 0. Grid with
+          minmax(160px, 1fr) keeps them side-by-side on wide screens and
+          stacks them when 2x160px+gap can't fit (≈ <340px viewport). */}
       <div
         style={{
-          display: 'flex',
+          display: 'grid',
           gap: 12,
-          flexWrap: 'wrap',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
         }}
       >
         <MetricTile

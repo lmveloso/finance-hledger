@@ -14,6 +14,44 @@ import { formatBRL } from '../../lib/formatBRL';
 // i18n/currency decoupling noted in docs §6.2.
 const BRLc = (n) => formatBRL(n, { fractionDigits: 2 });
 
+// Default visible chips per group before the "Ver mais" reveal.
+const DEFAULT_VISIBLE_PER_GROUP = 5;
+
+// Group raw `[{ tag, count }]` by their namespace prefix (text before the
+// first ":"). Tags without a prefix collapse into the `__other__` group.
+// Inside each group, chips are sorted by descending count so the heavy
+// hitters surface first. Groups themselves are sorted by their own
+// largest-count chip so the most active namespace floats to the top.
+function groupTags(allTags, query) {
+  const norm = (query || '').trim().toLowerCase();
+  const filtered = norm
+    ? allTags.filter((x) => x.tag.toLowerCase().includes(norm))
+    : allTags;
+
+  const groups = new Map();
+  for (const entry of filtered) {
+    const colonIdx = entry.tag.indexOf(':');
+    const prefix = colonIdx > 0 ? entry.tag.slice(0, colonIdx) : '__other__';
+    const label = colonIdx > 0 ? entry.tag.slice(colonIdx + 1) : entry.tag;
+    if (!groups.has(prefix)) groups.set(prefix, []);
+    groups.get(prefix).push({ ...entry, label });
+  }
+
+  const ordered = Array.from(groups.entries()).map(([prefix, chips]) => {
+    chips.sort((a, b) => b.count - a.count);
+    return { prefix, chips, topCount: chips[0]?.count || 0 };
+  });
+  ordered.sort((a, b) => b.topCount - a.topCount);
+  return ordered;
+}
+
+function formatGroupTitle(prefix) {
+  if (prefix === '__other__') return t('transacoes.tags.group.other');
+  // Capitalize first letter, leave the rest intact ("parcelamento" →
+  // "Parcelamento", "tipo" → "Tipo", "moradia" → "Moradia").
+  return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+}
+
 // ── Transações ──────────────────────────────────────────────────────────
 function Transacoes() {
   // Declared inside the component so token lookups re-evaluate on dark/light toggle.
@@ -35,6 +73,9 @@ function Transacoes() {
   const [rangeMode, setRangeMode] = useState('month'); // 'month' | 'range'
   const [rangeStart, setRangeStart] = useState('');
   const [rangeEnd, setRangeEnd] = useState('');
+  // Tag filter UI state — search query + per-namespace expanded flag.
+  const [tagSearch, setTagSearch] = useState('');
+  const [expandedGroups, setExpandedGroups] = useState({});
 
   const limit = 50;
 
@@ -179,47 +220,180 @@ function Transacoes() {
         </div>
       )}
 
-      {/* Tags filter */}
-      {allTags.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <div className="sans" style={{ fontSize: 11, color: color.text.muted, marginBottom: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-            {t('transacoes.tags.label')}
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {allTags.map(tag => {
-              const isActive = selectedTags.includes(tag.tag);
-              return (
-                <button key={tag.tag} onClick={() => toggleTag(tag.tag)} className="sans"
+      {/* Tags filter — grouped by namespace prefix.
+          Long lists (parcelamentos in particular) used to dominate the
+          viewport on mobile. Now: a search box on top, then collapsible
+          groups (Tipo / Parcelamento / Moradia / …), with each group
+          showing the top N chips by default and a "Ver mais" reveal for
+          the rest. Chip labels drop the redundant prefix inside their
+          group ("parcelamento:Anuidade Caixa" → "Anuidade Caixa"). */}
+      {allTags.length > 0 && (() => {
+        // Cheap re-grouping each render is fine: allTags is small (≤ 50ish
+        // tags per month) and the function allocates only flat arrays.
+        const grouped = groupTags(allTags, tagSearch);
+        const hasFilters =
+          selectedTags.length > 0 ||
+          tagSearch.trim().length > 0 ||
+          category !== '';
+        return (
+          <div style={{ marginBottom: 20 }}>
+            <div
+              style={{
+                display: 'flex',
+                gap: 12,
+                marginBottom: 10,
+                alignItems: 'center',
+                flexWrap: 'wrap',
+              }}
+            >
+              <div className="sans" style={{ fontSize: 11, color: color.text.muted, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                {t('transacoes.tags.label')}
+              </div>
+              <input
+                type="search"
+                value={tagSearch}
+                onChange={(e) => setTagSearch(e.target.value)}
+                placeholder={t('transacoes.tags.search.placeholder')}
+                className="sans"
+                style={{
+                  flex: '1 1 160px',
+                  minWidth: 0,
+                  background: color.bg.page,
+                  border: `1px solid ${color.border.default}`,
+                  borderRadius: 3,
+                  color: color.text.primary,
+                  padding: '6px 10px',
+                  fontSize: 12,
+                  fontFamily: fonts.jakarta.body,
+                  outline: 'none',
+                }}
+              />
+              {hasFilters && (
+                <button
+                  onClick={() => {
+                    setSelectedTags([]);
+                    setTagSearch('');
+                    setCategory('');
+                    setPage(0);
+                  }}
+                  className="sans"
                   style={{
-                    background: isActive ? color.border.default : color.bg.card,
-                    border: `1px solid ${isActive ? color.accent.primary : color.border.default}`,
-                    borderRadius: 12, color: isActive ? color.accent.primary : color.text.secondary,
-                    padding: '4px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.12s',
-                    display: 'flex', alignItems: 'center', gap: 6,
-                  }}>
-                  {tag.tag}
-                  <span style={{
-                    background: isActive ? color.accent.primary : color.border.default,
-                    color: isActive ? color.bg.page : color.text.muted,
-                    borderRadius: 8, padding: '0 6px', fontSize: 10, fontWeight: 600,
-                  }}>
-                    {tag.count}
-                  </span>
+                    background: 'none',
+                    border: 'none',
+                    color: color.feedback.negative,
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    padding: '4px 8px',
+                  }}
+                >
+                  {t('transacoes.tags.clear')}
                 </button>
+              )}
+            </div>
+
+            {grouped.map(({ prefix, chips }) => {
+              const isExpanded = !!expandedGroups[prefix] || tagSearch.trim().length > 0;
+              const visible = isExpanded ? chips : chips.slice(0, DEFAULT_VISIBLE_PER_GROUP);
+              const remaining = chips.length - visible.length;
+              return (
+                <div key={prefix} style={{ marginBottom: 10 }}>
+                  <div
+                    className="sans"
+                    style={{
+                      fontSize: 10,
+                      color: color.text.muted,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      marginBottom: 6,
+                    }}
+                  >
+                    {formatGroupTitle(prefix)}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {visible.map((entry) => {
+                      const isActive = selectedTags.includes(entry.tag);
+                      return (
+                        <button
+                          key={entry.tag}
+                          onClick={() => toggleTag(entry.tag)}
+                          className="sans"
+                          title={entry.tag}
+                          style={{
+                            background: isActive ? color.border.default : color.bg.card,
+                            border: `1px solid ${isActive ? color.accent.primary : color.border.default}`,
+                            borderRadius: 12,
+                            color: isActive ? color.accent.primary : color.text.secondary,
+                            padding: '4px 10px',
+                            fontSize: 12,
+                            cursor: 'pointer',
+                            transition: 'all 0.12s',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            maxWidth: '100%',
+                          }}
+                        >
+                          <span style={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            maxWidth: 220,
+                          }}>
+                            {entry.label}
+                          </span>
+                          <span style={{
+                            background: isActive ? color.accent.primary : color.border.default,
+                            color: isActive ? color.bg.page : color.text.muted,
+                            borderRadius: 8,
+                            padding: '0 6px',
+                            fontSize: 10,
+                            fontWeight: 600,
+                            flexShrink: 0,
+                          }}>
+                            {entry.count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                    {remaining > 0 && (
+                      <button
+                        onClick={() => setExpandedGroups((s) => ({ ...s, [prefix]: true }))}
+                        className="sans"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: color.accent.primary,
+                          fontSize: 12,
+                          cursor: 'pointer',
+                          padding: '4px 8px',
+                        }}
+                      >
+                        {t('transacoes.tags.showMore', { count: remaining })}
+                      </button>
+                    )}
+                    {isExpanded && remaining === 0 && chips.length > DEFAULT_VISIBLE_PER_GROUP && tagSearch.trim().length === 0 && (
+                      <button
+                        onClick={() => setExpandedGroups((s) => ({ ...s, [prefix]: false }))}
+                        className="sans"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: color.text.muted,
+                          fontSize: 12,
+                          cursor: 'pointer',
+                          padding: '4px 8px',
+                        }}
+                      >
+                        {t('transacoes.tags.showLess')}
+                      </button>
+                    )}
+                  </div>
+                </div>
               );
             })}
-            {selectedTags.length > 0 && (
-              <button onClick={() => setSelectedTags([])} className="sans"
-                style={{
-                  background: 'none', border: 'none', color: color.feedback.negative,
-                  fontSize: 12, cursor: 'pointer', padding: '4px 8px',
-                }}>
-                {t('transacoes.tags.clear')}
-              </button>
-            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {error && <ErrorBox msg={error} />}
 

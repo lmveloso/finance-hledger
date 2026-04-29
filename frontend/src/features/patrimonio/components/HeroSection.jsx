@@ -79,14 +79,18 @@ function HeroSection({ months = [], totalAssets, totalLiabilities }) {
         {t('patrimonio.hero.net')}
       </div>
 
-      {/* Display-font net number */}
+      {/* Display-font net number. clamp() keeps it punchy on desktop but
+          shrinks below the 52px breakpoint that was forcing horizontal
+          scroll on narrow phones (R$ 75.375 at 52px ≈ 470px wide). */}
       <div
         className="serif"
         style={{
-          fontSize: 52,
+          fontSize: 'clamp(32px, 11vw, 52px)',
           color: color.accent.primary,
           letterSpacing: '-0.03em',
           lineHeight: 1,
+          maxWidth: '100%',
+          overflowWrap: 'break-word',
         }}
       >
         {BRL(currentNet)}
@@ -114,7 +118,7 @@ function HeroSection({ months = [], totalAssets, totalLiabilities }) {
 
       {/* Ativos / Passivos split */}
       <div style={{ display: 'flex', gap: 32, marginTop: 20, flexWrap: 'wrap' }}>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div
             className="sans"
             style={{
@@ -129,12 +133,16 @@ function HeroSection({ months = [], totalAssets, totalLiabilities }) {
           </div>
           <div
             className="serif"
-            style={{ fontSize: 24, color: color.feedback.positive }}
+            style={{
+              fontSize: 'clamp(20px, 6vw, 24px)',
+              color: color.feedback.positive,
+              overflowWrap: 'break-word',
+            }}
           >
             {BRL(totalAssets ?? 0)}
           </div>
         </div>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div
             className="sans"
             style={{
@@ -149,7 +157,11 @@ function HeroSection({ months = [], totalAssets, totalLiabilities }) {
           </div>
           <div
             className="serif"
-            style={{ fontSize: 24, color: color.feedback.negative }}
+            style={{
+              fontSize: 'clamp(20px, 6vw, 24px)',
+              color: color.feedback.negative,
+              overflowWrap: 'break-word',
+            }}
           >
             {BRL(totalLiabilities ?? 0)}
           </div>

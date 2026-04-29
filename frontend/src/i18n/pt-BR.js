@@ -261,6 +261,12 @@ const dict = {
   'auth.error.connection': 'Erro de conexão',
   'auth.loading': 'Carregando...',
 
+  // ── PIN gate (local "curious people" lock) ────────────────────────────
+  'pin.title': 'Digite o PIN',
+  'pin.subtitle': 'Quatro dígitos.',
+  'pin.error.wrong': 'PIN incorreto',
+  'pin.aria.digit': 'Dígito do PIN',
+
   // ── Month stepper (MonthNavigator) ─────────────────────────────────────
   'month.prev': 'Mês anterior',
   'month.next': 'Próximo mês',
@@ -293,6 +299,10 @@ const dict = {
   'transacoes.pagination.zero': '0 resultados',
   'transacoes.tags.label': 'Tags',
   'transacoes.tags.clear': 'Limpar filtros',
+  'transacoes.tags.search.placeholder': 'Filtrar tags…',
+  'transacoes.tags.showMore': 'Ver mais ({count})',
+  'transacoes.tags.showLess': 'Ver menos',
+  'transacoes.tags.group.other': 'Outras',
 
   // ── Ano tab ────────────────────────────────────────────────────────────
   'ano.header': 'Visão anual',

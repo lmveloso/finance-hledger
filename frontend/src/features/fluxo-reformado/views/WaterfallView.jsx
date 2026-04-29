@@ -129,17 +129,24 @@ function BarRow({ bar, scale }) {
 
   const isLabelMuted = bar.kind === 'expense';
 
+  // Tighter grid: label clamps narrow on phones, amount column is `auto`
+  // so it only takes what the formatted BRL needs, leaving the rest of the
+  // row width for the bar itself. The previous `minmax(80px, 140px) 1fr
+  // minmax(80px, 110px)` left the bar with as little as ~54px on a 360px
+  // viewport (the squeezed-graphic screenshot).
   return (
     <div
+      className="fluxo-waterfall-row"
       style={{
         display: 'grid',
-        gridTemplateColumns: 'minmax(80px, 140px) 1fr minmax(80px, 110px)',
-        gap: 10,
+        gridTemplateColumns: 'minmax(64px, 96px) minmax(0, 1fr) auto',
+        gap: 8,
         alignItems: 'center',
       }}
     >
       <span
         className="sans"
+        title={bar.label}
         style={{
           fontSize: 12,
           color: isLabelMuted ? color.text.secondary : color.text.primary,
@@ -148,6 +155,7 @@ function BarRow({ bar, scale }) {
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
           fontWeight: bar.kind === 'result' ? 600 : 400,
+          minWidth: 0,
         }}
       >
         {bar.label}
@@ -160,6 +168,7 @@ function BarRow({ bar, scale }) {
           background: color.bg.cardAlt,
           borderRadius: radius.rounded.xs,
           overflow: 'hidden',
+          minWidth: 0,
         }}
       >
         <div
